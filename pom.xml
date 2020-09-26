@@ -13,6 +13,7 @@
         <module>ghost-restful</module>
         <module>ghost-main</module>
         <module>ghost-dao</module>
+        <module>ghost-common</module>
     </modules>
 
     <name>ghost</name>
@@ -101,7 +102,11 @@
                 <artifactId>ghost-dao</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>cc.w0rm</groupId>
+                <artifactId>ghost-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- Spring-Boot -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
