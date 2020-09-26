@@ -9,9 +9,10 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
+        <module>ghost-main</module>
+        <module>ghost-api</module>
         <module>ghost-service</module>
         <module>ghost-restful</module>
-        <module>ghost-main</module>
         <module>ghost-dao</module>
         <module>ghost-common</module>
     </modules>
@@ -95,6 +96,11 @@
             <dependency>
                 <groupId>cc.w0rm</groupId>
                 <artifactId>ghost-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cc.w0rm</groupId>
+                <artifactId>ghost-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

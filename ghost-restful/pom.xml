@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>cc.w0rm</groupId>
-            <artifactId>ghost-service</artifactId>
+            <artifactId>ghost-api</artifactId>
         </dependency>
     </dependencies>
 
