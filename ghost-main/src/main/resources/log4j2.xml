@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" name="Name">
+    <properties>
+        <property name="logHome">/log/apps</property>
+        <property name="gitGroupName">cc.w0rm</property>
+        <property name="projectName">ghost</property>
+    </properties>
+    <Appenders>
+        <RollingFile name="infoAppender" fileName="logs/app.log" filePattern="${logHome}/${projectName}-%d{yyyy-MM-dd}.log">
+            <PatternLayout charset="UTF-8">
+                <Pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} [%level] ${gitGroupName}/${projectName} ${hostName} ${ctx:X-B3-TraceId} &lt;%t %C{1.}.%M(%L) %c{1.}&gt; - %m%n%ex</Pattern>
+            </PatternLayout>
+            <Policies>
+                <CronTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="errorAppender" fileName="logs/app.log" filePattern="${logHome}/${projectName}-%d{yyyy-MM-dd}.error">
+            <PatternLayout charset="UTF-8">
+                <Pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} [%level] ${gitGroupName}/${projectName} ${hostName} ${ctx:X-B3-TraceId} &lt;%t %C{1.}.%M(%L) %c{1.}&gt; - %m%n%ex</Pattern>
+            </PatternLayout>
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <CronTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %traceId %logger{36} - %msg%n"/>
+        </Console>
+        <RollingFile name="RollingFile" fileName="logs/app.log"
+                     filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy.MM.dd 'at' HH:mm:ss z} %-5level %traceId %class{36} %L %M - %msg%xEx%n"/>
+            <SizeBasedTriggeringPolicy size="5 MB" />
+        </RollingFile>
+
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="infoAppender"/>
+            <AppenderRef ref="errorAppender"/>
+            <appender-ref ref="Console"/>
+            <appender-ref ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

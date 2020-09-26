@@ -1,0 +1,63 @@
+server:
+  port: 8090
+
+endpoints:
+  enabled: false
+  metrics:
+    enabled: true
+    sensitive: false
+
+spring:
+  profiles:
+    active: dev
+
+  datasource:
+    druid:
+      driverClassName: com.mysql.jdbc.Driver
+      url: jdbc:mysql://${db.host}:${db.port}/${db.database}?useUnicode=true&useSSL=false&parseTime=true&loc=Local
+      username: ${db.user}
+      password: ${db.password}
+      initialSize: 10
+      minIdle: 6
+      maxActive: 50
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 'x'
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: false
+      maxPoolPreparedStatementPerConnectionSize: 20
+      filters: wall,stat
+
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  threadpool:
+    default:
+      coreSize: 30
+      maximumSize: 50
+      allowMaximumSizeToDivergeFromCoreSize: true
+  command:
+    default:
+      coreSize: 4
+      maximumSize: 5
+      allowMaximumSizeToDivergeFromCoreSize: true
+      maxQueueSize: 50000
+      queueSizeRejectionThreshold: 50000
+      execution:
+        isolation: #隔离
+          thread:
+            timeoutInMilliseconds: 20000 #默认为1000调大 线程超时时间
+      circuitBreaker:
+        requestVolumeThreshold: 20 #默认为20
+        sleepWindowsInMilliseconds: 5000 #默认为5000 断路器打开后的休眠时间
+        errorThresholdPercentage: 60 #默认为50 错误比例
+      metrices:
+        rollingStats:
+          timeInMilliseconds: 300000 #默认10000 统计的时间窗口
+
+logging:
+  config: classpath:log4j2.xml
