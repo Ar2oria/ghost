@@ -29,19 +29,39 @@ public class BaseResponse<T> implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private PageInfo pageInfo;
 
-    public static BaseResponse success() {
-        return new BaseResponse(SUCCESS, SUCCESS_MESSAGE, null, null);
+    public static <T> BaseResponse<T> let(ResponseCodeEnum responseCodeEnum) {
+        return let(responseCodeEnum, null, null);
+    }
+
+    public static <T> BaseResponse<T> let(ResponseCodeEnum responseCodeEnum, T data) {
+        return let(responseCodeEnum, data, null);
+    }
+
+    public static <T> BaseResponse<T> let(ResponseCodeEnum responseCodeEnum, T data, PageInfo pageInfo) {
+        return new BaseResponse<>(responseCodeEnum.getCode(), responseCodeEnum.getMessage(), data, pageInfo);
+    }
+
+    public static <T> BaseResponse<T> success() {
+        return success(null);
     }
 
     public static <T> BaseResponse<T> success(T data) {
-        return new BaseResponse<>(SUCCESS, SUCCESS_MESSAGE, data, null);
+        return success(data, null);
     }
 
     public static <T> BaseResponse<T> success(T data, PageInfo pageInfo) {
         return new BaseResponse<>(SUCCESS, SUCCESS_MESSAGE, data, pageInfo);
     }
 
+    public static <T> BaseResponse<T> failure() {
+        return failure(null);
+    }
+
     public static <T> BaseResponse<T> failure(T data) {
-        return new BaseResponse<>(DEFAULT_FAILURE, DEFAULT_FAILURE_MESSAGE, data, null);
+        return failure(DEFAULT_FAILURE, DEFAULT_FAILURE_MESSAGE, data);
+    }
+
+    public static <T> BaseResponse<T> failure(Integer code, String msg, T data) {
+        return new BaseResponse<>(code, msg, data, null);
     }
 }
