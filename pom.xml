@@ -64,7 +64,7 @@
         <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
 
         <robot.version>1.8.1-1.16</robot.version>
-        <robot-spring-boot.version>1.15.0</robot-spring-boot.version>
+        <robot-spring-boot.version>1.16.0-preview.3</robot-spring-boot.version>
     </properties>
 
     <dependencies>
