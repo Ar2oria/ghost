@@ -239,26 +239,54 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         return Lists.newArrayList(str.split(","));
     }
 
+    /**
+     * 列出所有登陆的qq号
+     * @return
+     */
     public List<String> listOnlineCodes() {
         return Lists.newArrayList(_onlineCodes);
     }
 
+    /**
+     * 判断一个账户是否在线
+     * @param code
+     * @return
+     */
     public Boolean isOnline(String code) {
         return _onlineCodes.contains(code);
     }
 
+    /**
+     * 获取所有消息组的名称
+     * @return
+     */
     public List<String> listMsgGroupNames() {
         return Lists.newArrayList(onlineMsgGroup.keySet());
     }
 
+    /**
+     * 获取所有登陆的消息组
+     * @return
+     */
     public List<MsgGroup> listMsgGroup() {
         return Lists.newArrayList(onlineMsgGroup.values());
     }
 
+    /**
+     * 通过消息组的名称获取组信息
+     * @param name
+     * @return
+     */
     public MsgGroup getMsgGroup(String name) {
         return onlineMsgGroup.get(name);
     }
 
+    /**
+     * 获取一个账号的生产者/消费者下的黑名单
+     * @param code
+     * @param roleEnum
+     * @return
+     */
     public Set<String> getBlackSet(String code, RoleEnum roleEnum) {
         Factory<ConfigRole> configRoleFactory = _rule.get(code);
         switch (roleEnum) {
@@ -271,6 +299,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         }
     }
 
+    /**
+     * 获取一个账号下的生产者/消费者下的白名单
+     * @param code
+     * @param roleEnum
+     * @return
+     */
     public Set<String> getWhiteSet(String code, RoleEnum roleEnum) {
         Factory<ConfigRole> configRoleFactory = _rule.get(code);
         switch (roleEnum) {
