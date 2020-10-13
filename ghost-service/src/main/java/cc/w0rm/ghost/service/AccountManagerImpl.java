@@ -14,6 +14,7 @@ import java.util.Set;
  */
 @Component
 public class AccountManagerImpl implements AccountManager {
+
     /**
      * 通过消息组标识获取组成员
      *

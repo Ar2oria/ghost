@@ -1,0 +1,286 @@
+package cc.w0rm.ghost.config;
+
+import cc.w0rm.ghost.common.util.TypeUtil;
+import cc.w0rm.ghost.entity.*;
+import cc.w0rm.ghost.enums.ColorEnum;
+import cc.w0rm.ghost.enums.RoleEnum;
+import cn.hutool.core.collection.CollUtil;
+import com.forte.qqrobot.bot.BotInfo;
+import com.forte.qqrobot.bot.BotManager;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+/**
+ * @author : xuyang
+ * @date : 2020/10/13 11:07 上午
+ */
+@Slf4j
+@Component
+@ConfigurationProperties(prefix = "accountManager")
+public class AccountManagerConfig extends LinkedHashMap<String, Object> {
+    private ImmutableSet<String> _onlineCodes;
+    private Map<String, Factory<List<String>>> _group;
+    private Map<String, Factory<ConfigRole>> _rule;
+    private ImmutableMap<String, MsgGroup> onlineMsgGroup;
+    private static final String MAP_REGEX = "^\\{(.*)}$";
+    private static final Pattern MAP_PATTERN = Pattern.compile(MAP_REGEX);
+
+    @Resource
+    private BotManager botManager;
+
+    @PostConstruct
+    public synchronized void init() {
+        log.info("[ghost-robot] 加载配置文件...");
+
+        if (!CollUtil.isEmpty(onlineMsgGroup)) {
+            return;
+        }
+        // 加载qq号信息
+        loadCodes();
+
+        // 解析消息组的配置文件
+        parseMsgGroup();
+
+        // 解析规则的配置文件
+        parseRule();
+
+        // 组装消息组数据
+        loadMsgGroup();
+
+        log.info("[ghost-robot] 配置文件加载完成");
+    }
+
+    public void refresh() {
+        loadCodes();
+        loadMsgGroup();
+    }
+
+    /**
+     * 解析配置文件，读取消息组
+     */
+    private void parseMsgGroup() {
+        Map<String, Object> msgGroup = TypeUtil.convert(get("msgGroup"));
+        Set<String> names = msgGroup.keySet();
+        if (CollUtil.isEmpty(names)) {
+            log.error("没有发现到任何消息组，请检查配置文件");
+            return;
+        }
+
+        // key - 消息组名称， value - 对应的生产者/消费者的qq号
+        this._group = names.stream()
+                .collect(Collectors.toMap(Function.identity(), name -> {
+                    Map<String, Object> role = TypeUtil.convert(msgGroup.get(name));
+                    String producer = TypeUtil.convert(role.get("producer"));
+                    String consumer = TypeUtil.convert(role.get("consumer"));
+                    List<String> producerGroup = split(producer);
+                    if (CollUtil.isEmpty(producerGroup)) {
+                        throw new IllegalStateException("消息组[" + name + "]创建失败，没有配置生产者");
+                    }
+
+                    return new Factory<>(producerGroup, split(consumer));
+                }));
+    }
+
+
+    /**
+     * 解析配置文件，读取规则
+     */
+    private void parseRule() {
+        if (CollUtil.isEmpty(_rule)){
+            _rule = new HashMap<>();
+        }
+
+        Map<String, Object> rule = TypeUtil.convert(get("rule"));
+        if (!CollUtil.isEmpty(rule)) {
+            Map<String, Object> producer = TypeUtil.convert(rule.get("producer"));
+            String black = TypeUtil.convert(producer.get("black"));
+            parseRule(black, RoleEnum.PRODUCER, ColorEnum.BLACK);
+            String white = TypeUtil.convert(producer.get("white"));
+            parseRule(white, RoleEnum.PRODUCER, ColorEnum.WHITE);
+
+            Map<String, Object> consumer = TypeUtil.convert(rule.get("consumer"));
+            black = TypeUtil.convert(consumer.get("black"));
+            parseRule(black, RoleEnum.CONSUMER, ColorEnum.BLACK);
+            white = TypeUtil.convert(consumer.get("white"));
+            parseRule(white, RoleEnum.CONSUMER, ColorEnum.WHITE);
+        }
+
+        List<String> codes = listOnlineCodes();
+        if (CollUtil.isNotEmpty(codes)){
+            codes.forEach(code->{
+                Factory<ConfigRole> configRole = _rule.get(code);
+                if (Objects.isNull(configRole)){
+                    configRole = new Factory<>(new ConfigRole(code), new ConfigRole(code));
+                    _rule.put(code, configRole);
+                }
+            });
+        }
+    }
+
+    private void parseRule(String config, RoleEnum roleEnum, ColorEnum colorEnum) {
+        Map<String, List<String>> book = parseRuleConfig(config);
+        book.keySet().forEach(code -> {
+            Factory<ConfigRole> rule = _rule.get(code);
+            if (Objects.isNull(rule)) {
+                ConfigRole producerRule = new ConfigRole(code);
+                ConfigRole consumerRule = new ConfigRole(code);
+                rule = new Factory<>(producerRule, consumerRule);
+                _rule.put(code, rule);
+            }
+
+            ConfigRole role = null;
+            switch (roleEnum) {
+                case PRODUCER:
+                    role = rule.getProducer();
+                    break;
+                case CONSUMER:
+                    role = rule.getConsumer();
+                    break;
+                default:
+                    break;
+            }
+
+            Set<String> colorSet = null;
+            switch (colorEnum) {
+                case BLACK:
+                    colorSet = role.getBlackSet();
+                    break;
+                case WHITE:
+                    colorSet = role.getWhiteSet();
+                    break;
+                default:
+                    break;
+            }
+
+            colorSet.addAll(book.get(code));
+        });
+    }
+
+
+    private Map<String, List<String>> parseRuleConfig(String config) {
+        if (Strings.isBlank(config)) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, List<String>> result = new HashMap<>();
+        Matcher matcher = MAP_PATTERN.matcher(config);
+        if (!matcher.find()) {
+            List<String> codes = split(config);
+            result.put("#", codes);
+            return result;
+        }
+
+        String mapConfig = matcher.group(1);
+        String[] split = mapConfig.split(";");
+        for (String kvStr : split) {
+            if (Strings.isBlank(kvStr)) {
+                continue;
+            }
+
+            String[] kvSplit = kvStr.split(":");
+            if (kvSplit.length != 2) {
+                throw new IllegalStateException("解析规则失败，请检查配置文件");
+            }
+            result.put(kvSplit[0], split(kvSplit[1]));
+        }
+
+        return result;
+    }
+
+
+    private void loadCodes() {
+        this._onlineCodes = ImmutableSet.copyOf(Lists.newArrayList(botManager.bots()).stream()
+                .map(BotInfo::getBotCode).collect(Collectors.toSet()));
+    }
+
+    private void loadMsgGroup() {
+        Map<String, MsgGroup> collect = _group.keySet().stream()
+                .collect(Collectors.toMap(Function.identity(), name -> {
+                    Factory<List<String>> listFactory = _group.get(name);
+                    List<String> producerCodes = listFactory.getProducer();
+                    List<String> consumerCodes = listFactory.getConsumer();
+
+                    Set<Producer> producerSet = producerCodes.stream()
+                            .filter(this::isOnline)
+                            .map(code -> {
+                                Factory<ConfigRole> configRoleFactory = _rule.get(code);
+                                ConfigRole producerRule = configRoleFactory.getProducer();
+                                return new Producer(botManager.getBot(code), producerRule.getBlackSet(), producerRule.getWhiteSet());
+                            }).collect(Collectors.toSet());
+
+                    Set<Consumer> consumerSet = consumerCodes.stream()
+                            .filter(this::isOnline)
+                            .map(code -> {
+                                Factory<ConfigRole> configRoleFactory = _rule.get(code);
+                                ConfigRole consumerRule = configRoleFactory.getConsumer();
+                                return new Consumer(botManager.getBot(code), consumerRule.getBlackSet(), consumerRule.getWhiteSet());
+                            }).collect(Collectors.toSet());
+
+                    return new MsgGroup(name, producerSet, consumerSet);
+                }));
+
+        this.onlineMsgGroup = ImmutableMap.copyOf(collect);
+    }
+
+    private List<String> split(String str) {
+        return Lists.newArrayList(str.split(","));
+    }
+
+    public List<String> listOnlineCodes() {
+        return Lists.newArrayList(_onlineCodes);
+    }
+
+    public Boolean isOnline(String code) {
+        return _onlineCodes.contains(code);
+    }
+
+    public List<String> listMsgGroupNames() {
+        return Lists.newArrayList(onlineMsgGroup.keySet());
+    }
+
+    public List<MsgGroup> listMsgGroup() {
+        return Lists.newArrayList(onlineMsgGroup.values());
+    }
+
+    public MsgGroup getMsgGroup(String name) {
+        return onlineMsgGroup.get(name);
+    }
+
+    public Set<String> getBlackSet(String code, RoleEnum roleEnum) {
+        Factory<ConfigRole> configRoleFactory = _rule.get(code);
+        switch (roleEnum) {
+            case PRODUCER:
+                return configRoleFactory.getProducer().getBlackSet();
+            case CONSUMER:
+                return configRoleFactory.getConsumer().getBlackSet();
+            default:
+                return Collections.emptySet();
+        }
+    }
+
+    public Set<String> getWhiteSet(String code, RoleEnum roleEnum) {
+        Factory<ConfigRole> configRoleFactory = _rule.get(code);
+        switch (roleEnum) {
+            case PRODUCER:
+                return configRoleFactory.getProducer().getWhiteSet();
+            case CONSUMER:
+                return configRoleFactory.getConsumer().getWhiteSet();
+            default:
+                return Collections.emptySet();
+        }
+    }
+
+}
