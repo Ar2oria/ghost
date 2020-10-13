@@ -13,11 +13,10 @@
 
   <name>ghost-api</name>
 
-
   <dependencies>
     <dependency>
-      <groupId>cc.w0rm</groupId>
-      <artifactId>ghost-service</artifactId>
+      <groupId>io.github.ForteScarlet</groupId>
+      <artifactId>simple-robot-core</artifactId>
     </dependency>
   </dependencies>
 </project>

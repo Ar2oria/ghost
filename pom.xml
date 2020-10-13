@@ -63,7 +63,7 @@
         <!-- maven -->
         <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
 
-        <robot.version>1.8.1-1.16</robot.version>
+        <simple-robot-core.version>1.16.3</simple-robot-core.version>
         <robot-spring-boot.version>1.16.0-preview.3</robot-spring-boot.version>
     </properties>
 
@@ -337,6 +337,19 @@
                 <groupId>love.forte.simple-robot</groupId>
                 <artifactId>component-mirai-spring-boot-starter</artifactId>
                 <version>${robot-spring-boot.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <!-- core -->
+                        <groupId>io.github.ForteScarlet</groupId>
+                        <artifactId>simple-robot-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.ForteScarlet</groupId>
+                <artifactId>simple-robot-core</artifactId>
+                <version>${simple-robot-core.version}</version>
             </dependency>
 
         </dependencies>

@@ -17,6 +17,10 @@
     <dependencies>
         <dependency>
             <groupId>cc.w0rm</groupId>
+            <artifactId>ghost-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cc.w0rm</groupId>
             <artifactId>ghost-dao</artifactId>
         </dependency>
         <dependency>
