@@ -1,6 +1,8 @@
 package cc.w0rm.ghost.config;
 
 import cc.w0rm.ghost.common.util.TypeUtil;
+import cc.w0rm.ghost.config.color.InterceptContext;
+import cc.w0rm.ghost.config.color.InterceptNode;
 import cc.w0rm.ghost.entity.*;
 import cc.w0rm.ghost.enums.ColorEnum;
 import cc.w0rm.ghost.enums.RoleEnum;
@@ -35,17 +37,23 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     private Map<String, Factory<List<String>>> _group;
     private Map<String, Factory<ConfigRole>> _rule;
     private ImmutableMap<String, MsgGroup> onlineMsgGroup;
+    private InterceptNode producerIntercept;
+    private InterceptNode consumerIntercept;
+    private volatile boolean initState = false;
+
     private static final String MAP_REGEX = "^\\{(.*)}$";
     private static final Pattern MAP_PATTERN = Pattern.compile(MAP_REGEX);
 
     @Resource
     private BotManager botManager;
+    @Resource
+    private InterceptContext interceptContext;
 
     @PostConstruct
     public synchronized void init() {
         log.info("[ghost-robot] 加载配置文件...");
 
-        if (!CollUtil.isEmpty(onlineMsgGroup)) {
+        if (isPrepared()) {
             return;
         }
         // 加载qq号信息
@@ -57,8 +65,13 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         // 解析规则的配置文件
         parseRule();
 
+        // 生成拦截器
+        createIntercept();
+
         // 组装消息组数据
         loadMsgGroup();
+
+        initState = true;
 
         log.info("[ghost-robot] 配置文件加载完成");
     }
@@ -99,7 +112,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * 解析配置文件，读取规则
      */
     private void parseRule() {
-        if (CollUtil.isEmpty(_rule)){
+        if (CollUtil.isEmpty(_rule)) {
             _rule = new HashMap<>();
         }
 
@@ -119,10 +132,10 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         }
 
         List<String> codes = listOnlineCodes();
-        if (CollUtil.isNotEmpty(codes)){
-            codes.forEach(code->{
+        if (CollUtil.isNotEmpty(codes)) {
+            codes.forEach(code -> {
                 Factory<ConfigRole> configRole = _rule.get(code);
-                if (Objects.isNull(configRole)){
+                if (Objects.isNull(configRole)) {
                     configRole = new Factory<>(new ConfigRole(code), new ConfigRole(code));
                     _rule.put(code, configRole);
                 }
@@ -200,6 +213,47 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         return result;
     }
 
+    private void createIntercept() {
+        if (CollUtil.isEmpty(_rule)) {
+            throw new IllegalStateException("无法加载自定义拦截器，原因：解析规则失败");
+        }
+
+        InterceptNode producerRoot = new InterceptNode();
+        InterceptNode consumerRoot = new InterceptNode();
+
+        InterceptNode producerPre = producerRoot;
+        InterceptNode consumerPre = consumerRoot;
+
+        Set<String> codes = _rule.keySet();
+        for (String code : codes) {
+            Factory<ConfigRole> configRole = _rule.get(code);
+            ConfigRole producer = configRole.getProducer();
+            ConfigRole consumer = configRole.getConsumer();
+
+            InterceptNode prTmp = createIntercept(producer);
+            InterceptNode coTmp = createIntercept(consumer);
+
+            producerPre.setNext(prTmp);
+            consumerPre.setNext(coTmp);
+            producerPre = prTmp;
+            consumerPre = coTmp;
+        }
+
+        this.producerIntercept = producerRoot.getNext();
+        this.consumerIntercept = consumerRoot.getNext();
+    }
+
+    private InterceptNode createIntercept(ConfigRole configRole) {
+        if (Objects.isNull(configRole)) {
+            throw new NullPointerException("无法加载自定义拦截器，ConfigRole为空");
+        }
+
+        InterceptNode interceptNode = new InterceptNode();
+        interceptNode.setIntercept(interceptContext.getInterceptStrategy(configRole));
+
+        return interceptNode;
+    }
+
 
     private void loadCodes() {
         this._onlineCodes = ImmutableSet.copyOf(Lists.newArrayList(botManager.bots()).stream()
@@ -241,6 +295,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 列出所有登陆的qq号
+     *
      * @return
      */
     public List<String> listOnlineCodes() {
@@ -249,6 +304,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 判断一个账户是否在线
+     *
      * @param code
      * @return
      */
@@ -258,6 +314,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 获取所有消息组的名称
+     *
      * @return
      */
     public List<String> listMsgGroupNames() {
@@ -266,6 +323,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 获取所有登陆的消息组
+     *
      * @return
      */
     public List<MsgGroup> listMsgGroup() {
@@ -274,6 +332,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 通过消息组的名称获取组信息
+     *
      * @param name
      * @return
      */
@@ -283,6 +342,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 获取一个账号的生产者/消费者下的黑名单
+     *
      * @param code
      * @param roleEnum
      * @return
@@ -301,6 +361,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     /**
      * 获取一个账号下的生产者/消费者下的白名单
+     *
      * @param code
      * @param roleEnum
      * @return
@@ -317,4 +378,15 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         }
     }
 
+    public boolean isPrepared() {
+        return initState;
+    }
+
+    public InterceptNode getProducerIntercept() {
+        return producerIntercept;
+    }
+
+    public InterceptNode getConsumerIntercept() {
+        return consumerIntercept;
+    }
 }

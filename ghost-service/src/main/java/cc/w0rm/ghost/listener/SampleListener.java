@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 public class SampleListener {
     private static final String SAMPLE_QQ_GROUP = "792924131";
 
-    public void listen(MsgSender msgSender, GroupMsg groupMsg){
+    public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         GroupInfo groupInfo = msgSender.getGroupInfo(groupMsg);
-        msgSender.SENDER.sendGroupMsg(SAMPLE_QQ_GROUP,
-                "["+groupInfo.getName()+"]("+groupMsg.getRemarkOrNickname()+"):"+groupMsg.getMsg());
+        msgSender.SENDER.sendGroupMsg(msgSender.bot().getBotCode() + ":" + SAMPLE_QQ_GROUP,
+                "[" + groupInfo.getName() + "](" + groupMsg.getRemarkOrNickname() + "):" + groupMsg.getMsg());
     }
 }
