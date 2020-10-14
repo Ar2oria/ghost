@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @ListenBody
 @Component
 public class SampleListener {
-    private static final String SAMPLE_QQ_GROUP = "792924131";
+    private static final String SAMPLE_QQ_GROUP = "830628164";
 
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         GroupInfo groupInfo = msgSender.getGroupInfo(groupMsg);

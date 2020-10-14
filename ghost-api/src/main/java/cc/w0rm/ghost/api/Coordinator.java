@@ -1,7 +1,7 @@
 package cc.w0rm.ghost.api;
 
+import cc.w0rm.ghost.dto.MsgGetDTO;
 import cc.w0rm.ghost.entity.ForwardResult;
-import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 
 /**
  * @author : xuyang
@@ -19,7 +19,7 @@ public interface Coordinator {
      * @param msgGet
      * @return
      */
-    ForwardResult forward(MsgGet msgGet);
+    ForwardResult forward(MsgGetDTO msgGet);
 
     /**
      * 将消息转发到指定的消息组，该消息会同步到消息组中所有消费者
@@ -27,7 +27,7 @@ public interface Coordinator {
      * @param msgGet
      * @return
      */
-    ForwardResult forward(String flag, MsgGet msgGet);
+    ForwardResult forward(String flag, MsgGetDTO msgGet);
 
     /**
      * 将消息转发到指定的qq群
@@ -35,7 +35,7 @@ public interface Coordinator {
      * @param msgGet
      * @return
      */
-    ForwardResult forwardGroup(String group, MsgGet msgGet);
+    ForwardResult forwardGroup(String group, MsgGetDTO msgGet);
 
 
 }

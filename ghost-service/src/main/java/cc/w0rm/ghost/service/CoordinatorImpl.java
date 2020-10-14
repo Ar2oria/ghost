@@ -1,8 +1,8 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.Coordinator;
+import cc.w0rm.ghost.dto.MsgGetDTO;
 import cc.w0rm.ghost.entity.ForwardResult;
-import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,7 +28,7 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(MsgGet msgGet) {
+    public ForwardResult forward(MsgGetDTO msgGet) {
         return null;
     }
 
@@ -40,7 +40,7 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(String flag, MsgGet msgGet) {
+    public ForwardResult forward(String flag, MsgGetDTO msgGet) {
         return null;
     }
 
@@ -52,7 +52,7 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forwardGroup(String group, MsgGet msgGet) {
+    public ForwardResult forwardGroup(String group, MsgGetDTO msgGet) {
         return null;
     }
 }

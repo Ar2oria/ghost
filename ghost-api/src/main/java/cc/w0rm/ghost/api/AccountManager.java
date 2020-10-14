@@ -1,8 +1,8 @@
 package cc.w0rm.ghost.api;
 
+import cc.w0rm.ghost.dto.BotInfoDTO;
+import cc.w0rm.ghost.dto.CodesDTO;
 import cc.w0rm.ghost.entity.GroupRuler;
-import com.forte.qqrobot.beans.messages.CodesAble;
-import com.forte.qqrobot.bot.BotInfo;
 
 import java.util.Set;
 
@@ -16,13 +16,13 @@ public interface AccountManager {
      * @param flag
      * @return
      */
-    Set<BotInfo> listMsgGroupMember(String flag);
+    Set<BotInfoDTO> listMsgGroupMember(String flag);
     /**
      * 通过qq信息获取组成员
      * @param codesAble
      * @return
      */
-    Set<BotInfo> listMsgGroupMember(CodesAble codesAble);
+    Set<BotInfoDTO> listMsgGroupMember(CodesDTO codesAble);
 
     /**
      * 通过qq号获取消息组标识
@@ -36,7 +36,7 @@ public interface AccountManager {
      * @param codesAble
      * @return
      */
-    String getMsgGroupFlag(CodesAble codesAble);
+    String getMsgGroupFlag(CodesDTO codesAble);
 
     /**
      * 通过qq号获取群管理/转发规则
@@ -50,5 +50,5 @@ public interface AccountManager {
      * @param codesAble
      * @return
      */
-    GroupRuler getGroupRuler(CodesAble codesAble);
+    GroupRuler getGroupRuler(CodesDTO codesAble);
 }
