@@ -2,9 +2,8 @@ package cc.w0rm.ghost.aspect;
 
 import cc.w0rm.ghost.config.AccountManagerConfig;
 import cc.w0rm.ghost.config.color.InterceptNode;
-import com.forte.qqrobot.intercept.Context;
-import com.forte.qqrobot.intercept.Interceptor;
 import com.forte.qqrobot.sender.intercept.SendContext;
+import com.simbot.component.mirai.MultipleMiraiBotSender;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -37,7 +36,13 @@ public class ConsumerMsgAspect {
         try {
             if(accountManagerConfig.isPrepared()) {
                 InterceptNode root = accountManagerConfig.getConsumerIntercept();
+                if ("sendGroupMsg".equals(context.getMethod().getName())){
+                    long id = ((MultipleMiraiBotSender) context.SENDER).getBot().getId();
+                    context.put("qq", Long.toString(id));
+                    context.put("group", context.getParams()[0]);
+                }
                 result = root.intercept(context);
+                context.clear();
             }
         } catch (Exception exp){
             log.error("消费者自定义拦截器执行异常", exp);

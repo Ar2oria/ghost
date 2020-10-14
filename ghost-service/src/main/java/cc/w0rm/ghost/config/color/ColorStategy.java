@@ -29,13 +29,8 @@ public abstract class ColorStategy implements InterceptStrategy {
         } else if (context instanceof SendContext) {
             SendContext sendContext = (SendContext) context;
             if ("sendGroupMsg".equals(sendContext.getMethod().getName())) {
-                Object[] params = sendContext.getParams();
-                String accountMap = (String) params[0];
-                String[] kv = accountMap.split(":");
-                String qq = kv[0];
-                String group = kv[1];
-                params[0] = group;
-                sendContext.setParams(params);
+                String qq = sendContext.get("qq").toString();
+                String group = sendContext.get("group").toString();
                 return strategy(qq, group, configRole);
             } else {
                 return false;

@@ -20,7 +20,7 @@ public class SampleListener {
 
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         GroupInfo groupInfo = msgSender.getGroupInfo(groupMsg);
-        msgSender.SENDER.sendGroupMsg(msgSender.bot().getBotCode() + ":" + SAMPLE_QQ_GROUP,
+        msgSender.SENDER.sendGroupMsg(SAMPLE_QQ_GROUP,
                 "[" + groupInfo.getName() + "](" + groupMsg.getRemarkOrNickname() + "):" + groupMsg.getMsg());
     }
 }
