@@ -37,12 +37,44 @@ import java.util.stream.Collectors;
 @Component
 @ConfigurationProperties(prefix = "accountManager")
 public class AccountManagerConfig extends LinkedHashMap<String, Object> {
+    /**
+     * 所有在线的qq账号
+     */
     private ImmutableSet<String> _onlineCodes;
+
+    /**
+     * key：qq账号，value：所属的消息组
+     */
+    private Map<String, Set<String>> _codeGroup;
+
+    /**
+     * key：消息组名，value：组中的生产者与消费者
+     */
     private Map<String, PartnerInfo<List<String>>> _group;
+
+    /**
+     * key：qq账号，value：对应的生产者消费者的黑白名单
+     */
     private Map<String, PartnerInfo<ConfigRole>> _rule;
+
+    /**
+     * key：消息组名，value：消息组数据，组中的生产者与消费者均为已登陆账号
+     */
     private ImmutableMap<String, MsgGroup> onlineMsgGroup;
+
+    /**
+     * 生产者拦截器
+     */
     private InterceptNode producerIntercept;
+
+    /**
+     * 消费者拦截器
+     */
     private InterceptNode consumerIntercept;
+
+    /**
+     * 配置文件加载状态
+     */
     private volatile boolean initState = false;
 
     private static final String MAP_REGEX = "^\\{(.*)}$";
@@ -82,6 +114,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     public void refresh() {
         loadCodes();
+        loadCodes();
         loadMsgGroup();
     }
 
@@ -106,9 +139,36 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                     if (CollUtil.isEmpty(producerGroup)) {
                         throw new IllegalStateException("消息组[" + name + "]创建失败，没有配置生产者");
                     }
+                    List<String> consumerGroup = split(consumer);
+                    loadCodeGroup(name, producerGroup, consumerGroup);
 
-                    return new PartnerInfo<>(producerGroup, split(consumer));
+                    return new PartnerInfo<>(producerGroup, consumerGroup);
                 }));
+    }
+
+    private void loadCodeGroup(String name, List<String> producerGroup, List<String> consumerGroup) {
+        if (CollUtil.isNotEmpty(producerGroup)){
+            addCodeGroup(name, producerGroup);
+        }
+
+        if (CollUtil.isNotEmpty(consumerGroup)){
+            addCodeGroup(name, consumerGroup);
+        }
+    }
+
+    private void addCodeGroup(String name, List<String> codes) {
+        if (CollUtil.isEmpty(this._codeGroup)){
+            this._codeGroup = new HashMap<>();
+        }
+
+        codes.forEach(code->{
+            Set<String> groups = this._codeGroup.get(code);
+            if (CollUtil.isEmpty(groups)){
+                groups = new HashSet<>();
+                this._codeGroup.put(code, groups);
+            }
+            groups.add(name);
+        });
     }
 
 
@@ -141,7 +201,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                 PartnerInfo<ConfigRole> configRole = _rule.get(code);
                 if (Objects.isNull(configRole)) {
                     configRole = new PartnerInfo<>(new ConfigRole(code), new ConfigRole(code));
-                    _rule.put(code, configRole);
+                    this._rule.put(code, configRole);
                 }
             });
         }
@@ -347,6 +407,15 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      */
     public MsgGroup getMsgGroup(String name) {
         return onlineMsgGroup.get(name);
+    }
+
+    /**
+     * 获取一个账号所属的所有消息组
+     * @param code
+     * @return
+     */
+    public List<String> getMsgGroupByCode(String code){
+        return Lists.newArrayList(_codeGroup.get(code));
     }
 
     /**
