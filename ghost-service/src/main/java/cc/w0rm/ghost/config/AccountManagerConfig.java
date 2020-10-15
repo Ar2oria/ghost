@@ -265,6 +265,10 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void loadMsgGroup() {
+        if (CollUtil.isEmpty(_group)){
+            throw new IllegalStateException("初始化消息组失败，原因：消息组为空");
+        }
+
         Map<String, MsgGroup> collect = _group.keySet().stream()
                 .collect(Collectors.toMap(Function.identity(), name -> {
                     PartnerInfo<List<String>> listPartnerInfo = _group.get(name);
