@@ -3,6 +3,10 @@ package cc.w0rm.ghost.config;
 import cc.w0rm.ghost.common.util.TypeUtil;
 import cc.w0rm.ghost.config.color.InterceptContext;
 import cc.w0rm.ghost.config.color.InterceptNode;
+import cc.w0rm.ghost.config.role.ConfigRole;
+import cc.w0rm.ghost.config.role.Consumer;
+import cc.w0rm.ghost.config.role.MsgGroup;
+import cc.w0rm.ghost.config.role.Producer;
 import cc.w0rm.ghost.entity.*;
 import cc.w0rm.ghost.enums.ColorEnum;
 import cc.w0rm.ghost.enums.RoleEnum;
@@ -34,8 +38,8 @@ import java.util.stream.Collectors;
 @ConfigurationProperties(prefix = "accountManager")
 public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     private ImmutableSet<String> _onlineCodes;
-    private Map<String, Factory<List<String>>> _group;
-    private Map<String, Factory<ConfigRole>> _rule;
+    private Map<String, PartnerInfo<List<String>>> _group;
+    private Map<String, PartnerInfo<ConfigRole>> _rule;
     private ImmutableMap<String, MsgGroup> onlineMsgGroup;
     private InterceptNode producerIntercept;
     private InterceptNode consumerIntercept;
@@ -103,7 +107,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                         throw new IllegalStateException("消息组[" + name + "]创建失败，没有配置生产者");
                     }
 
-                    return new Factory<>(producerGroup, split(consumer));
+                    return new PartnerInfo<>(producerGroup, split(consumer));
                 }));
     }
 
@@ -134,9 +138,9 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         List<String> codes = listOnlineCodes();
         if (CollUtil.isNotEmpty(codes)) {
             codes.forEach(code -> {
-                Factory<ConfigRole> configRole = _rule.get(code);
+                PartnerInfo<ConfigRole> configRole = _rule.get(code);
                 if (Objects.isNull(configRole)) {
-                    configRole = new Factory<>(new ConfigRole(code), new ConfigRole(code));
+                    configRole = new PartnerInfo<>(new ConfigRole(code), new ConfigRole(code));
                     _rule.put(code, configRole);
                 }
             });
@@ -146,11 +150,11 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     private void parseRule(String config, RoleEnum roleEnum, ColorEnum colorEnum) {
         Map<String, List<String>> book = parseRuleConfig(config);
         book.keySet().forEach(code -> {
-            Factory<ConfigRole> rule = _rule.get(code);
+            PartnerInfo<ConfigRole> rule = _rule.get(code);
             if (Objects.isNull(rule)) {
                 ConfigRole producerRule = new ConfigRole(code);
                 ConfigRole consumerRule = new ConfigRole(code);
-                rule = new Factory<>(producerRule, consumerRule);
+                rule = new PartnerInfo<>(producerRule, consumerRule);
                 _rule.put(code, rule);
             }
 
@@ -226,7 +230,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
         Set<String> codes = _rule.keySet();
         for (String code : codes) {
-            Factory<ConfigRole> configRole = _rule.get(code);
+            PartnerInfo<ConfigRole> configRole = _rule.get(code);
             ConfigRole producer = configRole.getProducer();
             ConfigRole consumer = configRole.getConsumer();
 
@@ -263,23 +267,23 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     private void loadMsgGroup() {
         Map<String, MsgGroup> collect = _group.keySet().stream()
                 .collect(Collectors.toMap(Function.identity(), name -> {
-                    Factory<List<String>> listFactory = _group.get(name);
-                    List<String> producerCodes = listFactory.getProducer();
-                    List<String> consumerCodes = listFactory.getConsumer();
+                    PartnerInfo<List<String>> listPartnerInfo = _group.get(name);
+                    List<String> producerCodes = listPartnerInfo.getProducer();
+                    List<String> consumerCodes = listPartnerInfo.getConsumer();
 
                     Set<Producer> producerSet = producerCodes.stream()
                             .filter(this::isOnline)
                             .map(code -> {
-                                Factory<ConfigRole> configRoleFactory = _rule.get(code);
-                                ConfigRole producerRule = configRoleFactory.getProducer();
+                                PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+                                ConfigRole producerRule = partnerInfo.getProducer();
                                 return new Producer(botManager.getBot(code), producerRule.getBlackSet(), producerRule.getWhiteSet());
                             }).collect(Collectors.toSet());
 
                     Set<Consumer> consumerSet = consumerCodes.stream()
                             .filter(this::isOnline)
                             .map(code -> {
-                                Factory<ConfigRole> configRoleFactory = _rule.get(code);
-                                ConfigRole consumerRule = configRoleFactory.getConsumer();
+                                PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+                                ConfigRole consumerRule = partnerInfo.getConsumer();
                                 return new Consumer(botManager.getBot(code), consumerRule.getBlackSet(), consumerRule.getWhiteSet());
                             }).collect(Collectors.toSet());
 
@@ -348,12 +352,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getBlackSet(String code, RoleEnum roleEnum) {
-        Factory<ConfigRole> configRoleFactory = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
-                return configRoleFactory.getProducer().getBlackSet();
+                return partnerInfo.getProducer().getBlackSet();
             case CONSUMER:
-                return configRoleFactory.getConsumer().getBlackSet();
+                return partnerInfo.getConsumer().getBlackSet();
             default:
                 return Collections.emptySet();
         }
@@ -367,12 +371,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getWhiteSet(String code, RoleEnum roleEnum) {
-        Factory<ConfigRole> configRoleFactory = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
-                return configRoleFactory.getProducer().getWhiteSet();
+                return partnerInfo.getProducer().getWhiteSet();
             case CONSUMER:
-                return configRoleFactory.getConsumer().getWhiteSet();
+                return partnerInfo.getConsumer().getWhiteSet();
             default:
                 return Collections.emptySet();
         }

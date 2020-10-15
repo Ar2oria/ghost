@@ -1,4 +1,4 @@
-package cc.w0rm.ghost.entity;
+package cc.w0rm.ghost.config.role;
 
 import com.forte.qqrobot.bot.BotInfo;
 

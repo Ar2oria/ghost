@@ -1,6 +1,6 @@
 package cc.w0rm.ghost.config.color;
 
-import cc.w0rm.ghost.entity.ConfigRole;
+import cc.w0rm.ghost.config.role.ConfigRole;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.intercept.Context;
 import com.forte.qqrobot.intercept.Interceptor;

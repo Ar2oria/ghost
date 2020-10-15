@@ -1,4 +1,4 @@
-package cc.w0rm.ghost.entity;
+package cc.w0rm.ghost.config.role;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
