@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class Factory<T> {
+public class PartnerInfo<T> {
     private T producer;
     private T consumer;
 }
