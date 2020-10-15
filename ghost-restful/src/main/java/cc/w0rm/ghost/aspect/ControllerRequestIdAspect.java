@@ -11,19 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * FileName : ControllerRequestIdAspect
- * <p>
- * ProjectName : xinche-after-insurance
- * <p>
- * PackageName : com.maodou.after.insurance.aspect
- * <p>
- * Description : controller层requestid添加
- *
- * @author : daisenrong
- * @version : 1.0.0
- * @date : 2018/11/16 23:02
- */
+
 @Aspect
 @Component
 @Slf4j
