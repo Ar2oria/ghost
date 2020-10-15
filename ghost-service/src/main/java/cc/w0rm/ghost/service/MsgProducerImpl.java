@@ -19,7 +19,7 @@ public class MsgProducerImpl implements MsgProducer {
     private Coordinator coordinator;
 
     @Override
-    public void createGroupMsg(MsgSender msgSender, GroupMsg groupMsg) {
+    public void make(MsgSender msgSender, GroupMsg groupMsg) {
 
         // 1. 解析消息
 

@@ -40,7 +40,7 @@ public class GroupMsgListener {
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         executorService.submit(()->{
             try {
-                msgProducer.createGroupMsg(msgSender, groupMsg);
+                msgProducer.make(msgSender, groupMsg);
             }catch (Exception exp){
                 log.error("[listener]消息处理异常", exp);
             }

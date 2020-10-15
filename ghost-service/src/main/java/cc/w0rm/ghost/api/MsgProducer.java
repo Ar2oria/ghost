@@ -13,5 +13,5 @@ public interface MsgProducer {
      * @param msgSender
      * @param groupMsg
      */
-    void createGroupMsg(MsgSender msgSender, GroupMsg groupMsg);
+    void make(MsgSender msgSender, GroupMsg groupMsg);
 }
