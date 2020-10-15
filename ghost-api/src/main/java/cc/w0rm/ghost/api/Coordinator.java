@@ -23,11 +23,11 @@ public interface Coordinator {
 
     /**
      * 将消息转发到指定的消息组，该消息会同步到消息组中所有消费者
-     * @param flag
+     * @param name
      * @param msgGet
      * @return
      */
-    ForwardResult forward(String flag, MsgGetDTO msgGet);
+    ForwardResult forward(String name, MsgGetDTO msgGet);
 
     /**
      * 将消息转发到指定的qq群
