@@ -5,16 +5,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author : xuyang
- * @date : 2020/10/16 11:51 下午
+ * @date : 2020/10/18 11:33 下午
  */
+
 @Component
-public class DefaultForwardStrategy implements ForwardStrategy {
-    /**
-     * 转发消息
-     * @param msgGet
-     */
+public class MsgExpireStrategy implements ForwardStrategy {
+
     @Override
     public void forward(MsgGet msgGet) {
-
+        throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
     }
 }

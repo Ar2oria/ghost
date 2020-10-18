@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * @date : 2020/10/16 11:53 下午
  */
 @Slf4j
-@Component("reorderMsgForwardStrategy")
+@Component
 public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements ForwardStrategy {
     private static final long START_TIME = Instant.now().toEpochMilli();
     private CircleIndexArray<Room> roomList;
@@ -30,6 +30,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private long interval;
     private int waitCount;
     private int roomSize;
+    private ForwardStrategy msgExpireStrategy;
 
     private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(5,
             new ThreadFactoryBuilder().setNameFormat("ReorderMsgForwardStrategy-ScheduledThreadPool").build());
@@ -42,6 +43,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         interval = 5000L;
         waitCount = 2;
         roomSize = 5;
+        msgExpireStrategy = new MsgExpireStrategy();
         roomList = new CircleIndexArray<>(roomSize);
     }
 
@@ -53,6 +55,15 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.interval = coordinatorConfig.getIntervalTime();
                 this.waitCount = coordinatorConfig.getWaitCount();
                 this.roomSize = coordinatorConfig.getRoomSize();
+                this.msgExpireStrategy = coordinatorConfig.getMsgExpireStrategy();
+
+                if (roomSize == 0){
+                    throw new IllegalStateException("初始化转发策略失败： 房间数不能为0");
+                }
+                if (roomSize <= waitCount){
+                    throw new IllegalStateException("初始化转发策略失败：房间数必须大于等待数");
+                }
+
                 this.roomList = new CircleIndexArray<>(roomSize);
             }
         }
@@ -91,7 +102,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 .toInstant().toEpochMilli();
         Room room = findRoom(msgTime);
         if (room == null || !room.tryPut(msgGet)) {
-            throw new MsgForwardException("消息转发失败，消息已经过期");
+            msgExpireStrategy.forward(msgGet);
         }
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
     }

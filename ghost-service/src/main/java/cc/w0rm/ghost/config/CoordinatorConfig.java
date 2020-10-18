@@ -1,8 +1,8 @@
 package cc.w0rm.ghost.config;
 
+import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,4 +22,8 @@ public class CoordinatorConfig {
     private String expireStrategy;
 
     private Integer roomSize;
+
+    public ForwardStrategy getMsgExpireStrategy() {
+        return null;
+    }
 }
