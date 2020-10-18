@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.MsgConsumer;
+import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import org.springframework.stereotype.Service;
 
 /**
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MsgConsumerImpl implements MsgConsumer {
     @Override
-    public void consume() {
+    public void consume(MsgGet msgGet) {
 
         // 1. 获取消息下所有群
 

@@ -2,12 +2,11 @@ package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.api.MsgConsumer;
-import cc.w0rm.ghost.dto.MsgGetDTO;
+import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.entity.ForwardResult;
+import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
 
 /**
  * @author : xuyang
@@ -15,9 +14,13 @@ import javax.annotation.Resource;
  */
 @Service
 public class CoordinatorImpl implements Coordinator {
+    @Autowired
+    private CoordinatorConfig coordinatorConfig;
 
     @Autowired
     private MsgConsumer msgConsumer;
+
+
 
     /**
      * 设置消息转发策略
@@ -36,7 +39,7 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(MsgGetDTO msgGet) {
+    public ForwardResult forward(MsgGet msgGet) {
 
         // 1. 对消息进行去重
 
@@ -57,7 +60,7 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(String name, MsgGetDTO msgGet) {
+    public ForwardResult forward(String name, MsgGet msgGet) {
         return null;
     }
 
@@ -69,7 +72,13 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forwardGroup(String group, MsgGetDTO msgGet) {
+    public ForwardResult forwardGroup(String group, MsgGet msgGet) {
         return null;
     }
+
+    @Override
+    public CoordinatorConfig getConfig() {
+        return null;
+    }
+
 }
