@@ -2,6 +2,7 @@ package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.MsgConsumer;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
+import com.forte.qqrobot.bot.BotInfo;
 import org.springframework.stereotype.Service;
 
 /**
@@ -9,16 +10,21 @@ import org.springframework.stereotype.Service;
  * @date : 2020/10/15 4:10 下午
  */
 
+/**
+ * service 必须指定名称， 名称为对应的消息组名称
+ */
 @Service
 public class MsgConsumerImpl implements MsgConsumer {
+
+
+    /**
+     * @param botInfo 账号信息
+     * @param group   qq群号
+     * @param msgGet  消息
+     */
     @Override
-    public void consume(MsgGet msgGet) {
-
-        // 1. 获取消息下所有群
-
-        // 2. 通过sku判断群是否接收过消息
-
-        // 3. 消息转发
+    public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
 
     }
+
 }

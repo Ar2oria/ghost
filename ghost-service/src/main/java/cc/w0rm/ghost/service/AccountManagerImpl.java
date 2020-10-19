@@ -1,9 +1,9 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.AccountManager;
-import cc.w0rm.ghost.dto.BotInfoDTO;
-import cc.w0rm.ghost.dto.CodesDTO;
 import cc.w0rm.ghost.entity.GroupRuler;
+import com.forte.qqrobot.beans.messages.ThisCodeAble;
+import com.forte.qqrobot.bot.BotInfo;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -22,7 +22,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public Set<BotInfoDTO> listMsgGroupMember(String flag) {
+    public Set<BotInfo> listMsgGroupMember(String flag) {
         return null;
     }
 
@@ -33,7 +33,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public Set<BotInfoDTO> listMsgGroupMember(CodesDTO codesAble) {
+    public Set<BotInfo> listMsgGroupMember(ThisCodeAble codesAble) {
         return null;
     }
 
@@ -55,7 +55,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public String getMsgGroupFlag(CodesDTO codesAble) {
+    public String getMsgGroupFlag(ThisCodeAble codesAble) {
         return null;
     }
 
@@ -77,7 +77,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public GroupRuler getGroupRuler(CodesDTO codesAble) {
+    public GroupRuler getGroupRuler(ThisCodeAble codesAble) {
         return null;
     }
 }

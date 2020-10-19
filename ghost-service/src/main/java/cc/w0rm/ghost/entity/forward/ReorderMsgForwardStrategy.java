@@ -68,7 +68,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             }
         }
 
-        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleWithFixedDelay(() -> {
+        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleAtFixedRate(() -> {
             try {
                 long curIdx = curIdx();
                 long lastIdx = roomList.lastIdx();
@@ -91,7 +91,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             } catch (Exception exp) {
                 log.error("定时转发任务执行异常", exp);
             }
-        }, 0L, this.interval / 2, TimeUnit.MILLISECONDS);
+        }, 0L, this.interval, TimeUnit.MILLISECONDS);
     }
 
     @Override
