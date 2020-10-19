@@ -141,9 +141,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                     }
                     List<String> consumerGroup = split(consumer);
                     loadCodeGroup(name, producerGroup, consumerGroup);
+                    log.info("加载消息组内生产者、消费者完成");
 
                     return new PartnerInfo<>(producerGroup, consumerGroup);
                 }));
+
+        log.info("加载消息组完成，消息组:{}", this._group);
     }
 
     private void loadCodeGroup(String name, List<String> producerGroup, List<String> consumerGroup) {
@@ -176,8 +179,8 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * 解析配置文件，读取规则
      */
     private void parseRule() {
-        if (CollUtil.isEmpty(_rule)) {
-            _rule = new HashMap<>();
+        if (CollUtil.isEmpty(this._rule)) {
+            this._rule = new HashMap<>();
         }
 
         Map<String, Object> rule = TypeUtil.convert(get("rule"));
@@ -205,6 +208,8 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                 }
             });
         }
+
+        log.info("加载消息组规则完成");
     }
 
     private void parseRule(String config, RoleEnum roleEnum, ColorEnum colorEnum) {
@@ -278,7 +283,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void createIntercept() {
-        if (CollUtil.isEmpty(_rule)) {
+        if (CollUtil.isEmpty(this._rule)) {
             throw new IllegalStateException("无法加载自定义拦截器，原因：解析规则失败");
         }
 
@@ -305,6 +310,8 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
         this.producerIntercept = producerRoot.getNext();
         this.consumerIntercept = consumerRoot.getNext();
+
+        log.info("加载消息拦截器完成");
     }
 
     private InterceptNode createIntercept(ConfigRole configRole) {
@@ -325,7 +332,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void loadMsgGroup() {
-        if (CollUtil.isEmpty(_group)){
+        if (CollUtil.isEmpty(this._group)){
             log.warn("初始化消息组失败，原因：消息组为空");
             return;
         }
@@ -426,7 +433,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getBlackSet(String code, RoleEnum roleEnum) {
-        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = this._rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
                 return partnerInfo.getProducer().getBlackSet();
@@ -445,7 +452,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getWhiteSet(String code, RoleEnum roleEnum) {
-        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = this._rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
                 return partnerInfo.getProducer().getWhiteSet();

@@ -120,7 +120,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                     super.forward(msgGet);
                     log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
                 } catch (Exception exp) {
-                    log.error("转发消息失败，消息id:{}", msgGet.getId(), exp);
+                    log.error("转发消息失败，消息:{}", msgGet.getMsg(), exp);
                 }
             }
         }
