@@ -116,12 +116,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
             for (MsgGet msgGet : queue) {
-                try {
-                    super.forward(msgGet);
-                    log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
-                } catch (Exception exp) {
-                    log.error("转发消息失败，消息:{}", msgGet.getMsg(), exp);
-                }
+                super.forward(msgGet);
+                log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
+
             }
         }
     }

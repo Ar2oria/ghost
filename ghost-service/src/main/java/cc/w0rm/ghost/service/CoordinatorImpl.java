@@ -52,19 +52,13 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public boolean forward(MsgGet msgGet) {
-        if (msgGet == null){
-            return false;
+    public void forward(MsgGet msgGet) {
+        if (msgGet == null) {
+            throw new IllegalArgumentException("参数不能为空");
         }
 
-        try {
-            forwardStrategy.forward(msgGet);
-        }catch (Exception exp){
-            log.error("转发消息异常， msg={}", msgGet, exp);
-            return false;
-        }
-
-        return true;
+        // todo 暂时无消息过滤功能
+        forwardStrategy.forward(msgGet);
     }
 
     /**
@@ -75,24 +69,24 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public boolean forward(String name, MsgGet msgGet) {
-        if (Strings.isBlank(name) || msgGet == null){
-            return false;
+    public void forward(String name, MsgGet msgGet) {
+        if (Strings.isBlank(name) || msgGet == null) {
+            throw new IllegalArgumentException("参数不能为空");
         }
-        if (msgGet instanceof GroupMsg){
-            GroupMsg groupMsg = (GroupMsg)msgGet;
+        if (msgGet instanceof GroupMsg) {
+            GroupMsg groupMsg = (GroupMsg) msgGet;
             MsgGetExt msgGetExt = new MsgGetExt(groupMsg);
             msgGetExt.setMsgGroup(name);
 
-            return forward(msgGetExt);
-        }else {
-            return forward(msgGet);
+            forward(msgGetExt);
+        } else {
+            forward(msgGet);
         }
     }
 
     @Override
     public CoordinatorConfig getConfig() {
-        return null;
+        return coordinatorConfig;
     }
 
 }
