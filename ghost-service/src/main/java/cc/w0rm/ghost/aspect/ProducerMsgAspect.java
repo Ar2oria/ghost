@@ -2,8 +2,6 @@ package cc.w0rm.ghost.aspect;
 
 import cc.w0rm.ghost.config.AccountManagerConfig;
 import cc.w0rm.ghost.config.color.InterceptNode;
-import com.forte.qqrobot.intercept.Context;
-import com.forte.qqrobot.intercept.Interceptor;
 import com.forte.qqrobot.listener.MsgGetContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -37,6 +35,10 @@ public class ProducerMsgAspect {
         try {
             if(accountManagerConfig.isPrepared()) {
                 InterceptNode root = accountManagerConfig.getProducerIntercept();
+                if (root == null){
+                    return result;
+                }
+
                 result = root.intercept(context);
             }
         } catch (Exception exp){

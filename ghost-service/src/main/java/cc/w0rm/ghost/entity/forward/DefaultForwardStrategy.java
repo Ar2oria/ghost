@@ -2,21 +2,26 @@ package cc.w0rm.ghost.entity.forward;
 
 import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.api.MsgConsumer;
+import cc.w0rm.ghost.config.role.Consumer;
+import cc.w0rm.ghost.config.role.MsgGroup;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.beans.messages.result.GroupList;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
-import com.forte.qqrobot.bot.BotInfo;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,6 +31,16 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class DefaultForwardStrategy implements ForwardStrategy {
+
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4,
+            Integer.MAX_VALUE,
+            60,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("DefaultForwardStrategy-ThreadPool")
+                    .build());
 
     @Autowired
     private AccountManager accountManager;
@@ -44,30 +59,77 @@ public class DefaultForwardStrategy implements ForwardStrategy {
      */
     @Override
     public void forward(MsgGet msgGet) {
-        Set<BotInfo> botInfoSet = accountManager.listMsgGroupMember(msgGet);
-        String msgGroupFlag = accountManager.getMsgGroupFlag(msgGet);
-        MsgConsumer msgConsumer = msgConsumerMap.get(msgGroupFlag);
+        if (msgGet == null || !accountManager.isProducer(msgGet)) {
+            return;
+        }
 
-        Object[] taskArray = botInfoSet.stream()
-                .flatMap(botInfo -> {
-                    Set<String> groupCode = groupCodeCache.getIfPresent(botInfo.getBotCode());
-                    if (CollUtil.isEmpty(groupCode)) {
-                        GroupList groupList = botInfo.getSender().GETTER.getGroupList();
-                        groupCode = groupList.stream()
-                                .map(Group::getCode).collect(Collectors.toSet());
-                        groupCodeCache.put(botInfo.getBotCode(), groupCode);
+        List<MsgGroup> msgGroups;
+        if (msgGet instanceof MsgGetExt) {
+            MsgGetExt msgGetExt = (MsgGetExt) msgGet;
+            msgGet = msgGetExt.getMsgGet();
+            String msgGroupName = msgGetExt.getMsgGroup();
+            MsgGroup msgGroup = accountManager.getMsgGroup(msgGroupName);
+            if (msgGroup == null){
+                return;
+            }
+            msgGroups = Lists.newArrayList(msgGroup);
+        } else {
+            msgGroups = accountManager.listMsgGroup(msgGet);
+        }
+
+        Object[] taskArray = getFutureTaskArray(msgGet, msgGroups);
+        if (taskArray == null) {
+            return;
+        }
+
+        try {
+            CompletableFuture<Void> future = CompletableFuture.allOf((CompletableFuture<?>[]) taskArray);
+            future.join();
+        } catch (Exception exp) {
+            log.error("消息: [{}] 转发失败", msgGet.getMsg(), exp);
+        }
+    }
+
+    @Nullable
+    private Object[] getFutureTaskArray(MsgGet msgGet, List<MsgGroup> msgGroups) {
+        if (msgGet == null || CollUtil.isEmpty(msgGroups)) {
+            return null;
+        }
+
+        return msgGroups.stream()
+                .flatMap(msgGroup -> {
+                    String msgGroupName = msgGroup.getName();
+                    MsgConsumer msgConsumer = msgConsumerMap.get(msgGroupName);
+                    if (msgConsumer == null) {
+                        return null;
                     }
-                    return groupCode.stream()
-                            .map(group -> CompletableFuture.runAsync(() -> {
-                                try {
-                                    msgConsumer.consume(botInfo, group, msgGet);
-                                    log.debug("send msg to group[{}] success, msgId={}", group, msgGet.getId());
-                                } catch (Exception exp) {
-                                    log.error("发送群消息给群[{}]失败， 账号:{}, 消息:{}}", group, botInfo.getBotCode(), msgGet.getMsg(), exp);
-                                }
-                            }));
-                }).toArray();
 
-        CompletableFuture.allOf((CompletableFuture<?>[]) taskArray);
+                    Set<Consumer> consumerSet = msgGroup.getConsumer();
+                    if (CollUtil.isEmpty(consumerSet)) {
+                        return null;
+                    }
+
+                    return consumerSet.stream()
+                            .flatMap(consumer -> {
+                                Set<String> groupCodes = groupCodeCache.getIfPresent(consumer.getBotCode());
+                                if (CollUtil.isEmpty(groupCodes)) {
+                                    GroupList groupList = consumer.getSender().GETTER.getGroupList();
+                                    groupCodes = groupList.stream()
+                                            .map(Group::getCode).collect(Collectors.toSet());
+                                    groupCodeCache.put(consumer.getBotCode(), groupCodes);
+                                }
+
+                                return groupCodes.stream()
+                                        .map(groupCode -> CompletableFuture.runAsync(() -> {
+                                            try {
+                                                msgConsumer.consume(consumer, groupCode, msgGet);
+                                                log.debug("send msg to group[{}] success, msgId={}", groupCode, msgGet.getId());
+                                            } catch (Exception exp) {
+                                                log.error("发送群消息给群[{}]失败， 账号:{}, 消息:{}}", groupCode, consumer.getBotCode(), msgGet.getMsg(), exp);
+                                            }
+                                        }, EXECUTOR_SERVICE));
+                            });
+
+                }).filter(Objects::nonNull).toArray();
     }
 }

@@ -40,9 +40,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
 
     public ReorderMsgForwardStrategy() {
-        interval = 5000L;
-        waitCount = 2;
-        roomSize = 5;
+        interval = 1000L;
+        waitCount = 10;
+        roomSize = 20;
         msgExpireStrategy = new MsgExpireStrategy();
         roomList = new CircleIndexArray<>(roomSize);
     }
