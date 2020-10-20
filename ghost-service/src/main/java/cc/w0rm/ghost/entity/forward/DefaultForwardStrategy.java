@@ -66,10 +66,10 @@ public class DefaultForwardStrategy implements ForwardStrategy {
         List<MsgGroup> msgGroups;
         if (msgGet instanceof MsgGetExt) {
             MsgGetExt msgGetExt = (MsgGetExt) msgGet;
-            msgGet = msgGetExt.getMsgGet();
+            msgGet = msgGetExt.getGroupMsg();
             String msgGroupName = msgGetExt.getMsgGroup();
             MsgGroup msgGroup = accountManager.getMsgGroup(msgGroupName);
-            if (msgGroup == null){
+            if (msgGroup == null) {
                 return;
             }
             msgGroups = Lists.newArrayList(msgGroup);
@@ -82,12 +82,8 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             return;
         }
 
-        try {
-            CompletableFuture<Void> future = CompletableFuture.allOf((CompletableFuture<?>[]) taskArray);
-            future.join();
-        } catch (Exception exp) {
-            log.error("消息: [{}] 转发失败", msgGet.getMsg(), exp);
-        }
+        CompletableFuture<Void> future = CompletableFuture.allOf((CompletableFuture<?>[]) taskArray);
+        future.join();
     }
 
     @Nullable

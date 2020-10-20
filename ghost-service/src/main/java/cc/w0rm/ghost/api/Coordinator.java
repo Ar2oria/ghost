@@ -20,7 +20,7 @@ public interface Coordinator {
      * @param msgGet
      * @return
      */
-    boolean forward(MsgGet msgGet);
+    void forward(MsgGet msgGet);
 
     /**
      * 将消息转发到指定的消息组，该消息会同步到消息组中所有消费者
@@ -28,7 +28,7 @@ public interface Coordinator {
      * @param msgGet
      * @return
      */
-    boolean forward(String name, MsgGet msgGet);
+    void forward(String name, MsgGet msgGet);
 
     CoordinatorConfig getConfig();
 }
