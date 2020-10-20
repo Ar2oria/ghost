@@ -29,21 +29,11 @@ public class GroupMsgListener {
     @Autowired
     private MsgProducer msgProducer;
 
-    private ExecutorService executorService = new ThreadPoolExecutor(8,
-            20,
-            30,
-            TimeUnit.MINUTES,
-            new ArrayBlockingQueue<>(300),
-            new ThreadFactoryBuilder().setNameFormat("Listener-ThreadPool").build(),
-            new ThreadPoolExecutor.AbortPolicy());
-
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
-        executorService.submit(()->{
-            try {
-                msgProducer.make(msgSender, groupMsg);
-            }catch (Exception exp){
-                log.error("[listener]消息处理异常", exp);
-            }
-        });
+        try {
+            msgProducer.make(msgSender, groupMsg);
+        } catch (Exception exp) {
+            log.error("[listener]消息处理异常", exp);
+        }
     }
 }
