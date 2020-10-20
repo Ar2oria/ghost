@@ -6,6 +6,7 @@ import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import cc.w0rm.ghost.entity.forward.MsgGetExt;
 import cc.w0rm.ghost.entity.forward.ReorderMsgForwardStrategy;
+import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
@@ -78,10 +79,15 @@ public class CoordinatorImpl implements Coordinator {
         if (Strings.isBlank(name) || msgGet == null){
             return false;
         }
+        if (msgGet instanceof GroupMsg){
+            GroupMsg groupMsg = (GroupMsg)msgGet;
+            MsgGetExt msgGetExt = new MsgGetExt(groupMsg);
+            msgGetExt.setMsgGroup(name);
 
-        MsgGetExt msgGetExt = new MsgGetExt(msgGet);
-
-        return forward(msgGetExt);
+            return forward(msgGetExt);
+        }else {
+            return forward(msgGet);
+        }
     }
 
     @Override

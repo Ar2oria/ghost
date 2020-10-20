@@ -37,15 +37,17 @@ public class Room implements IndexAble<Long> {
             return false;
         }
 
-        if (!(msgGet instanceof GroupMsg)) {
-            return false;
+        String key;
+        if (msgGet instanceof GroupMsg) {
+            GroupMsg groupMsg = (GroupMsg) msgGet;
+            key = groupMsg.getGroup();
+        }else {
+            key = msgGet.getThisCode();
         }
 
-        GroupMsg groupMsg = (GroupMsg) msgGet;
-        String groupCode = groupMsg.getGroup();
-        Group group = groupMap.computeIfAbsent(groupCode, k -> new Group(groupMsg));
+        Group group = groupMap.computeIfAbsent(key, k -> new Group(msgGet.getTime()));
 
-        return group.put(groupMsg);
+        return group.put(msgGet);
     }
 
     public synchronized List<MsgGet> clean() {
@@ -77,10 +79,9 @@ public class Room implements IndexAble<Long> {
         private Long time;
         private HashSet<MsgGetWrap> msgWraps;
 
-        public Group(MsgGet msgGet) {
+        public Group(Long time) {
             msgWraps = new HashSet<>();
-            time = msgGet.getTime();
-            msgWraps.add(new MsgGetWrap(msgGet));
+            this.time = time;
         }
 
         public synchronized boolean put(MsgGet msgGet) {
