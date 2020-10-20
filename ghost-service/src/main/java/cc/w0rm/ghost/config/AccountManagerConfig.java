@@ -101,11 +101,11 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         // 解析规则的配置文件
         parseRule();
 
-        // 生成拦截器
-        createIntercept();
-
         // 组装消息组数据
         loadMsgGroup();
+
+        // 生成拦截器
+        createIntercept();
 
         initState = true;
 
@@ -146,7 +146,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                     return new PartnerInfo<>(producerGroup, consumerGroup);
                 }));
 
-        log.info("加载消息组完成，消息组:{}", this._group);
+        log.info("加载消息组完成，消息组:{}", _group);
     }
 
     private void loadCodeGroup(String name, List<String> producerGroup, List<String> consumerGroup) {
@@ -160,7 +160,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void addCodeGroup(String name, List<String> codes) {
-        if (CollUtil.isEmpty(this._codeGroup)){
+        if (CollUtil.isEmpty(_codeGroup)){
             this._codeGroup = new HashMap<>();
         }
 
@@ -179,7 +179,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * 解析配置文件，读取规则
      */
     private void parseRule() {
-        if (CollUtil.isEmpty(this._rule)) {
+        if (CollUtil.isEmpty(_rule)) {
             this._rule = new HashMap<>();
         }
 
@@ -283,8 +283,9 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void createIntercept() {
-        if (CollUtil.isEmpty(this._rule)) {
-            throw new IllegalStateException("无法加载自定义拦截器，原因：解析规则失败");
+        if (CollUtil.isEmpty(_rule)) {
+            log.warn("跳过加载拦截器，无任何账号登陆");
+            return;
         }
 
         InterceptNode producerRoot = new InterceptNode();

@@ -36,6 +36,10 @@ public class ConsumerMsgAspect {
         try {
             if(accountManagerConfig.isPrepared()) {
                 InterceptNode root = accountManagerConfig.getConsumerIntercept();
+                if (root == null){
+                    return result;
+                }
+
                 if ("sendGroupMsg".equals(context.getMethod().getName())){
                     long id = ((MultipleMiraiBotSender) context.SENDER).getBot().getId();
                     context.put("qq", Long.toString(id));

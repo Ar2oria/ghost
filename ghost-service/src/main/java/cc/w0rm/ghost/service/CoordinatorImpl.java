@@ -3,15 +3,25 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.config.CoordinatorConfig;
-import cc.w0rm.ghost.entity.ForwardResult;
+import cc.w0rm.ghost.entity.forward.ForwardStrategy;
+import cc.w0rm.ghost.entity.forward.MsgGetExt;
+import cc.w0rm.ghost.entity.forward.ReorderMsgForwardStrategy;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
+import com.google.common.base.Preconditions;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.Objects;
 
 /**
  * @author : xuyang
  * @date : 2020/10/13 1:41 上午
  */
+
+@Slf4j
 @Service
 public class CoordinatorImpl implements Coordinator {
     @Autowired
@@ -20,7 +30,8 @@ public class CoordinatorImpl implements Coordinator {
     @Autowired
     private MsgConsumer msgConsumer;
 
-
+    @Resource(type = ReorderMsgForwardStrategy.class)
+    private ForwardStrategy forwardStrategy;
 
     /**
      * 设置消息转发策略
@@ -28,8 +39,9 @@ public class CoordinatorImpl implements Coordinator {
      * @param strategy
      */
     @Override
-    public void setForwardStrategy(Object strategy) {
-
+    public void setForwardStrategy(ForwardStrategy strategy) {
+        Preconditions.checkArgument(Objects.nonNull(strategy));
+        this.forwardStrategy = strategy;
     }
 
     /**
@@ -39,17 +51,19 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(MsgGet msgGet) {
+    public boolean forward(MsgGet msgGet) {
+        if (msgGet == null){
+            return false;
+        }
 
-        // 1. 对消息进行去重
+        try {
+            forwardStrategy.forward(msgGet);
+        }catch (Exception exp){
+            log.error("转发消息异常， msg={}", msgGet, exp);
+            return false;
+        }
 
-        // 2. 使用转发策略对消息顺序进行重排
-
-        // 3. 获取消息组中所有消费者
-
-        // 4. 对所有消费者转发消息 msgConsumer.consume()
-
-        return null;
+        return true;
     }
 
     /**
@@ -60,20 +74,14 @@ public class CoordinatorImpl implements Coordinator {
      * @return
      */
     @Override
-    public ForwardResult forward(String name, MsgGet msgGet) {
-        return null;
-    }
+    public boolean forward(String name, MsgGet msgGet) {
+        if (Strings.isBlank(name) || msgGet == null){
+            return false;
+        }
 
-    /**
-     * 将消息转发到指定的qq群
-     *
-     * @param group
-     * @param msgGet
-     * @return
-     */
-    @Override
-    public ForwardResult forwardGroup(String group, MsgGet msgGet) {
-        return null;
+        MsgGetExt msgGetExt = new MsgGetExt(msgGet);
+
+        return forward(msgGetExt);
     }
 
     @Override
