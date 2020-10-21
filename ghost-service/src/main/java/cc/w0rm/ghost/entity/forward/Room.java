@@ -2,9 +2,7 @@ package cc.w0rm.ghost.entity.forward;
 
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -21,12 +19,17 @@ import java.util.stream.Collectors;
 public class Room implements IndexAble<Long> {
     private final long index;
     private volatile boolean clean = false;
+    @Getter
     private volatile int msgCount;
+    @Getter
+    @Setter
+    private volatile int flag;
     private final ConcurrentHashMap<String, Group> groupMap;
 
     public Room(long index) {
         this.index = index;
         this.msgCount = 0;
+        this.flag = 0;
         this.groupMap = new ConcurrentHashMap<>();
     }
 
@@ -66,9 +69,6 @@ public class Room implements IndexAble<Long> {
         ).collect(Collectors.toList());
     }
 
-    public int getMsgCount() {
-        return this.msgCount;
-    }
 
     @Override
     public Long getId() {

@@ -5,6 +5,7 @@ import cc.w0rm.ghost.config.CoordinatorConfig;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,9 +111,14 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 .toInstant().toEpochMilli();
         Room room = findRoom(msgTime);
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
-        if (room == null || !room.tryPut(msgGet)) {
+        if (room == null) {
+            throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
+        } else if (!room.tryPut(msgGet)) {
             log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
-            trueForward(msgExpireStrategy, msgGet, (roomSize - 1) * interval);
+            while (room.getFlag() != 1) {
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+            trueForward(msgExpireStrategy, msgGet, interval);
         }
     }
 
@@ -128,13 +134,15 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 trueForward(this, msgGet, waitTime / room.getMsgCount());
             }
         }
+        room.setFlag(1);
+        log.debug("room[{}] all msg is forward", room.getId());
     }
 
     private void trueForward(ForwardStrategy strategy, MsgGet msgGet, long waitTime) {
         Runnable runnable;
         if (this == strategy) {
             runnable = () -> super.forward(msgGet);
-        }else {
+        } else {
             runnable = () -> strategy.forward(msgGet);
         }
 
