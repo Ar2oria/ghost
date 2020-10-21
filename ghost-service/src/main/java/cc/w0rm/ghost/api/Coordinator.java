@@ -31,5 +31,7 @@ public interface Coordinator {
     void forward(String name, MsgGet msgGet);
 
     CoordinatorConfig getConfig();
+
+    ForwardStrategy getStrategy(String expireStrategy);
 }
 

@@ -6,6 +6,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -55,12 +56,18 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.interval = coordinatorConfig.getIntervalTime();
                 this.waitCount = coordinatorConfig.getWaitCount();
                 this.roomSize = coordinatorConfig.getRoomSize();
-                this.msgExpireStrategy = coordinatorConfig.getMsgExpireStrategy();
+                String expireStrategy = coordinatorConfig.getExpireStrategy();
+                if (Strings.isNotBlank(expireStrategy)) {
+                    this.msgExpireStrategy = coordinator.getStrategy(expireStrategy);
+                    if (msgExpireStrategy == null) {
+                        msgExpireStrategy = new MsgExpireStrategy();
+                    }
+                }
 
-                if (roomSize == 0){
+                if (roomSize == 0) {
                     throw new IllegalStateException("初始化转发策略失败： 房间数不能为0");
                 }
-                if (roomSize <= waitCount){
+                if (roomSize <= waitCount) {
                     throw new IllegalStateException("初始化转发策略失败：房间数必须大于等待数");
                 }
 
@@ -141,7 +148,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
         Room returnRoom;
         long msgIdx = getTimeIdx(msgTime);
-        if (nowIdx == msgIdx) {
+        if (msgIdx > nowIdx) {
+            throw new MsgForwardException("消息时间序列异常，当前时间:" + now + ", 消息时间:" + msgTime);
+        } else if (nowIdx == msgIdx) {
             returnRoom = lastRoom;
         } else {
             returnRoom = roomList.firstLowerOrEqual(msgIdx);
