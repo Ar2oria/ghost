@@ -19,12 +19,14 @@ import java.util.stream.Collectors;
  */
 @ToString
 public class Room implements IndexAble<Long> {
-    private Long index;
+    private final long index;
     private volatile boolean clean = false;
+    private volatile int msgCount;
     private final ConcurrentHashMap<String, Group> groupMap;
 
-    public Room(Long index) {
+    public Room(long index) {
         this.index = index;
+        this.msgCount = 0;
         this.groupMap = new ConcurrentHashMap<>();
     }
 
@@ -41,12 +43,11 @@ public class Room implements IndexAble<Long> {
         if (msgGet instanceof GroupMsg) {
             GroupMsg groupMsg = (GroupMsg) msgGet;
             key = groupMsg.getGroup();
-        }else {
+        } else {
             key = msgGet.getThisCode();
         }
 
         Group group = groupMap.computeIfAbsent(key, k -> new Group(msgGet.getTime()));
-
         return group.put(msgGet);
     }
 
@@ -54,6 +55,7 @@ public class Room implements IndexAble<Long> {
         if (clean) {
             return Collections.emptyList();
         }
+
         this.clean = true;
 
         List<Group> collect = groupMap.values().stream()
@@ -62,6 +64,10 @@ public class Room implements IndexAble<Long> {
         return collect.stream().flatMap(group ->
                 group.getMsgList().stream()
         ).collect(Collectors.toList());
+    }
+
+    public int getMsgCount() {
+        return this.msgCount;
     }
 
     @Override
@@ -75,16 +81,17 @@ public class Room implements IndexAble<Long> {
     }
 
     @Data
-    static class Group implements Comparable<Group> {
+    class Group implements Comparable<Group> {
         private Long time;
         private HashSet<MsgGetWrap> msgWraps;
 
         public Group(Long time) {
-            msgWraps = new HashSet<>();
+            this.msgWraps = new HashSet<>();
             this.time = time;
         }
 
         public synchronized boolean put(MsgGet msgGet) {
+            msgCount++;
             return msgWraps.add(new MsgGetWrap(msgGet));
         }
 
@@ -104,7 +111,7 @@ public class Room implements IndexAble<Long> {
 
         @Data
         @AllArgsConstructor
-        static class MsgGetWrap implements Comparable<MsgGetWrap> {
+        class MsgGetWrap implements Comparable<MsgGetWrap> {
             private MsgGet msgGet;
 
             @Override

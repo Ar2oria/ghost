@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-@ConfigurationProperties(prefix = "coordinatorConfig")
+@ConfigurationProperties(prefix = "coordinator")
 public class CoordinatorConfig {
     @Getter
     private Long intervalTime = 5000L;

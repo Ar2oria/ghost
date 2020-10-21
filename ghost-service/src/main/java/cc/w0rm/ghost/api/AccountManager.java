@@ -63,5 +63,5 @@ public interface AccountManager {
 
     boolean isProducer(String code);
 
-    boolean isProducer(MsgGet msgGet);
+    boolean isProducer(ThisCodeAble codeAble);
 }
