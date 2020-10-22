@@ -37,7 +37,7 @@ public class MsgConsumerImpl implements MsgConsumer {
                 msgGet.getId(),
                 group);
 
-        if (TEST_GROUP_CODES.contains(group)){
+        if (TEST_GROUP_CODES.contains(group)) {
             botInfo.getSender().SENDER.sendGroupMsg(group, msgGet.getMsg());
         }
 

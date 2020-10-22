@@ -23,8 +23,6 @@ public abstract class ColorStrategy  implements InterceptStrategy {
                 GroupMsg groupMsg = (GroupMsg) msgGet;
                 String qq = groupMsg.getThisCode();
                 return strategy(qq, groupMsg.getGroup(), configRole);
-            } else {
-                return true;
             }
         } else if (context instanceof SendContext) {
             SendContext sendContext = (SendContext) context;
@@ -32,8 +30,6 @@ public abstract class ColorStrategy  implements InterceptStrategy {
                 String qq = sendContext.get("qq").toString();
                 String group = sendContext.get("group").toString();
                 return strategy(qq, group, configRole);
-            } else {
-                return true;
             }
         }
 
