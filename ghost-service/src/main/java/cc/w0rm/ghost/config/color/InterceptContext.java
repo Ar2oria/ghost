@@ -44,4 +44,8 @@ public class InterceptContext {
         return (Interceptor<Object, Context<Object>>) context -> st.intercept(context, configRole);
     }
 
+    public Interceptor getRepeatMessageHandleStrategy() {
+        InterceptStrategy strategy = strategyMap.get(RepeatMessageHandleStrategy.class);
+        return (Interceptor<Object, Context<Object>>) context -> strategy.intercept(context, null);
+    }
 }

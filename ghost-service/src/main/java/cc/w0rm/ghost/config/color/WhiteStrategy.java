@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  * @date : 2020/10/14 4:23 下午
  */
 @Component
-public class WhiteStrategy extends ColorStategy implements InterceptStrategy {
+public class WhiteStrategy extends ColorStrategy implements InterceptStrategy {
     @Override
     public boolean strategy(String qq, String group, ConfigRole configRole) {
         if (!configRole.getQQCode().equals(qq) && !isGlobalInterceptCode(configRole.getQQCode())) {

@@ -1,0 +1,64 @@
+package cc.w0rm.ghost.config.color;
+
+import cc.w0rm.ghost.config.role.ConfigRole;
+import cn.hutool.core.collection.ConcurrentHashSet;
+import com.forte.qqrobot.beans.messages.msgget.MsgGet;
+import com.forte.qqrobot.intercept.Context;
+import com.forte.qqrobot.listener.MsgGetContext;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * @author : xuyang
+ * @date : 2020/10/22 5:27 下午
+ */
+@Slf4j
+@Component
+public class RepeatMessageHandleStrategy implements InterceptStrategy {
+
+    private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .softValues()
+            .build();
+
+
+    @Override
+    public boolean intercept(Context context, ConfigRole configRole) {
+        if (context instanceof MsgGetContext) {
+            MsgGetContext msgGetContext = (MsgGetContext) context;
+            if (isForward(msgGetContext.getMsgGet())) {
+                log.debug("msg[{}] is already forward to this account, skip", msgGetContext.getMsgGet().getId());
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isForward(MsgGet msgGet) {
+        if (msgGet.getMsg() == null){
+            return false;
+        }
+
+        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
+        if (msgHash == null) {
+            msgHash = new ConcurrentHashSet<>();
+            ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
+        }
+
+        if (msgHash.contains(msgGet.getMsg().hashCode())) {
+            return true;
+        } else {
+            msgHash.add(msgGet.getMsg().hashCode());
+            return false;
+        }
+    }
+}

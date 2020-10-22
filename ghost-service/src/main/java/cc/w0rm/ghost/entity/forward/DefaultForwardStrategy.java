@@ -6,6 +6,7 @@ import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.beans.messages.result.GroupList;
@@ -19,7 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -146,7 +150,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
 
     private boolean canForward(MsgGet msgGet, String groupCode) {
         if (isForward(msgGet, groupCode)) {
-            log.debug("msg is forward to group, skip.");
+            log.debug("msg is already forward to group, skip.");
             return false;
         }
 
@@ -174,7 +178,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     private boolean isForward(MsgGet msgGet, String groupCode) {
         Set<Integer> msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
         if (msgHash == null) {
-            msgHash = new HashSet<>();
+            msgHash = new ConcurrentHashSet<>();
             GROUP_MSG_FILTER.put(groupCode, msgHash);
         }
 

@@ -308,12 +308,14 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
             producerPre = prTmp;
             consumerPre = coTmp;
         }
+        producerPre.setNext(getRepeatMessageIntercept());
 
         this.producerIntercept = producerRoot.getNext();
         this.consumerIntercept = consumerRoot.getNext();
 
         log.info("加载消息拦截器完成");
     }
+
 
     private InterceptNode createIntercept(ConfigRole configRole) {
         if (Objects.isNull(configRole)) {
@@ -323,6 +325,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         InterceptNode interceptNode = new InterceptNode();
         interceptNode.setIntercept(interceptContext.getInterceptStrategy(configRole));
 
+        return interceptNode;
+    }
+
+    private InterceptNode getRepeatMessageIntercept() {
+        InterceptNode interceptNode = new InterceptNode();
+        interceptNode.setIntercept(interceptContext.getRepeatMessageHandleStrategy());
         return interceptNode;
     }
 
