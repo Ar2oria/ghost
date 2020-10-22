@@ -5,19 +5,22 @@ import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import cc.w0rm.ghost.entity.forward.MsgGetExt;
-import cc.w0rm.ghost.entity.forward.ReorderMsgForwardStrategy;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author : xuyang
@@ -38,8 +41,14 @@ public class CoordinatorImpl implements Coordinator {
 
     private volatile ForwardStrategy forwardStrategy;
 
+    private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .softValues()
+            .build();
+
     @PostConstruct
-    public void init(){
+    public void init() {
         forwardStrategy = getStrategy(coordinatorConfig.getForwardStrategy());
     }
 
@@ -67,14 +76,32 @@ public class CoordinatorImpl implements Coordinator {
             throw new IllegalArgumentException("参数不能为空");
         }
 
-        // todo 暂时无消息过滤功能
+        if (isForward(msgGet)){
+            log.debug("msg[{}] is forward, abandoned", msgGet.getId());
+            return;
+        }
 
         if (forwardStrategy == null) {
-            log.debug("forward strategy is not init... msg[{}] will be abandoned", msgGet.getMsg());
+            log.debug("forward strategy is not init... msg[{}] will be abandoned", msgGet.getId());
             return;
         }
 
         forwardStrategy.forward(msgGet);
+    }
+
+    private boolean isForward(MsgGet msgGet) {
+        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
+        if (msgHash == null){
+            msgHash = new HashSet<>();
+            ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
+        }
+
+        if (msgHash.contains(msgGet.getMsg().hashCode())){
+            return true;
+        }else {
+            msgHash.add(msgGet.getMsg().hashCode());
+            return false;
+        }
     }
 
     /**
