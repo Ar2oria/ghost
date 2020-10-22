@@ -67,12 +67,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             return;
         }
 
-        if (!(msgGet instanceof QQCodeAble)){
-            return;
-        }
-
-        String sourceCode = ((QQCodeAble)msgGet).getQQCode();
-        if (!accountManager.isProducer(sourceCode)){
+        if (!accountManager.isProducer(msgGet)){
             return;
         }
 
