@@ -2,6 +2,8 @@ package cc.w0rm.ghost.entity.forward;
 
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.config.CoordinatorConfig;
+import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
+import cc.w0rm.ghost.common.util.RunnableWithMDC;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -77,7 +79,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             }
         }
 
-        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleAtFixedRate(() -> {
+        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleAtFixedRate(new RunnableWithMDC(() -> {
             try {
                 long curIdx = curIdx();
                 long lastIdx = roomList.lastIdx();
@@ -100,15 +102,21 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             } catch (Exception exp) {
                 log.error("定时转发任务执行异常", exp);
             }
-        }, 0L, this.interval, TimeUnit.MILLISECONDS);
+        }), 0L, this.interval, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void forward(MsgGet msgGet) {
-        log.debug("ReorderMsgForwardStrategy: receive msg[{}]({})", msgGet.getId(), msgGet.getMsg());
         long msgTime = msgGet.getTimeToLocalDateTime()
                 .atZone(ZoneOffset.systemDefault())
                 .toInstant().toEpochMilli();
+        int length = msgGet.getMsg().length();
+        length = Math.min(length, 5);
+        log.debug("ReorderMsgForwardStrategy:[{}] receive new (msg[{}]time[{}][{}])",
+                Instant.now().toEpochMilli(),
+                msgGet.getId(),
+                msgTime,
+                msgGet.getMsg().substring(0, length));
         Room room = findRoom(msgTime);
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
         if (room == null) {
@@ -141,22 +149,22 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private void trueForward(ForwardStrategy strategy, MsgGet msgGet, long waitTime) {
         Runnable runnable;
         if (this == strategy) {
-            runnable = () -> super.forward(msgGet);
+            runnable = new RunnableWithMDC(() -> super.forward(msgGet));
         } else {
-            runnable = () -> strategy.forward(msgGet);
+            runnable = new RunnableWithMDC(() -> strategy.forward(msgGet));
         }
 
-        CompletableFuture<Void> future = CompletableFuture.runAsync(runnable, SCHEDULED_THREAD_POOL_EXECUTOR)
+        CompletableFuture<Void> future = CompletableFutureWithMDC.runAsyncWithMdc(runnable, SCHEDULED_THREAD_POOL_EXECUTOR)
                 .whenComplete((v, exp) -> {
                     if (exp != null) {
-                        log.error("转发消息[{}]，消费者执行中出现未知异常", msgGet.getMsg(), exp);
+                        log.error("转发消息[{}]，消费者执行中出现未知异常", msgGet.getId(), exp);
                     }
                 });
         try {
             future.get(waitTime, TimeUnit.MILLISECONDS);
             log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
         } catch (Exception exp) {
-            log.error("转发消息[{}]，等待超时，请查看网络是否出现异常或代码中出现死循环", msgGet.getMsg(), exp);
+            log.error("转发消息[{}]，等待超时，请查看网络是否出现异常或代码中出现死循环", msgGet.getId(), exp);
         }
     }
 

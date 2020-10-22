@@ -69,7 +69,6 @@ public class Room implements IndexAble<Long> {
         ).collect(Collectors.toList());
     }
 
-
     @Override
     public Long getId() {
         return this.index;
@@ -133,6 +132,12 @@ public class Room implements IndexAble<Long> {
                     return other.getMsgGet().getId().equals(this.getMsgGet().getId());
                 }
                 return false;
+            }
+
+            @Override
+            public String toString() {
+                return "{\"msgId\": \"" + msgGet.getId() + "\","
+                        + "\"msgTime\": \"" + msgGet.getTime() + "\"}";
             }
 
         }

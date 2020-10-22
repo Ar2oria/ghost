@@ -33,11 +33,8 @@ public class MsgProducerImpl implements MsgProducer {
         try {
             coordinator.forward(groupMsg);
         } catch (Exception exp) {
-            log.error("转发消息失败 msgId[{}]: [{}({})] {}",
-                    groupMsg.getId(),
-                    groupMsg.getFlag(),
-                    groupMsg.getGroup(),
-                    groupMsg.getMsg(), exp);
+            log.error("消息生产者，转发消息失败 msgId[{}]",
+                    groupMsg.getId(), exp);
         }
 
     }
