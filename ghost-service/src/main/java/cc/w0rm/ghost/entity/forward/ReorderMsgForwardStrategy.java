@@ -45,9 +45,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
 
     public ReorderMsgForwardStrategy() {
-        interval = 1000L;
-        waitCount = 10;
-        roomSize = 20;
+        interval = 5000L;
+        waitCount = 2;
+        roomSize = 5;
         msgExpireStrategy = new MsgExpireStrategy();
         roomList = new CircleIndexArray<>(roomSize);
     }
@@ -107,9 +107,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
     @Override
     public void forward(MsgGet msgGet) {
-        long msgTime = msgGet.getTimeToLocalDateTime()
-                .atZone(ZoneOffset.systemDefault())
-                .toInstant().toEpochMilli();
+        long msgTime = msgGet.getTime();
         int length = msgGet.getMsg().length();
         length = Math.min(length, 5);
         log.debug("ReorderMsgForwardStrategy:[{}] receive new (msg[{}]time[{}][{}])",
@@ -117,8 +115,10 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 msgGet.getId(),
                 msgTime,
                 msgGet.getMsg().substring(0, length));
+
         Room room = findRoom(msgTime);
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
+
         if (room == null) {
             throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
         } else if (!room.tryPut(msgGet)) {

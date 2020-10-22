@@ -2,9 +2,9 @@ package cc.w0rm.ghost.entity.forward;
 
 import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.api.MsgConsumer;
+import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
-import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
@@ -19,10 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +47,12 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             .concurrencyLevel(Integer.MAX_VALUE)
             .expireAfterAccess(1, TimeUnit.HOURS)
             .initialCapacity(10).build();
+
+    private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .softValues()
+            .build();
 
     @Autowired
     private AccountManager accountManager;
@@ -128,13 +131,8 @@ public class DefaultForwardStrategy implements ForwardStrategy {
 
                     return groupCodes.parallelStream()
                             .map(groupCode -> CompletableFutureWithMDC.runAsyncWithMdc(() -> {
-                                if (msgGet instanceof GroupMsg) {
-                                    GroupMsg groupMsg = (GroupMsg) msgGet;
-                                    String sourceCode = groupMsg.getGroup();
-                                    if (sourceCode.equals(groupCode)) {
-                                        log.debug("msg forward to self, skip.");
-                                        return;
-                                    }
+                                if (!canForward(msgGet, groupCode)) {
+                                    return;
                                 }
 
                                 try {
@@ -146,10 +144,52 @@ public class DefaultForwardStrategy implements ForwardStrategy {
                 });
     }
 
+    private boolean canForward(MsgGet msgGet, String groupCode) {
+        if (isForward(msgGet, groupCode)) {
+            log.debug("msg is forward to group, skip.");
+            return false;
+        }
+
+        if (msgGet instanceof GroupMsg) {
+            if (isFromMyGroup((GroupMsg) msgGet, groupCode)) {
+                log.debug("msg forward to self, skip.");
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isFromMyGroup(GroupMsg msgGet, String groupCode) {
+        String sourceCode = msgGet.getGroup();
+        if (sourceCode.equals(groupCode)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isForward(MsgGet msgGet, String groupCode) {
+        Set<Integer> msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
+        if (msgHash == null) {
+            msgHash = new HashSet<>();
+            GROUP_MSG_FILTER.put(groupCode, msgHash);
+        }
+
+        if (msgHash.contains(msgGet.getMsg().hashCode())) {
+            return true;
+        } else {
+            msgHash.add(msgGet.getMsg().hashCode());
+            return false;
+        }
+    }
+
     @NotNull
     private Set<String> getGroupCodeFromCache(Consumer consumer) {
         Set<String> groupCodes = GROUP_CODE_CACHE.getIfPresent(consumer.getBotCode());
-        if (CollUtil.isEmpty(groupCodes)) {
+        if (groupCodes == null) {
             GroupList groupList = consumer.getSender().GETTER.getGroupList();
             groupCodes = groupList.stream()
                     .map(Group::getCode).collect(Collectors.toSet());
