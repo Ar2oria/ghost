@@ -6,7 +6,6 @@ import com.forte.qqrobot.beans.messages.result.LoginQQInfo;
 import com.forte.qqrobot.sender.intercept.SendContext;
 import com.forte.qqrobot.sender.senderlist.RootSenderList;
 import com.forte.qqrobot.sender.senderlist.SenderSendList;
-import com.simbot.component.mirai.MultipleMiraiBotSender;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
