@@ -27,9 +27,9 @@ public class MsgConsumerImpl implements MsgConsumer {
      */
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
-        log.info("[q1] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
+        log.debug("[q1] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
                 botInfo.getBotCode(),
-                msgGet.getMsg(),
+                msgGet.getId(),
                 group);
     }
 

@@ -87,14 +87,14 @@ public class CircleIndexArray<T extends IndexAble<Long>> {
          * 返回list
          */
         ArrayList<T> result = Lists.newArrayListWithCapacity(copyData.length);
-        int i = copyTail;
-        while (i != idx) {
-            if (copyData[i] != null) {
-                result.add(elemAt(copyData, i));
+        int startIdx = copyTail;
+        while (startIdx != idx) {
+            if (copyData[startIdx] != null) {
+                result.add(elemAt(copyData, startIdx));
             }
-            i = (i + 1) % copyData.length;
+            startIdx = (startIdx + 1) % copyData.length;
         }
-        result.add(elemAt(copyData, i));
+        result.add(elemAt(copyData, startIdx));
 
         return result;
     }
@@ -188,7 +188,7 @@ public class CircleIndexArray<T extends IndexAble<Long>> {
      * @return
      */
     private int circleFindIndex(IndexAble<Long>[] array, int start, long index) {
-        if (array == null || start < 0 || start >= array.length) {
+        if (array == null || start >= array.length) {
             return -1;
         }
 
@@ -209,15 +209,16 @@ public class CircleIndexArray<T extends IndexAble<Long>> {
      * @return
      */
     private int circleFindIndexFirstLowerOrEqual(IndexAble<Long>[] array, int start, long index) {
-        if (array == null || start < 0 || start >= array.length) {
+        if (array == null || start >= array.length) {
             return -1;
         }
 
-        int realIndex = start;
+        int realIndex = (array.length + start) % array.length;
+        int stopIndex = (array.length + start + 1) % array.length;
         while (array[realIndex] != null
                 && array[realIndex].getId() > index
-                && realIndex != start + 1) {
-            realIndex = (elementData.length + realIndex - 1) % elementData.length;
+                && realIndex != stopIndex) {
+            realIndex = (array.length + realIndex - 1) % array.length;
         }
 
         IndexAble<Long> obj = array[realIndex];
@@ -227,8 +228,8 @@ public class CircleIndexArray<T extends IndexAble<Long>> {
 
     @SuppressWarnings("unchecked")
     private T elemAt(IndexAble<Long>[] array, int idx) {
-        idx = (idx + elementData.length) % elementData.length;
-        return array == null ? null : (T) array[idx];
+        idx = (idx + array.length) % array.length;
+        return (T) array[idx];
     }
 
 }
