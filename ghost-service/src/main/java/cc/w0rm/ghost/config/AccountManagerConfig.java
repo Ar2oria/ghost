@@ -7,7 +7,7 @@ import cc.w0rm.ghost.config.role.ConfigRole;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.config.role.Producer;
-import cc.w0rm.ghost.entity.*;
+import cc.w0rm.ghost.entity.PartnerInfo;
 import cc.w0rm.ghost.enums.ColorEnum;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;

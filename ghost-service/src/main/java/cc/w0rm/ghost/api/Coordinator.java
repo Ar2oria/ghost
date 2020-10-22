@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.api;
 
 import cc.w0rm.ghost.config.CoordinatorConfig;
+import cc.w0rm.ghost.entity.forward.ExpireStrategy;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 
@@ -32,6 +33,8 @@ public interface Coordinator {
 
     CoordinatorConfig getConfig();
 
-    ForwardStrategy getStrategy(String expireStrategy);
+    ForwardStrategy getForwardStrategy(String forward);
+
+    ExpireStrategy getExpireStrategy(String expire);
 }
 
