@@ -2,7 +2,10 @@ package cc.w0rm.ghost.aspect;
 
 import cc.w0rm.ghost.config.AccountManagerConfig;
 import cc.w0rm.ghost.config.color.InterceptNode;
+import com.forte.qqrobot.beans.messages.result.LoginQQInfo;
 import com.forte.qqrobot.sender.intercept.SendContext;
+import com.forte.qqrobot.sender.senderlist.RootSenderList;
+import com.forte.qqrobot.sender.senderlist.SenderSendList;
 import com.simbot.component.mirai.MultipleMiraiBotSender;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -41,9 +44,13 @@ public class ConsumerMsgAspect {
                 }
 
                 if ("sendGroupMsg".equals(context.getMethod().getName())){
-                    long id = ((MultipleMiraiBotSender) context.SENDER).getBot().getId();
-                    context.put("qq", Long.toString(id));
-                    context.put("group", context.getParams()[0]);
+                    SenderSendList sender = context.getSender();
+                    if (sender instanceof RootSenderList){
+                        LoginQQInfo loginQQInfo = ((RootSenderList) context.SENDER).getLoginQQInfo();
+                        context.put("qq", loginQQInfo.getCode());
+                        context.put("group", context.getParams()[0]);
+                    }
+
                 }
                 result = root.intercept(context);
                 context.clear();

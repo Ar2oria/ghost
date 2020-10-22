@@ -3,8 +3,11 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.api.MsgConsumer;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.bot.BotInfo;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 
 /**
  * @author : xuyang
@@ -19,6 +22,8 @@ import org.springframework.stereotype.Service;
 @Service("q1")
 public class MsgConsumerImpl implements MsgConsumer {
 
+    private static final Set<String> TEST_GROUP_CODES = Sets.newHashSet("792924131", "830628164");
+
 
     /**
      * @param botInfo 账号信息
@@ -31,6 +36,11 @@ public class MsgConsumerImpl implements MsgConsumer {
                 botInfo.getBotCode(),
                 msgGet.getId(),
                 group);
+
+        if (TEST_GROUP_CODES.contains(group)){
+            botInfo.getSender().SENDER.sendGroupMsg(group, msgGet.getMsg());
+        }
+
     }
 
 }
