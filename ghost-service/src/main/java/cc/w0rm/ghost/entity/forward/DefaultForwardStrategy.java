@@ -5,6 +5,7 @@ import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
+import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
@@ -182,10 +183,11 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             GROUP_MSG_FILTER.put(groupCode, msgHash);
         }
 
-        if (msgHash.contains(msgGet.getMsg().hashCode())) {
+        int hash = MsgUtil.hashCode(msgGet.getMsg());
+        if (msgHash.contains(hash)) {
             return true;
         } else {
-            msgHash.add(msgGet.getMsg().hashCode());
+            msgHash.add(hash);
             return false;
         }
     }

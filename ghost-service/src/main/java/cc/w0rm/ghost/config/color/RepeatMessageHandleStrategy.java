@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.config.color;
 
 import cc.w0rm.ghost.config.role.ConfigRole;
+import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.intercept.Context;
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class RepeatMessageHandleStrategy implements InterceptStrategy {
+public  class RepeatMessageHandleStrategy implements InterceptStrategy {
 
     private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
@@ -35,8 +36,6 @@ public class RepeatMessageHandleStrategy implements InterceptStrategy {
             if (isForward(msgGetContext.getMsgGet())) {
                 log.debug("msg[{}] is already forward to this account, skip", msgGetContext.getMsgGet().getId());
                 return false;
-            } else {
-                return true;
             }
         }
 
@@ -53,11 +52,11 @@ public class RepeatMessageHandleStrategy implements InterceptStrategy {
             msgHash = new ConcurrentHashSet<>();
             ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
         }
-
-        if (msgHash.contains(msgGet.getMsg().hashCode())) {
+        int hash = MsgUtil.hashCode(msgGet.getMsg());
+        if (msgHash.contains(hash)) {
             return true;
         } else {
-            msgHash.add(msgGet.getMsg().hashCode());
+            msgHash.add(hash);
             return false;
         }
     }
