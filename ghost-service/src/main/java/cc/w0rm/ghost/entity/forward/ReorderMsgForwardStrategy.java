@@ -1,9 +1,9 @@
 package cc.w0rm.ghost.entity.forward;
 
 import cc.w0rm.ghost.api.Coordinator;
-import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.common.util.RunnableWithMDC;
+import cc.w0rm.ghost.config.CoordinatorConfig;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -35,7 +35,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private long interval;
     private int waitCount;
     private int roomSize;
-    private ForwardStrategy msgExpireStrategy;
+    private ExpireStrategy msgExpireStrategy;
 
     private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(4,
             new ThreadFactoryBuilder().setNameFormat("ReorderMsgForwardStrategy-ScheduledThreadPool").build());
@@ -62,9 +62,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.roomSize = coordinatorConfig.getRoomSize();
                 String expireStrategy = coordinatorConfig.getExpireStrategy();
                 if (Strings.isNotBlank(expireStrategy)) {
-                    this.msgExpireStrategy = coordinator.getStrategy(expireStrategy);
+                    this.msgExpireStrategy = coordinator.getExpireStrategy(expireStrategy);
                     if (msgExpireStrategy == null) {
-                        msgExpireStrategy = new MsgExpireStrategy();
+                        throw new IllegalArgumentException("消息过期策略获取失败，请检查参数");
                     }
                 }
 
@@ -122,13 +122,13 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
 
         if (room == null) {
-            throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
+            msgExpireStrategy.accept(msgGet);
         } else if (!room.tryPut(msgGet)) {
             log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             while (room.getFlag() != 1) {
                 Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
             }
-            trueForward(msgExpireStrategy, msgGet, interval);
+            trueForward(msgGet, interval);
         }
     }
 
@@ -141,20 +141,15 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
             for (MsgGet msgGet : queue) {
-                trueForward(this, msgGet, waitTime / room.getMsgCount());
+                trueForward(msgGet, waitTime / room.getMsgCount());
             }
         }
         room.setFlag(1);
         log.debug("room[{}] all msg is forward", room.getId());
     }
 
-    private void trueForward(ForwardStrategy strategy, MsgGet msgGet, long waitTime) {
-        Runnable runnable;
-        if (this == strategy) {
-            runnable = new RunnableWithMDC(() -> super.forward(msgGet));
-        } else {
-            runnable = new RunnableWithMDC(() -> strategy.forward(msgGet));
-        }
+    private void trueForward(MsgGet msgGet, long waitTime) {
+        Runnable runnable = new RunnableWithMDC(() -> super.forward(msgGet));
 
         CompletableFuture<Void> future = CompletableFutureWithMDC.runAsyncWithMdc(runnable, SCHEDULED_THREAD_POOL_EXECUTOR)
                 .whenComplete((v, exp) -> {

@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-public class MsgExpireStrategy implements ForwardStrategy {
+public class MsgExpireStrategy implements ExpireStrategy {
 
     @Override
-    public void forward(MsgGet msgGet) {
+    public void accept(MsgGet msgGet) {
         throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
     }
 }

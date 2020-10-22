@@ -2,6 +2,7 @@ package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.config.CoordinatorConfig;
+import cc.w0rm.ghost.entity.forward.ExpireStrategy;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import cc.w0rm.ghost.entity.forward.MsgGetExt;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
@@ -30,11 +31,14 @@ public class CoordinatorImpl implements Coordinator {
     @Autowired
     private Map<String, ForwardStrategy> strategyMap;
 
-    private volatile ForwardStrategy forwardStrategy;
+    @Autowired
+    private Map<String, ExpireStrategy> expireStrategyMap;
+
+    private ForwardStrategy forwardStrategy;
 
     @PostConstruct
     public void init() {
-        forwardStrategy = getStrategy(coordinatorConfig.getForwardStrategy());
+        forwardStrategy = getForwardStrategy(coordinatorConfig.getForwardStrategy());
     }
 
 
@@ -101,8 +105,13 @@ public class CoordinatorImpl implements Coordinator {
     }
 
     @Override
-    public ForwardStrategy getStrategy(String expireStrategy) {
+    public ForwardStrategy getForwardStrategy(String expireStrategy) {
         return strategyMap.get(expireStrategy);
+    }
+
+    @Override
+    public ExpireStrategy getExpireStrategy(String expire) {
+        return expireStrategyMap.get(expire);
     }
 
 }

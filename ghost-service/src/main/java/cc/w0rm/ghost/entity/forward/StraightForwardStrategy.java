@@ -1,5 +1,6 @@
 package cc.w0rm.ghost.entity.forward;
 
+import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import org.springframework.stereotype.Component;
 
 /**
@@ -7,5 +8,9 @@ import org.springframework.stereotype.Component;
  * @date : 2020/10/22 12:22 上午
  */
 @Component
-public class StraightForwardStrategy extends DefaultForwardStrategy {
+public class StraightForwardStrategy extends DefaultForwardStrategy implements ExpireStrategy {
+    @Override
+    public void accept(MsgGet msgGet) {
+        super.forward(msgGet);
+    }
 }
