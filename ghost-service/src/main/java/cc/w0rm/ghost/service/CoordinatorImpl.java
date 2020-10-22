@@ -29,7 +29,7 @@ public class CoordinatorImpl implements Coordinator {
     private CoordinatorConfig coordinatorConfig;
 
     @Autowired
-    private Map<String, ForwardStrategy> strategyMap;
+    private Map<String, ForwardStrategy> forwardStrategyMap;
 
     @Autowired
     private Map<String, ExpireStrategy> expireStrategyMap;
@@ -106,7 +106,7 @@ public class CoordinatorImpl implements Coordinator {
 
     @Override
     public ForwardStrategy getForwardStrategy(String expireStrategy) {
-        return strategyMap.get(expireStrategy);
+        return forwardStrategyMap.get(expireStrategy);
     }
 
     @Override
