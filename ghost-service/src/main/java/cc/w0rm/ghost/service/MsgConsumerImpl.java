@@ -22,7 +22,7 @@ import java.util.Set;
 @Service("q1")
 public class MsgConsumerImpl implements MsgConsumer {
 
-    private static final Set<String> TEST_GROUP_CODES = Sets.newHashSet("792924131", "830628164");
+    private static final Set<String> TEST_GROUP_CODES = Sets.newHashSet( "830628164");
 
 
     /**
