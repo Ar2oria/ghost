@@ -14,7 +14,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -31,8 +33,16 @@ public class CoordinatorImpl implements Coordinator {
     @Autowired
     private MsgConsumer msgConsumer;
 
-    @Resource(type = ReorderMsgForwardStrategy.class)
-    private ForwardStrategy forwardStrategy;
+    @Autowired
+    private Map<String, ForwardStrategy> strategyMap;
+
+    private volatile ForwardStrategy forwardStrategy;
+
+    @PostConstruct
+    public void init(){
+        forwardStrategy = getStrategy(coordinatorConfig.getForwardStrategy());
+    }
+
 
     /**
      * 设置消息转发策略
@@ -58,6 +68,12 @@ public class CoordinatorImpl implements Coordinator {
         }
 
         // todo 暂时无消息过滤功能
+
+        if (forwardStrategy == null) {
+            log.debug("forward strategy is not init... msg[{}] will be abandoned", msgGet.getMsg());
+            return;
+        }
+
         forwardStrategy.forward(msgGet);
     }
 
@@ -82,11 +98,17 @@ public class CoordinatorImpl implements Coordinator {
         } else {
             forward(msgGet);
         }
+
     }
 
     @Override
     public CoordinatorConfig getConfig() {
         return coordinatorConfig;
+    }
+
+    @Override
+    public ForwardStrategy getStrategy(String expireStrategy) {
+        return strategyMap.get(expireStrategy);
     }
 
 }

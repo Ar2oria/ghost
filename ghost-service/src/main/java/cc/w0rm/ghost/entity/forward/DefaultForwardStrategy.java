@@ -5,6 +5,8 @@ import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
 import cn.hutool.core.collection.CollUtil;
+import com.forte.qqrobot.beans.messages.QQCodeAble;
+import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.beans.messages.result.GroupList;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
@@ -42,15 +44,17 @@ public class DefaultForwardStrategy implements ForwardStrategy {
                     .setNameFormat("DefaultForwardStrategy-ThreadPool")
                     .build());
 
+
+    private static final Cache<String, Set<String>> GROUP_CODE_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .initialCapacity(10).build();
+
     @Autowired
     private AccountManager accountManager;
 
     @Autowired
     private Map<String, MsgConsumer> msgConsumerMap;
-
-    private final Cache<String, Set<String>> groupCodeCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .initialCapacity(10).build();
 
     /**
      * 转发消息
@@ -59,7 +63,16 @@ public class DefaultForwardStrategy implements ForwardStrategy {
      */
     @Override
     public void forward(MsgGet msgGet) {
-        if (msgGet == null || !accountManager.isProducer(msgGet)) {
+        if (msgGet == null) {
+            return;
+        }
+
+        if (!(msgGet instanceof QQCodeAble)){
+            return;
+        }
+
+        String sourceCode = ((QQCodeAble)msgGet).getQQCode();
+        if (!accountManager.isProducer(sourceCode)){
             return;
         }
 
@@ -77,17 +90,18 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             msgGroups = accountManager.listMsgGroup(msgGet);
         }
 
-        Object[] taskArray = getFutureTaskArray(msgGet, msgGroups);
-        if (taskArray == null) {
+        CompletableFuture<?>[] taskArray = getFutureTaskArray(msgGet, msgGroups);
+        if (taskArray == null || taskArray.length == 0) {
             return;
         }
 
-        CompletableFuture<Void> future = CompletableFuture.allOf((CompletableFuture<?>[]) taskArray);
+        CompletableFuture<Void> future = CompletableFuture.allOf(taskArray);
         future.join();
+        log.debug("forward msg[{}] to all consumers success", msgGet.getId());
     }
 
     @Nullable
-    private Object[] getFutureTaskArray(MsgGet msgGet, List<MsgGroup> msgGroups) {
+    private CompletableFuture<?>[] getFutureTaskArray(MsgGet msgGet, List<MsgGroup> msgGroups) {
         if (msgGet == null || CollUtil.isEmpty(msgGroups)) {
             return null;
         }
@@ -97,35 +111,45 @@ public class DefaultForwardStrategy implements ForwardStrategy {
                     String msgGroupName = msgGroup.getName();
                     MsgConsumer msgConsumer = msgConsumerMap.get(msgGroupName);
                     if (msgConsumer == null) {
+                        log.error("未找到对应消息组[{}]的消费者策略，请检查配置文件！", msgGroupName);
                         return null;
                     }
 
                     Set<Consumer> consumerSet = msgGroup.getConsumer();
                     if (CollUtil.isEmpty(consumerSet)) {
+                        log.error("消息组[{}]没有qq账号对信息进行消费", msgGroupName);
                         return null;
                     }
 
                     return consumerSet.stream()
                             .flatMap(consumer -> {
-                                Set<String> groupCodes = groupCodeCache.getIfPresent(consumer.getBotCode());
+                                Set<String> groupCodes = GROUP_CODE_CACHE.getIfPresent(consumer.getBotCode());
                                 if (CollUtil.isEmpty(groupCodes)) {
                                     GroupList groupList = consumer.getSender().GETTER.getGroupList();
                                     groupCodes = groupList.stream()
                                             .map(Group::getCode).collect(Collectors.toSet());
-                                    groupCodeCache.put(consumer.getBotCode(), groupCodes);
+                                    GROUP_CODE_CACHE.put(consumer.getBotCode(), groupCodes);
                                 }
 
-                                return groupCodes.stream()
+                                return groupCodes.parallelStream()
                                         .map(groupCode -> CompletableFuture.runAsync(() -> {
+                                            if (msgGet instanceof GroupMsg) {
+                                                GroupMsg groupMsg = (GroupMsg) msgGet;
+                                                String sourceCode = groupMsg.getGroup();
+                                                if (sourceCode.equals(groupCode)) {
+                                                    log.debug("msg forward to self, skip.");
+                                                    return;
+                                                }
+                                            }
+
                                             try {
                                                 msgConsumer.consume(consumer, groupCode, msgGet);
-                                                log.debug("send msg to group[{}] success, msgId={}", groupCode, msgGet.getId());
                                             } catch (Exception exp) {
-                                                log.error("发送群消息给群[{}]失败， 账号:{}, 消息:{}}", groupCode, consumer.getBotCode(), msgGet.getMsg(), exp);
+                                                log.error("消息处理异常，消费者[{}], 群[{}], 消息[{}]", consumer.getQQCode(), groupCode, msgGet.getMsg(), exp);
                                             }
                                         }, EXECUTOR_SERVICE));
                             });
 
-                }).filter(Objects::nonNull).toArray();
+                }).filter(Objects::nonNull).toArray(CompletableFuture[]::new);
     }
 }

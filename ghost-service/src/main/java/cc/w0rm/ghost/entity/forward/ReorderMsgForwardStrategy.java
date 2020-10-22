@@ -5,7 +5,9 @@ import cc.w0rm.ghost.config.CoordinatorConfig;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,7 @@ import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +35,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private int roomSize;
     private ForwardStrategy msgExpireStrategy;
 
-    private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(5,
+    private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(4,
             new ThreadFactoryBuilder().setNameFormat("ReorderMsgForwardStrategy-ScheduledThreadPool").build());
 
     @Autowired
@@ -55,12 +58,18 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.interval = coordinatorConfig.getIntervalTime();
                 this.waitCount = coordinatorConfig.getWaitCount();
                 this.roomSize = coordinatorConfig.getRoomSize();
-                this.msgExpireStrategy = coordinatorConfig.getMsgExpireStrategy();
+                String expireStrategy = coordinatorConfig.getExpireStrategy();
+                if (Strings.isNotBlank(expireStrategy)) {
+                    this.msgExpireStrategy = coordinator.getStrategy(expireStrategy);
+                    if (msgExpireStrategy == null) {
+                        msgExpireStrategy = new MsgExpireStrategy();
+                    }
+                }
 
-                if (roomSize == 0){
+                if (roomSize == 0) {
                     throw new IllegalStateException("初始化转发策略失败： 房间数不能为0");
                 }
-                if (roomSize <= waitCount){
+                if (roomSize <= waitCount) {
                     throw new IllegalStateException("初始化转发策略失败：房间数必须大于等待数");
                 }
 
@@ -81,10 +90,10 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 long expireIdx = curIdx - waitCount;
                 List<Room> expireRooms = roomList.range(expireIdx);
                 if (CollUtil.isNotEmpty(expireRooms)) {
-                    log.debug("ReorderMsgForwardStrategy: find expire rooms[{}]", expireRooms);
                     expireRooms.forEach(room -> {
                         if (!room.isCleaned()) {
-                            forward(room);
+                            log.debug("ReorderMsgForwardStrategy: find expire rooms[{}]", room);
+                            forward(room, (roomSize - (curIdx - room.getId()) - 1) * interval);
                         }
                     });
                 }
@@ -101,14 +110,20 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 .atZone(ZoneOffset.systemDefault())
                 .toInstant().toEpochMilli();
         Room room = findRoom(msgTime);
-        if (room == null || !room.tryPut(msgGet)) {
-            msgExpireStrategy.forward(msgGet);
-        }
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
+        if (room == null) {
+            throw new MsgForwardException("消息转发失败： 消息已过期 msgId:" + msgGet.getId());
+        } else if (!room.tryPut(msgGet)) {
+            log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
+            while (room.getFlag() != 1) {
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+            trueForward(msgExpireStrategy, msgGet, interval);
+        }
     }
 
 
-    private void forward(Room room) {
+    private void forward(Room room, long waitTime) {
         if (room == null || room.isCleaned()) {
             return;
         }
@@ -116,10 +131,32 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
             for (MsgGet msgGet : queue) {
-                super.forward(msgGet);
-                log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
-
+                trueForward(this, msgGet, waitTime / room.getMsgCount());
             }
+        }
+        room.setFlag(1);
+        log.debug("room[{}] all msg is forward", room.getId());
+    }
+
+    private void trueForward(ForwardStrategy strategy, MsgGet msgGet, long waitTime) {
+        Runnable runnable;
+        if (this == strategy) {
+            runnable = () -> super.forward(msgGet);
+        } else {
+            runnable = () -> strategy.forward(msgGet);
+        }
+
+        CompletableFuture<Void> future = CompletableFuture.runAsync(runnable, SCHEDULED_THREAD_POOL_EXECUTOR)
+                .whenComplete((v, exp) -> {
+                    if (exp != null) {
+                        log.error("转发消息[{}]，消费者执行中出现未知异常", msgGet.getMsg(), exp);
+                    }
+                });
+        try {
+            future.get(waitTime, TimeUnit.MILLISECONDS);
+            log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
+        } catch (Exception exp) {
+            log.error("转发消息[{}]，等待超时，请查看网络是否出现异常或代码中出现死循环", msgGet.getMsg(), exp);
         }
     }
 
@@ -141,7 +178,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
         Room returnRoom;
         long msgIdx = getTimeIdx(msgTime);
-        if (nowIdx == msgIdx) {
+        if (msgIdx > nowIdx) {
+            throw new MsgForwardException("消息时间序列异常，当前时间:" + now + ", 消息时间:" + msgTime);
+        } else if (nowIdx == msgIdx) {
             returnRoom = lastRoom;
         } else {
             returnRoom = roomList.firstLowerOrEqual(msgIdx);

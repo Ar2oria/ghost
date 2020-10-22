@@ -11,7 +11,6 @@ import cc.w0rm.ghost.entity.Rule;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
-import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -182,7 +181,7 @@ public class AccountManagerImpl implements AccountManager {
             }
 
             ImmutableSet<Producer> producer = group.getProducer();
-            if (CollUtil.isEmpty(producer)){
+            if (CollUtil.isNotEmpty(producer)){
                 Set<String> qqSet = producer.stream()
                         .map(DefaultRole::getBotCode)
                         .collect(Collectors.toSet());
@@ -197,11 +196,11 @@ public class AccountManagerImpl implements AccountManager {
 
 
     @Override
-    public boolean isProducer(MsgGet msgGet) {
-        if (msgGet == null){
+    public boolean isProducer(ThisCodeAble codesAble) {
+        if (codesAble == null){
             return false;
         }
 
-        return isProducer(msgGet.getThisCode());
+        return isProducer(codesAble.getThisCode());
     }
 }

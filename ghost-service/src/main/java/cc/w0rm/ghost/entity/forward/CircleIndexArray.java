@@ -227,6 +227,7 @@ public class CircleIndexArray<T extends IndexAble<Long>> {
 
     @SuppressWarnings("unchecked")
     private T elemAt(IndexAble<Long>[] array, int idx) {
+        idx = (idx + elementData.length) % elementData.length;
         return array == null ? null : (T) array[idx];
     }
 
