@@ -1,26 +1,20 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.Coordinator;
-import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
 import cc.w0rm.ghost.entity.forward.MsgGetExt;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author : xuyang
@@ -34,18 +28,9 @@ public class CoordinatorImpl implements Coordinator {
     private CoordinatorConfig coordinatorConfig;
 
     @Autowired
-    private MsgConsumer msgConsumer;
-
-    @Autowired
     private Map<String, ForwardStrategy> strategyMap;
 
     private volatile ForwardStrategy forwardStrategy;
-
-    private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
-            .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(5, TimeUnit.MINUTES)
-            .softValues()
-            .build();
 
     @PostConstruct
     public void init() {
@@ -76,11 +61,6 @@ public class CoordinatorImpl implements Coordinator {
             throw new IllegalArgumentException("参数不能为空");
         }
 
-        if (isForward(msgGet)){
-            log.debug("msg[{}] is forward, abandoned", msgGet.getId());
-            return;
-        }
-
         if (forwardStrategy == null) {
             log.debug("forward strategy is not init... msg[{}] will be abandoned", msgGet.getId());
             return;
@@ -89,20 +69,7 @@ public class CoordinatorImpl implements Coordinator {
         forwardStrategy.forward(msgGet);
     }
 
-    private boolean isForward(MsgGet msgGet) {
-        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
-        if (msgHash == null){
-            msgHash = new HashSet<>();
-            ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
-        }
 
-        if (msgHash.contains(msgGet.getMsg().hashCode())){
-            return true;
-        }else {
-            msgHash.add(msgGet.getMsg().hashCode());
-            return false;
-        }
-    }
 
     /**
      * 将消息转发到指定的消息组，该消息会同步到消息组中所有消费者

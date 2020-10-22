@@ -107,7 +107,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
 
     @Override
     public void forward(MsgGet msgGet) {
-        long msgTime = msgGet.getTime();
+        long msgTime = msgGet.getTimeToLocalDateTime()
+                .atZone(ZoneOffset.systemDefault())
+                .toInstant().toEpochMilli();
         int length = msgGet.getMsg().length();
         length = Math.min(length, 5);
         log.debug("ReorderMsgForwardStrategy:[{}] receive new (msg[{}]time[{}][{}])",
