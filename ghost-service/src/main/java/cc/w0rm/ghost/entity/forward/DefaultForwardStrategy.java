@@ -84,7 +84,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
         List<MsgGroup> msgGroups;
         if (msgGet instanceof GroupMsgExt) {
             GroupMsgExt groupMsgExt = (GroupMsgExt) msgGet;
-            msgGet = groupMsgExt.getOriginMsg();
+            msgGet = groupMsgExt.getMsgGet();
             String msgGroupName = groupMsgExt.getMsgGroupName();
             MsgGroup msgGroup = accountManager.getMsgGroup(msgGroupName);
             if (msgGroup == null) {

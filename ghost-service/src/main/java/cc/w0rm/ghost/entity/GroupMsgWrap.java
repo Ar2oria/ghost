@@ -3,100 +3,99 @@ package cc.w0rm.ghost.entity;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.types.GroupMsgType;
 import com.forte.qqrobot.beans.messages.types.PowerType;
-import lombok.Getter;
 
 /**
  * @author : xuyang
- * @date : 2020/10/23 2:19 下午
+ * @date : 2020/10/23 3:03 下午
  */
-public abstract class GroupMsgWrap implements GroupMsg {
-    @Getter
-    private GroupMsg groupMsg;
+public abstract class GroupMsgWrap extends MsgGetWrap implements GroupMsg {
 
     public GroupMsgWrap(GroupMsg groupMsg){
-        this.groupMsg = groupMsg;
+        super(groupMsg);
     }
-
-    public GroupMsg getOriginMsg(){
-        if (groupMsg instanceof GroupMsgWrap){
-            return ((GroupMsgWrap) groupMsg).getOriginMsg();
-        }
-        return groupMsg;
-    }
-
 
     @Override
     public String getQQ() {
-        return groupMsg.getQQ();
+        return ((GroupMsg)getMsgGet()).getQQ();
+    }
+
+    @Override
+    public String getQQCode() {
+        return ((GroupMsg)getMsgGet()).getQQCode();
+    }
+
+    @Override
+    public String getCode() {
+        return ((GroupMsg)getMsgGet()).getCode();
+    }
+
+    @Override
+    public String getQQHeadUrl() {
+        return ((GroupMsg)getMsgGet()).getQQHeadUrl();
+    }
+
+    @Override
+    public Long getQQCodeNumber() {
+        return ((GroupMsg)getMsgGet()).getQQCodeNumber();
+    }
+
+    @Override
+    public Long getCodeNumber() {
+        return ((GroupMsg)getMsgGet()).getCodeNumber();
     }
 
     @Override
     public String getGroup() {
-        return groupMsg.getGroup();
+        return ((GroupMsg)getMsgGet()).getGroup();
+    }
+
+    @Override
+    public String getGroupCode() {
+        return ((GroupMsg)getMsgGet()).getGroupCode();
+    }
+
+    @Override
+    public String getGroupHeadUrl() {
+        return ((GroupMsg)getMsgGet()).getGroupHeadUrl();
+    }
+
+    @Override
+    public Long getGroupCodeNumber() {
+        return ((GroupMsg)getMsgGet()).getGroupCodeNumber();
     }
 
     @Override
     public GroupMsgType getType() {
-        return groupMsg.getType();
+        return ((GroupMsg)getMsgGet()).getType();
+    }
+
+    @Override
+    public String getFlag() {
+        return ((GroupMsg)getMsgGet()).getFlag();
     }
 
     @Override
     public String getNickname() {
-        return groupMsg.getNickname();
+        return ((GroupMsg)getMsgGet()).getNickname();
     }
 
     @Override
     public PowerType getPowerType() {
-        return groupMsg.getPowerType();
+        return ((GroupMsg)getMsgGet()).getPowerType();
     }
 
     @Override
     public void setPowerType(PowerType powerType) {
-        groupMsg.setPowerType(powerType);
+        ((GroupMsg)getMsgGet()).setPowerType(powerType);
     }
 
     @Override
     public String getRemark() {
-        return groupMsg.getRemark();
+        return ((GroupMsg)getMsgGet()).getRemark();
     }
 
     @Override
-    public String getId() {
-        return groupMsg.getId();
-    }
-
-    @Override
-    public String getMsg() {
-        return groupMsg.getMsg();
-    }
-
-    @Override
-    public void setMsg(String newMsg) {
-        groupMsg.setMsg(newMsg);
-    }
-
-    @Override
-    public String getFont() {
-        return groupMsg.getFont();
-    }
-
-    @Override
-    public Long getTime() {
-        return groupMsg.getTime();
-    }
-
-    @Override
-    public String getOriginalData() {
-        return groupMsg.getOriginalData();
-    }
-
-    @Override
-    public String getThisCode() {
-        return groupMsg.getThisCode();
-    }
-
-    @Override
-    public void setThisCode(String code) {
-        groupMsg.setThisCode(code);
+    public String getRemarkOrNickname() {
+        return ((GroupMsg)getMsgGet()).getRemarkOrNickname();
     }
 }
