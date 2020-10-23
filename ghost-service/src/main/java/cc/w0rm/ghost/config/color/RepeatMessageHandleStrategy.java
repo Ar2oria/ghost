@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.config.color;
 
 import cc.w0rm.ghost.config.role.ConfigRole;
+import cc.w0rm.ghost.enums.DetectionMode;
 import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
@@ -52,7 +53,7 @@ public  class RepeatMessageHandleStrategy implements InterceptStrategy {
             msgHash = new ConcurrentHashSet<>();
             ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
         }
-        int hash = MsgUtil.hashCode(msgGet.getMsg());
+        int hash = MsgUtil.hashCode(msgGet.getMsg(), DetectionMode.STRICT);
         if (msgHash.contains(hash)) {
             return true;
         } else {
