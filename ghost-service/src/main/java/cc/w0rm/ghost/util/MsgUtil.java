@@ -26,9 +26,11 @@ public class MsgUtil {
             hash = hash * 31 + group.hashCode();
         }
 
-        String s = matcher.replaceAll("");
-
-        return hash * 31 + s.hashCode();
+        if (hash > 0) {
+            return hash;
+        } else {
+            return msg.hashCode();
+        }
     }
 
 }
