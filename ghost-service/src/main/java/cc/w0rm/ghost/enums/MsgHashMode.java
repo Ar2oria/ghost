@@ -10,9 +10,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum DetectionMode {
+public enum MsgHashMode {
 
-    STANDARD,
+    NORMAL,
     MINIMUM,
     STRICT
 

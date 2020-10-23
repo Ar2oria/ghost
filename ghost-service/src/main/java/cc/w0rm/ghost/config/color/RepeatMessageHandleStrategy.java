@@ -1,7 +1,7 @@
 package cc.w0rm.ghost.config.color;
 
 import cc.w0rm.ghost.config.role.ConfigRole;
-import cc.w0rm.ghost.enums.DetectionMode;
+import cc.w0rm.ghost.enums.MsgHashMode;
 import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public  class RepeatMessageHandleStrategy implements InterceptStrategy {
+public class RepeatMessageHandleStrategy implements InterceptStrategy {
 
     private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
@@ -44,16 +44,21 @@ public  class RepeatMessageHandleStrategy implements InterceptStrategy {
     }
 
     private boolean isForward(MsgGet msgGet) {
-        if (msgGet.getMsg() == null){
+        if (msgGet.getMsg() == null) {
             return false;
         }
 
         Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
         if (msgHash == null) {
-            msgHash = new ConcurrentHashSet<>();
-            ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
+            synchronized (this) {
+                msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
+                if (msgHash == null) {
+                    msgHash = new ConcurrentHashSet<>();
+                    ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
+                }
+            }
         }
-        int hash = MsgUtil.hashCode(msgGet.getMsg(), DetectionMode.STRICT);
+        int hash = MsgUtil.hashCode(msgGet.getMsg(), MsgHashMode.STRICT);
         if (msgHash.contains(hash)) {
             return true;
         } else {

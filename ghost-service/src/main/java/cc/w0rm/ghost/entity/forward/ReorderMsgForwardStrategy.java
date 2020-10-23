@@ -126,11 +126,11 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
 
         if (room == null) {
+            log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             msgExpireStrategy.accept(msgGet);
         } else if (!room.tryPut(msgGet)) {
-            log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             while (room.getFlag() != 1) {
-                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+                Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
             }
             trueForward(msgGet, interval);
         }

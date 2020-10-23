@@ -1,6 +1,6 @@
 package cc.w0rm.ghost.util;
 
-import cc.w0rm.ghost.enums.DetectionMode;
+import cc.w0rm.ghost.enums.MsgHashMode;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
@@ -16,10 +16,13 @@ public class MsgUtil {
     private static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
     private static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     private static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
+    private static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
+    private static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
     private static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
     private static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
+    private static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s]*";
 
-    public static Map<String, String> getFiles(String msg) {
+    public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {
             return Collections.emptyMap();
         }
@@ -49,6 +52,22 @@ public class MsgUtil {
         return result;
     }
 
+    public static List<String> listUrls(String msg){
+        if (Strings.isBlank(msg)) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>(1);
+        Matcher matcher = URL_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            String url = matcher.group(0);
+            result.add(url);
+        }
+
+        return result;
+    }
+
+
     public static Map<String, String> getTaoKouLing(String msg) {
         if (Strings.isBlank(msg)) {
             return Collections.emptyMap();
@@ -65,22 +84,25 @@ public class MsgUtil {
     }
 
     public static int hashCode(String msg){
-        return hashCode(msg, DetectionMode.STANDARD);
+        return hashCode(msg, MsgHashMode.MINIMUM);
     }
-    public static int hashCode(String msg, DetectionMode detectionMode) {
+    public static int hashCode(String msg, MsgHashMode msgHashMode) {
         if (Strings.isBlank(msg)) {
             return 0;
         }
 
-        switch (detectionMode){
+        switch (msgHashMode){
             case MINIMUM:
                 return msg.hashCode();
-            case STANDARD:
-                return msg.replaceFirst(FILE_REGEX, "").hashCode();
+            case NORMAL:
+                return msg.replaceFirst(FILE_REGEX, "")
+                        .hashCode();
             case STRICT:
                 return msg.replaceAll(TAO_KOU_LING_REGEX, "")
-                        .replaceAll(SHORT_URL_REGEX, "")
+                        .replaceAll(URL_REGEX, "")
                         .replaceAll(FILE_REGEX, "")
+                        .replaceAll(SPECIFIC_SYMBOL_REGEX, "")
+                        .trim()
                         .hashCode();
             default:
                 return 0;
