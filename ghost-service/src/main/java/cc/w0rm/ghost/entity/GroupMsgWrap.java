@@ -1,26 +1,29 @@
-package cc.w0rm.ghost.entity.forward;
+package cc.w0rm.ghost.entity;
 
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.types.GroupMsgType;
 import com.forte.qqrobot.beans.messages.types.PowerType;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author : xuyang
- * @date : 2020/10/21 12:55 上午
+ * @date : 2020/10/23 2:19 下午
  */
-public class MsgGetExt implements  GroupMsg {
+public abstract class GroupMsgWrap implements GroupMsg {
     @Getter
     private GroupMsg groupMsg;
 
-    @Getter
-    @Setter
-    private String msgGroup;
-
-    public MsgGetExt (GroupMsg groupMsg){
+    public GroupMsgWrap(GroupMsg groupMsg){
         this.groupMsg = groupMsg;
     }
+
+    public GroupMsg getOriginMsg(){
+        if (groupMsg instanceof GroupMsgWrap){
+            return ((GroupMsgWrap) groupMsg).getOriginMsg();
+        }
+        return groupMsg;
+    }
+
 
     @Override
     public String getQQ() {
@@ -97,4 +100,3 @@ public class MsgGetExt implements  GroupMsg {
         groupMsg.setThisCode(code);
     }
 }
-
