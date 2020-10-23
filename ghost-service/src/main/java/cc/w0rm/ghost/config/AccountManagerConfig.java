@@ -7,7 +7,7 @@ import cc.w0rm.ghost.config.role.ConfigRole;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.config.role.Producer;
-import cc.w0rm.ghost.entity.*;
+import cc.w0rm.ghost.entity.PartnerInfo;
 import cc.w0rm.ghost.enums.ColorEnum;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
@@ -101,11 +101,11 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         // 解析规则的配置文件
         parseRule();
 
-        // 生成拦截器
-        createIntercept();
-
         // 组装消息组数据
         loadMsgGroup();
+
+        // 生成拦截器
+        createIntercept();
 
         initState = true;
 
@@ -141,9 +141,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                     }
                     List<String> consumerGroup = split(consumer);
                     loadCodeGroup(name, producerGroup, consumerGroup);
+                    log.info("加载消息组内生产者、消费者完成");
 
                     return new PartnerInfo<>(producerGroup, consumerGroup);
                 }));
+
+        log.info("加载消息组完成，消息组:{}", _group);
     }
 
     private void loadCodeGroup(String name, List<String> producerGroup, List<String> consumerGroup) {
@@ -157,7 +160,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void addCodeGroup(String name, List<String> codes) {
-        if (CollUtil.isEmpty(this._codeGroup)){
+        if (CollUtil.isEmpty(_codeGroup)){
             this._codeGroup = new HashMap<>();
         }
 
@@ -177,7 +180,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      */
     private void parseRule() {
         if (CollUtil.isEmpty(_rule)) {
-            _rule = new HashMap<>();
+            this._rule = new HashMap<>();
         }
 
         Map<String, Object> rule = TypeUtil.convert(get("rule"));
@@ -205,6 +208,8 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
                 }
             });
         }
+
+        log.info("加载消息组规则完成");
     }
 
     private void parseRule(String config, RoleEnum roleEnum, ColorEnum colorEnum) {
@@ -279,7 +284,8 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
 
     private void createIntercept() {
         if (CollUtil.isEmpty(_rule)) {
-            throw new IllegalStateException("无法加载自定义拦截器，原因：解析规则失败");
+            log.warn("跳过加载拦截器，无任何账号登陆");
+            return;
         }
 
         InterceptNode producerRoot = new InterceptNode();
@@ -302,10 +308,14 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
             producerPre = prTmp;
             consumerPre = coTmp;
         }
+        producerPre.setNext(getRepeatMessageIntercept());
 
         this.producerIntercept = producerRoot.getNext();
         this.consumerIntercept = consumerRoot.getNext();
+
+        log.info("加载消息拦截器完成");
     }
+
 
     private InterceptNode createIntercept(ConfigRole configRole) {
         if (Objects.isNull(configRole)) {
@@ -318,6 +328,12 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         return interceptNode;
     }
 
+    private InterceptNode getRepeatMessageIntercept() {
+        InterceptNode interceptNode = new InterceptNode();
+        interceptNode.setIntercept(interceptContext.getRepeatMessageHandleStrategy());
+        return interceptNode;
+    }
+
 
     private void loadCodes() {
         this._onlineCodes = ImmutableSet.copyOf(Lists.newArrayList(botManager.bots()).stream()
@@ -325,7 +341,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
     }
 
     private void loadMsgGroup() {
-        if (CollUtil.isEmpty(_group)){
+        if (CollUtil.isEmpty(this._group)){
             log.warn("初始化消息组失败，原因：消息组为空");
             return;
         }
@@ -426,7 +442,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getBlackSet(String code, RoleEnum roleEnum) {
-        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = this._rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
                 return partnerInfo.getProducer().getBlackSet();
@@ -445,7 +461,7 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * @return
      */
     public Set<String> getWhiteSet(String code, RoleEnum roleEnum) {
-        PartnerInfo<ConfigRole> partnerInfo = _rule.get(code);
+        PartnerInfo<ConfigRole> partnerInfo = this._rule.get(code);
         switch (roleEnum) {
             case PRODUCER:
                 return partnerInfo.getProducer().getWhiteSet();

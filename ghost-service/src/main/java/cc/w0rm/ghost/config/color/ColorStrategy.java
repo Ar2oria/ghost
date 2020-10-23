@@ -11,7 +11,7 @@ import com.forte.qqrobot.sender.intercept.SendContext;
  * @author : xuyang
  * @date : 2020/10/14 6:27 下午
  */
-public abstract class ColorStategy implements InterceptStrategy {
+public abstract class ColorStrategy  implements InterceptStrategy {
 
     public abstract boolean strategy(String qq, String group, ConfigRole configRole);
 
@@ -23,8 +23,6 @@ public abstract class ColorStategy implements InterceptStrategy {
                 GroupMsg groupMsg = (GroupMsg) msgGet;
                 String qq = groupMsg.getThisCode();
                 return strategy(qq, groupMsg.getGroup(), configRole);
-            } else {
-                return false;
             }
         } else if (context instanceof SendContext) {
             SendContext sendContext = (SendContext) context;
@@ -32,11 +30,9 @@ public abstract class ColorStategy implements InterceptStrategy {
                 String qq = sendContext.get("qq").toString();
                 String group = sendContext.get("group").toString();
                 return strategy(qq, group, configRole);
-            } else {
-                return false;
             }
         }
 
-        return false;
+        return true;
     }
 }
