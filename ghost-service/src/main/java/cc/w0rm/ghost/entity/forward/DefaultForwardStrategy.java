@@ -5,6 +5,7 @@ import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
+import cc.w0rm.ghost.entity.GroupMsgExt;
 import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
@@ -81,10 +82,10 @@ public class DefaultForwardStrategy implements ForwardStrategy {
         }
 
         List<MsgGroup> msgGroups;
-        if (msgGet instanceof MsgGetExt) {
-            MsgGetExt msgGetExt = (MsgGetExt) msgGet;
-            msgGet = msgGetExt.getGroupMsg();
-            String msgGroupName = msgGetExt.getMsgGroup();
+        if (msgGet instanceof GroupMsgExt) {
+            GroupMsgExt groupMsgExt = (GroupMsgExt) msgGet;
+            msgGet = groupMsgExt.getOriginMsg();
+            String msgGroupName = groupMsgExt.getMsgGroupName();
             MsgGroup msgGroup = accountManager.getMsgGroup(msgGroupName);
             if (msgGroup == null) {
                 return;

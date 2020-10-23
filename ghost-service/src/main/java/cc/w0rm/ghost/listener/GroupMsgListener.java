@@ -6,8 +6,9 @@ import com.forte.qqrobot.anno.template.OnGroup;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.sender.MsgSender;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * @author : xuyang
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GroupMsgListener {
 
-    @Autowired
+    @Resource(name = "msgProducer")
     private MsgProducer msgProducer;
 
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {

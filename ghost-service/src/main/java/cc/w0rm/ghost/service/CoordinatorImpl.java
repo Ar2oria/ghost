@@ -3,7 +3,7 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.config.CoordinatorConfig;
 import cc.w0rm.ghost.entity.forward.ForwardStrategy;
-import cc.w0rm.ghost.entity.forward.MsgGetExt;
+import cc.w0rm.ghost.entity.GroupMsgExt;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.google.common.base.Preconditions;
@@ -85,10 +85,9 @@ public class CoordinatorImpl implements Coordinator {
         }
         if (msgGet instanceof GroupMsg) {
             GroupMsg groupMsg = (GroupMsg) msgGet;
-            MsgGetExt msgGetExt = new MsgGetExt(groupMsg);
-            msgGetExt.setMsgGroup(name);
+            GroupMsgExt groupMsgExt = new GroupMsgExt(groupMsg, name);
 
-            forward(msgGetExt);
+            forward(groupMsgExt);
         } else {
             forward(msgGet);
         }
