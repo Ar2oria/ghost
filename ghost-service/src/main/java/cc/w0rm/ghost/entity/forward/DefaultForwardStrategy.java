@@ -180,8 +180,13 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     private boolean isForward(MsgGet msgGet, String groupCode) {
         Set<Integer> msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
         if (msgHash == null) {
-            msgHash = new ConcurrentHashSet<>();
-            GROUP_MSG_FILTER.put(groupCode, msgHash);
+            synchronized (this){
+                msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
+                if (msgHash == null){
+                    msgHash = new ConcurrentHashSet<>();
+                    GROUP_MSG_FILTER.put(groupCode, msgHash);
+                }
+            }
         }
 
         int hash = MsgUtil.hashCode(msgGet.getMsg());
