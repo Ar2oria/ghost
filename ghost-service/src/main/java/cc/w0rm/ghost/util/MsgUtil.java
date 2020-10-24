@@ -20,7 +20,7 @@ public class MsgUtil {
     private static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
     private static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
     private static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
-    private static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s]*";
+    private static final String SPECIFIC_SYMBOL_REGEX = "[亓元个条只件包套枚块片斤米尺寸千克瓶盒箱杯桶罐gGmMlL\\s]*";
 
     public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {
@@ -98,11 +98,10 @@ public class MsgUtil {
                 return msg.replaceFirst(FILE_REGEX, "")
                         .hashCode();
             case STRICT:
-                return msg.replaceAll(TAO_KOU_LING_REGEX, "")
+                return msg.replaceAll(FILE_REGEX, "")
                         .replaceAll(URL_REGEX, "")
-                        .replaceAll(FILE_REGEX, "")
+                        .replaceAll(TAO_KOU_LING_REGEX, "")
                         .replaceAll(SPECIFIC_SYMBOL_REGEX, "")
-                        .trim()
                         .hashCode();
             default:
                 return 0;
