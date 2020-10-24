@@ -25,7 +25,7 @@ public class RepeatMessageHandleStrategy implements InterceptStrategy {
 
     private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .expireAfterAccess(10, TimeUnit.MINUTES)
             .softValues()
             .build();
 
