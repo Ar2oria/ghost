@@ -11,12 +11,13 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements ForwardStrategy, SmartLifecycle {
+public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements ForwardStrategy {
     private static final long START_TIME = Instant.now().toEpochMilli();
     private CircleIndexArray<Room> roomList;
 
@@ -43,6 +44,9 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     @Autowired
     private Coordinator coordinator;
 
+    @Autowired
+    private Map<String, ExpireStrategy> expireStrategyMap;
+
 
     public ReorderMsgForwardStrategy() {
         interval = 5000L;
@@ -52,7 +56,8 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         roomList = new CircleIndexArray<>(roomSize);
     }
 
-    private void init() {
+    @PostConstruct
+    public void init() {
         if (coordinator != null) {
             CoordinatorConfig coordinatorConfig = coordinator.getConfig();
             if (coordinatorConfig != null) {
@@ -61,7 +66,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.roomSize = coordinatorConfig.getRoomSize();
                 String expireStrategy = coordinatorConfig.getExpireStrategy();
                 if (Strings.isNotBlank(expireStrategy)) {
-                    this.msgExpireStrategy = coordinator.getExpireStrategy(expireStrategy);
+                    this.msgExpireStrategy = expireStrategyMap.get(expireStrategy);
                     if (msgExpireStrategy == null) {
                         throw new IllegalArgumentException("消息过期策略获取失败，请检查参数");
                     }
@@ -121,11 +126,11 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
 
         if (room == null) {
+            log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             msgExpireStrategy.accept(msgGet);
         } else if (!room.tryPut(msgGet)) {
-            log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             while (room.getFlag() != 1) {
-                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+                Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
             }
             trueForward(msgGet, interval);
         }
@@ -200,40 +205,5 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private long getTimeIdx(long time) {
         long intervalTime = Math.max(0L, time - START_TIME);
         return intervalTime / this.interval;
-    }
-
-    private volatile boolean isRunning = false;
-
-    @Override
-    public boolean isAutoStartup() {
-        return true;
-    }
-
-    @Override
-    public void stop(Runnable callback) {
-        callback.run();
-        isRunning = false;
-    }
-
-    @Override
-    public void start() {
-        init();
-        isRunning = true;
-    }
-
-    @Override
-    public void stop() {
-        SCHEDULED_THREAD_POOL_EXECUTOR.shutdown();
-        isRunning = false;
-    }
-
-    @Override
-    public boolean isRunning() {
-        return isRunning;
-    }
-
-    @Override
-    public int getPhase() {
-        return 0;
     }
 }

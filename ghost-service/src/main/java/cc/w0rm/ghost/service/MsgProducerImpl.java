@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * @date : 2020/10/15 3:40 下午
  */
 @Slf4j
-@Service
+@Service("msgProducer")
 public class MsgProducerImpl implements MsgProducer {
     
     @Autowired
