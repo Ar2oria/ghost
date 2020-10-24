@@ -125,6 +125,14 @@ public class MsgUtil {
             return Strings.EMPTY;
         }
 
+        Map<String, String> fileMap = getFile(str);
+        if (fileMap.size() == 1) {
+            String fileStr = (String) fileMap.values().toArray()[0];
+            if (fileStr.equals(str)) {
+                return fileStr;
+            }
+        }
+
         String returnVal = str;
         for (Pattern pattern : PATTERNS) {
             returnVal = pattern.matcher(returnVal).replaceAll("");
