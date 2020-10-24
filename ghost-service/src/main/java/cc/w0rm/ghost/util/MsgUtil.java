@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.util;
 
 import cc.w0rm.ghost.enums.MsgHashMode;
+import com.google.common.collect.Lists;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
@@ -21,6 +22,12 @@ public class MsgUtil {
     private static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
     private static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
     private static final String SPECIFIC_SYMBOL_REGEX = "[亓元个条只件包套枚块片斤米尺寸千克瓶盒箱杯桶罐gGmMlL\\s]*";
+    private static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
+    private static final String ORDER_MSG_REGEX = "^\\d[-.]";
+    private static final Pattern ORDER_MSG_PATTERN = Pattern.compile(ORDER_MSG_REGEX);
+    private static final List<Pattern> PATTERNS = Lists.newArrayList(ORDER_MSG_PATTERN,
+            FILE_PATTERN, URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
+
 
     public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {
@@ -52,7 +59,7 @@ public class MsgUtil {
         return result;
     }
 
-    public static List<String> listUrls(String msg){
+    public static List<String> listUrls(String msg) {
         if (Strings.isBlank(msg)) {
             return Collections.emptyList();
         }
@@ -83,29 +90,47 @@ public class MsgUtil {
         return result;
     }
 
-    public static int hashCode(String msg){
+    public static boolean isOrderMsg(String msg) {
+        if (Strings.isBlank(msg)) {
+            return false;
+        }
+
+        return ORDER_MSG_PATTERN.matcher(msg).find();
+    }
+
+    public static int hashCode(String msg) {
         return hashCode(msg, MsgHashMode.MINIMUM);
     }
+
     public static int hashCode(String msg, MsgHashMode msgHashMode) {
         if (Strings.isBlank(msg)) {
             return 0;
         }
 
-        switch (msgHashMode){
+        switch (msgHashMode) {
             case MINIMUM:
                 return msg.hashCode();
             case NORMAL:
                 return msg.replaceFirst(FILE_REGEX, "")
                         .hashCode();
             case STRICT:
-                return msg.replaceAll(FILE_REGEX, "")
-                        .replaceAll(URL_REGEX, "")
-                        .replaceAll(TAO_KOU_LING_REGEX, "")
-                        .replaceAll(SPECIFIC_SYMBOL_REGEX, "")
-                        .hashCode();
+                return replace(msg).hashCode();
             default:
                 return 0;
         }
+    }
+
+    private static String replace(String str) {
+        if (Strings.isBlank(str)) {
+            return Strings.EMPTY;
+        }
+
+        String returnVal = str;
+        for (Pattern pattern : PATTERNS) {
+            returnVal = pattern.matcher(returnVal).replaceAll("");
+        }
+
+        return returnVal;
     }
 
 }
