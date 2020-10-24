@@ -19,10 +19,10 @@ import org.springframework.stereotype.Component;
 @ListenBody
 @Component
 public class GroupMsgListener {
-
+    
     @Autowired
     private MsgProducer msgProducer;
-
+    
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         try {
             msgProducer.make(msgSender, groupMsg);

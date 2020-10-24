@@ -36,8 +36,8 @@ public class TaoBaoGroupListener {
     
     public void listen(GroupMemberIncrease groupMemberIncrease) {
         try {
-            String increaseBeOperatedQQ = groupMemberIncrease.getBeOperatedQQ();
-            sendEmailService.sendTextMail("3372342316@qq.com", "新成员加入" + increaseBeOperatedQQ, "测试");
+            //String increaseBeOperatedQQ = groupMemberIncrease.getBeOperatedQQ();
+            //sendEmailService.sendTextMail("3372342316@qq.com", "新成员加入" + increaseBeOperatedQQ, "测试");
             //Context context = new Context();
             //context.setVariable("id", "006");
             //File file = ResourceUtils.getFile("classpath:templates/emailTemplate.html");

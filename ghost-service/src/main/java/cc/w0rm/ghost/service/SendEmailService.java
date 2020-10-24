@@ -45,8 +45,6 @@ public class SendEmailService {
         simpleMailMessage.setText(text);
         
         try {
-            System.out.println(javaMailSender);
-            System.out.println(simpleMailMessage);
             javaMailSender.send(simpleMailMessage);
             logger.info("邮件已发送。");
         } catch (Exception e) {
@@ -71,7 +69,6 @@ public class SendEmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);
-            
             javaMailSender.send(message);
             logger.info("html邮件发送成功");
         } catch (MessagingException e) {

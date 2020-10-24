@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  */
 public class MsgUtil {
     public static final String FILE_REGEX = "\\[CQ:image,file=\\{(.+)}[.].*]";
-    private static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
+    public static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
 
 
     public static int hashCode(String msg) {
