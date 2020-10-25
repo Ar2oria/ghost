@@ -12,3 +12,5 @@ if [ $process -ge 1 ];then
 fi
 
 exec nohup java -jar ghost-main/target/ghost-main.jar --XX:+UseG1G >/dev/null 2>&1&
+
+ps aux|grep ${module_name} |grep -v grep
