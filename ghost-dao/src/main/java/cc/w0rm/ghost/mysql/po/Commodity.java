@@ -7,8 +7,8 @@ import lombok.ToString;
 
 @Data
 @ToString
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class Commodity {
     private Integer id;
 

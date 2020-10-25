@@ -36,8 +36,32 @@ public class MsgGroupSqlProvider {
             sql.VALUES("commodity_id", "#{commodityId,jdbcType=VARCHAR}");
         }
         
-        if (record.getGroups() != null) {
-            sql.VALUES("groups", "#{groups,jdbcType=VARCHAR}");
+        if (record.getGroup() != null) {
+            sql.VALUES("group", "#{group,jdbcType=INTEGER}");
+        }
+        
+        if (record.getInsertTime() != null) {
+            sql.VALUES("insert_time", "#{insertTime,jdbcType=LONGVARCHAR}");
+        }
+        
+        return sql.toString();
+    }
+
+    public String selectByExampleWithBLOBs(MsgGroupExample example) {
+        SQL sql = new SQL();
+        if (example != null && example.isDistinct()) {
+            sql.SELECT_DISTINCT("_id");
+        } else {
+            sql.SELECT("_id");
+        }
+        sql.SELECT("commodity_id");
+        sql.SELECT("group");
+        sql.SELECT("insert_time");
+        sql.FROM("msg_group");
+        applyWhere(sql, example, false);
+        
+        if (example != null && example.getOrderByClause() != null) {
+            sql.ORDER_BY(example.getOrderByClause());
         }
         
         return sql.toString();
@@ -51,7 +75,7 @@ public class MsgGroupSqlProvider {
             sql.SELECT("_id");
         }
         sql.SELECT("commodity_id");
-        sql.SELECT("groups");
+        sql.SELECT("group");
         sql.FROM("msg_group");
         applyWhere(sql, example, false);
         
@@ -77,10 +101,28 @@ public class MsgGroupSqlProvider {
             sql.SET("commodity_id = #{record.commodityId,jdbcType=VARCHAR}");
         }
         
-        if (record.getGroups() != null) {
-            sql.SET("groups = #{record.groups,jdbcType=VARCHAR}");
+        if (record.getGroup() != null) {
+            sql.SET("group = #{record.group,jdbcType=INTEGER}");
         }
         
+        if (record.getInsertTime() != null) {
+            sql.SET("insert_time = #{record.insertTime,jdbcType=LONGVARCHAR}");
+        }
+        
+        applyWhere(sql, example, true);
+        return sql.toString();
+    }
+
+    public String updateByExampleWithBLOBs(Map<String, Object> parameter) {
+        SQL sql = new SQL();
+        sql.UPDATE("msg_group");
+        
+        sql.SET("_id = #{record.id,jdbcType=INTEGER}");
+        sql.SET("commodity_id = #{record.commodityId,jdbcType=VARCHAR}");
+        sql.SET("group = #{record.group,jdbcType=INTEGER}");
+        sql.SET("insert_time = #{record.insertTime,jdbcType=LONGVARCHAR}");
+        
+        MsgGroupExample example = (MsgGroupExample) parameter.get("example");
         applyWhere(sql, example, true);
         return sql.toString();
     }
@@ -91,7 +133,7 @@ public class MsgGroupSqlProvider {
         
         sql.SET("_id = #{record.id,jdbcType=INTEGER}");
         sql.SET("commodity_id = #{record.commodityId,jdbcType=VARCHAR}");
-        sql.SET("groups = #{record.groups,jdbcType=VARCHAR}");
+        sql.SET("group = #{record.group,jdbcType=INTEGER}");
         
         MsgGroupExample example = (MsgGroupExample) parameter.get("example");
         applyWhere(sql, example, true);
@@ -106,8 +148,12 @@ public class MsgGroupSqlProvider {
             sql.SET("commodity_id = #{commodityId,jdbcType=VARCHAR}");
         }
         
-        if (record.getGroups() != null) {
-            sql.SET("groups = #{groups,jdbcType=VARCHAR}");
+        if (record.getGroup() != null) {
+            sql.SET("group = #{group,jdbcType=INTEGER}");
+        }
+        
+        if (record.getInsertTime() != null) {
+            sql.SET("insert_time = #{insertTime,jdbcType=LONGVARCHAR}");
         }
         
         sql.WHERE("_id = #{id,jdbcType=INTEGER}");

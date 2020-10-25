@@ -7,14 +7,16 @@ import lombok.ToString;
 
 @Data
 @ToString
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class MsgGroup {
     private Integer id;
 
     private String commodityId;
 
-    private String groups;
+    private Integer group;
+
+    private String insertTime;
 
     public Integer getId() {
         return id;
@@ -32,11 +34,19 @@ public class MsgGroup {
         this.commodityId = commodityId == null ? null : commodityId.trim();
     }
 
-    public String getGroups() {
-        return groups;
+    public Integer getGroup() {
+        return group;
     }
 
-    public void setGroups(String groups) {
-        this.groups = groups == null ? null : groups.trim();
+    public void setGroup(Integer group) {
+        this.group = group;
+    }
+
+    public String getInsertTime() {
+        return insertTime;
+    }
+
+    public void setInsertTime(String insertTime) {
+        this.insertTime = insertTime == null ? null : insertTime.trim();
     }
 }
