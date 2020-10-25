@@ -4,9 +4,7 @@ git checkout master
 git branch -D online
 
 git fetch
-git checkout origin/online
-git branch online
-git checkout online
+git checkout origin/online -b online
 git branch -v
 mvn clean package -Dmaven.skip.test=true
 
