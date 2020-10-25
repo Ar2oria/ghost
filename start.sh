@@ -1,5 +1,9 @@
 #!/bin/bash
 
+git fetch
+git pull origin online
+mvn clean package -Dmaven.skip.test=true
+
 module_name="ghost-main.jar"
 
 process=`ps axu|grep ${module_name} |grep -v grep |awk '{print $2}'|wc -l`
