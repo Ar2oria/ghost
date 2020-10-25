@@ -1,6 +1,15 @@
 package cc.w0rm.ghost.service;
 
+import cc.w0rm.ghost.listener.GroupIncreaseListener;
+import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
+import cc.w0rm.ghost.mysql.po.Email;
+import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
+import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
+import com.forte.qqrobot.beans.messages.result.GroupList;
+import com.forte.qqrobot.beans.messages.result.inner.Group;
+import com.forte.qqrobot.sender.MsgSender;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,10 +17,19 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ResourceUtils;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.io.File;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -27,8 +45,38 @@ public class SendEmailService {
     @Resource
     private JavaMailSender javaMailSender;
     
+    @Resource
+    private EmailDALImpl emailDAL;
+    
     @Value("${spring.mail.username}")
     private String from;
+    
+    public void execute(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
+        try {
+            String qq = groupMemberIncrease.getBeOperatedQQ();
+            Set<String> targetQQJoinedGroups = emailDAL.getTargetQQJoinedGroups(qq);
+            GroupList groupList = msgSender.GETTER.getGroupList();
+            List<String> curQQGroups = groupList.stream().map(Group::getGroupCode).collect(Collectors.toList());
+            curQQGroups.removeAll(targetQQJoinedGroups);
+            if (CollectionUtils.isEmpty(curQQGroups)) {
+                return;
+            }
+            sendTextMail("3372342316@qq.com", "新成员加入" + qq, "发送的群号为:" + curQQGroups.get(0));
+            File file = ResourceUtils.getFile("classpath:templates/emailTemplate.html");
+            Context context = new Context();
+            context.setVariable("qq", qq);
+            String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
+            sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+            Email email = new Email();
+            email.setQqAccount(Integer.parseInt(qq));
+            targetQQJoinedGroups.add(curQQGroups.get(0));
+            emailDAL.addEmail(email, targetQQJoinedGroups);
+        } catch (Exception e) {
+            log.error("新成员加入邮件发送失败 成员qq:{} 群组:{}", groupMemberIncrease.getBeOperatedQQ(), groupMemberIncrease
+                .getGroup(), e);
+        }
+    }
+    
     
     /**
      * 发送纯文本邮件
@@ -37,13 +85,12 @@ public class SendEmailService {
      * @param subject 邮件主题
      * @param text    邮件内容
      */
-    public void sendTextMail(String to, String subject, String text) {
+    private void sendTextMail(String to, String subject, String text) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setFrom(from);
         simpleMailMessage.setTo(to);
         simpleMailMessage.setSubject(subject);
         simpleMailMessage.setText(text);
-        
         try {
             javaMailSender.send(simpleMailMessage);
             logger.info("邮件已发送。");
@@ -59,11 +106,9 @@ public class SendEmailService {
      * @param subject
      * @param content
      */
-    public void sendHtmlMail(String to, String subject, String content) {
-        MimeMessage message = javaMailSender.createMimeMessage();
-        
+    private void sendHtmlMail(String to, String subject, String content) {
         try {
-            //true表示需要创建一个multipart message
+            MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom(from);
             helper.setTo(to);

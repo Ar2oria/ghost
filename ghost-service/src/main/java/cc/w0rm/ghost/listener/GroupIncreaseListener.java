@@ -29,23 +29,14 @@ import java.nio.file.Files;
 @Slf4j
 public class GroupIncreaseListener {
     
-    private static final String SAMPLE_QQ_GROUP = "1095382558";
-    
     @Resource
     private SendEmailService sendEmailService;
     
-    public void listen(GroupMemberIncrease groupMemberIncrease) {
+    public void listen(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
-            //String increaseBeOperatedQQ = groupMemberIncrease.getBeOperatedQQ();
-            //sendEmailService.sendTextMail("3372342316@qq.com", "新成员加入" + increaseBeOperatedQQ, "测试");
-            //Context context = new Context();
-            //context.setVariable("id", "006");
-            //File file = ResourceUtils.getFile("classpath:templates/emailTemplate.html");
-            //String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())),
-            // context);
-            //sendEmailService.sendHtmlMail("3372342316@qq.com", "主题:您好请点击激活账号", emailContent);
+            sendEmailService.execute(msgSender, groupMemberIncrease);
         } catch (Exception e) {
-            log.info("", e);
+            log.info("email邮件发送失败", e);
         }
     }
 }
