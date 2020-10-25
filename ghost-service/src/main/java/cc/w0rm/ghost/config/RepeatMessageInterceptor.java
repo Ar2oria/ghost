@@ -1,4 +1,4 @@
-package cc.w0rm.ghost.config.color;
+package cc.w0rm.ghost.config;
 
 import cc.w0rm.ghost.config.role.ConfigRole;
 import cc.w0rm.ghost.enums.MsgHashMode;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class RepeatMessageHandleStrategy implements InterceptStrategy {
+public class RepeatMessageInterceptor implements ProducerInterceptor {
 
     private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
