@@ -27,7 +27,7 @@ import java.nio.file.Files;
 @ListenBody
 @Component
 @Slf4j
-public class TaoBaoGroupListener {
+public class GroupIncreaseListener {
     
     private static final String SAMPLE_QQ_GROUP = "1095382558";
     
