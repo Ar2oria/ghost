@@ -99,12 +99,8 @@ def get_tao_kou_ling(text: str) -> str:
 def get_tao_url(text:str)->str:
     pattern = "((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?)"
     full_result = re.compile(pattern).findall(text)
-    result = []
-    for i in range(len(full_result)):
-        if '.taobao.' in full_result[i][0]:
-            result.append(full_result[i])
-    if len(result)>0:
-        return True,result
+    if len(full_result)>0:
+        return True,full_result
     return False,None
 
 def full(text:str,#输入的qq信息
@@ -129,10 +125,16 @@ def full(text:str,#输入的qq信息
                 land_url = get_tao_land_url(good_id,apikey ,pid_2,pid_3,uid)
                 print('2->转成自己的商品land_url:',land_url)
                 tkl_my = creat_tkl(land_url,appkey,secret)
-                print('3->生成新的淘口令:',tkl_my['tbk_tpwd_create_response']['data']['model'])
-                #text = text.replace(tkl[0],tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
+                print('3->生成新的淘口令:',tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
+                text = text.replace(tkl[0],tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
+                ff,uuurl = get_tao_url(text)
+                kk,ruuurl = get_tao_url(tkl_my['tbk_tpwd_create_response']['data']['model'])
+                print(uuurl)
+                print(ruuurl)
+                if ff:
+                    text = text.replace(uuurl[0][0],ruuurl[0][0])
             print('4->返回新的文本:',text)
-            return 0,tkl_my['tbk_tpwd_create_response']['data']['model'],good_info
+            return 0,text,good_info
         except Exception as e:
             print('异常！')
             print(e)
@@ -201,10 +203,11 @@ if __name__ == '__main__':
     csrftoken = cookie_map['csrftoken'].value
 
     app.run(host='0.0.0.0',port='5001')
-    #test_str = '6.9   健美创研凡士林管状唇膏3g https://s.click.taobao.com/aNgS3vu ￥w9WocRo0VdJ￥/'
+    
+    #test_str = '6.9   健美创研凡士林管状唇膏3g https://s.click.taobao.com/aNgS3vu (eHnhcRJ10Sq)/'
     #f,get_txt,good_info = full(test_str)
-    #idd = get_goods_id('￥w9WocRo0VdJ￥/')
-    #print('--------------------------------------------------------------')
+    ##idd = get_goods_id('￥w9WocRo0VdJ￥/')
+    ##print('--------------------------------------------------------------')
     #print(get_txt)
 
  
