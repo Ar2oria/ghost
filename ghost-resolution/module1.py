@@ -52,35 +52,41 @@ def get_tao_land_url(good_id:str,apikey = 'DBopyqYPJz',pid_2='2114750177',pid_3=
     return my_tkl['result']['data']['coupon_click_url']
 
 def get_goods_id(tao_kou_ling:str)->str:
-    data = {
-        'mobile': '13104080302',
-        'pwd': 'xuyang1001'
-    }
+    try:
+        header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
+        header['X-CSRFToken'] = csrftoken
+        response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
+        good_info = json.loads(response.text)
+        return good_info['data']['goods_id'],good_info
+    except:
+            data = {
+                'mobile': '13104080302',
+                'pwd': 'xuyang1001'
+            }
 
-    header = {
-        'Cookie': 'csrftoken=aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
-        'X-CSRFToken': 'aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
-        'Content-Type': 'application/json',
-        'Host': 'm.mzsmn.com',
-        'Origin': 'http://m.mzsmn.com',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
-    }
+            header = {
+                'Cookie': 'csrftoken=aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+                'X-CSRFToken': 'aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+                'Content-Type': 'application/json',
+                'Host': 'm.mzsmn.com',
+                'Origin': 'http://m.mzsmn.com',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
+            }
 
-    response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
-    cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
-    session_id = cookie_map['sessionid'].value
-    csrftoken = cookie_map['csrftoken'].value
+            response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
+            cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
+            session_id = cookie_map['sessionid'].value
+            csrftoken = cookie_map['csrftoken'].value
 
-    data = {
-        'tkl': tao_kou_ling
-    }
+            data = {
+                'tkl': tao_kou_ling
+            }
+            header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
+            header['X-CSRFToken'] = csrftoken
 
-    header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
-    header['X-CSRFToken'] = csrftoken
-
-    response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
-    good_info = json.loads(response.text)
-    return good_info['data']['goods_id'],good_info
+            response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
+            good_info = json.loads(response.text)
+            return good_info['data']['goods_id'],good_info
 
 def get_tao_kou_ling(text: str) -> str:
     symbol = "\₰|\/|\//|\¥|\\(|\\)|\《|\￥|\€|\\$|\₤|\₳|\¢|\¤|\฿|\฿|\₵|\₡|\₫|\₲|\₭|£|\₥|\₦|\₱|\〒|\₮|\₩|\₴|\₪|\៛|\﷼|\₢|\ℳ|\₯|\₠|\₣|\₧|\ƒ"
@@ -175,6 +181,25 @@ def get_self_tkl():
 #############################################################
 
 if __name__ == '__main__':
+    data = {
+        'mobile': '13104080302',
+        'pwd': 'xuyang1001'
+    }
+
+    header = {
+        'Cookie': 'csrftoken=aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+        'X-CSRFToken': 'aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+        'Content-Type': 'application/json',
+        'Host': 'm.mzsmn.com',
+        'Origin': 'http://m.mzsmn.com',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
+    }
+
+    response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
+    cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
+    session_id = cookie_map['sessionid'].value
+    csrftoken = cookie_map['csrftoken'].value
+
     app.run(host='0.0.0.0',port='5001')
     #test_str = '6.9   健美创研凡士林管状唇膏3g https://s.click.taobao.com/aNgS3vu ￥w9WocRo0VdJ￥/'
     #f,get_txt,good_info = full(test_str)
