@@ -71,7 +71,6 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
      * 消费者拦截器
      */
     private InterceptNode consumerIntercept;
-    
 
     /**
      * 配置文件加载状态

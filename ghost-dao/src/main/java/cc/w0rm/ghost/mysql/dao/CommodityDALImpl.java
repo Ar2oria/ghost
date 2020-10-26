@@ -60,7 +60,7 @@ public class CommodityDALImpl {
         }
         try {
             MsgGroup msgGroup = new MsgGroup();
-            msgGroup.setGroup(Integer.parseInt(groups));
+            msgGroup.setGroup(Long.parseLong(groups));
             msgGroup.setCommodityId(commodityId);
             msgGroup.setInsertTime(String.valueOf(System.currentTimeMillis()));
             msgGroupMapper.insertOrUpdate(msgGroup);

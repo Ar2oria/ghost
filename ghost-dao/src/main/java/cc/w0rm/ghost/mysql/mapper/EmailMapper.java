@@ -21,7 +21,7 @@ public interface EmailMapper {
     int deleteByPrimaryKey(Integer id);
     
     @Insert({"insert into email (_id, qq_account, ", "joined_groups)",
-        "values (#{id,jdbcType=INTEGER}, #{qqAccount," + "jdbcType=INTEGER}, ", "#{joinedGroups,jdbcType=VARCHAR})"})
+        "values (#{id,jdbcType=INTEGER}, #{qqAccount," + "jdbcType=BIGINT}, ", "#{joinedGroups,jdbcType=VARCHAR})"})
     int insert(Email record);
     
     @InsertProvider(type = EmailSqlProvider.class, method = "insertSelective")
@@ -29,13 +29,13 @@ public interface EmailMapper {
     
     @SelectProvider(type = EmailSqlProvider.class, method = "selectByExample")
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.INTEGER, id = true), @Result(column =
-        "qq_account", property = "qqAccount", jdbcType = JdbcType.INTEGER), @Result(column = "joined_groups",
+        "qq_account", property = "qqAccount", jdbcType = JdbcType.BIGINT), @Result(column = "joined_groups",
         property = "joinedGroups", jdbcType = JdbcType.VARCHAR)})
     List<Email> selectByExample(EmailExample example);
     
     @Select({"select", "_id, qq_account, joined_groups", "from email", "where _id = #{id,jdbcType=INTEGER}"})
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.INTEGER, id = true), @Result(column =
-        "qq_account", property = "qqAccount", jdbcType = JdbcType.INTEGER), @Result(column = "joined_groups",
+        "qq_account", property = "qqAccount", jdbcType = JdbcType.BIGINT), @Result(column = "joined_groups",
         property = "joinedGroups", jdbcType = JdbcType.VARCHAR)})
     Email selectByPrimaryKey(Integer id);
     
@@ -48,19 +48,19 @@ public interface EmailMapper {
     @UpdateProvider(type = EmailSqlProvider.class, method = "updateByPrimaryKeySelective")
     int updateByPrimaryKeySelective(Email record);
     
-    @Update({"update email", "set qq_account = #{qqAccount,jdbcType=INTEGER},", "joined_groups = #{joinedGroups," +
+    @Update({"update email", "set qq_account = #{qqAccount,jdbcType=BIGINT},", "joined_groups = #{joinedGroups," +
         "jdbcType=VARCHAR}", "where _id = #{id,jdbcType=INTEGER}"})
     int updateByPrimaryKey(Email record);
     
     @Select({"select", "_id, qq_account, joined_groups", "from email", "where qq_account = #{qq,jdbcType=INTEGER}"})
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.INTEGER, id = true), @Result(column =
-        "qq_account", property = "qqAccount", jdbcType = JdbcType.INTEGER), @Result(column = "joined_groups",
+        "qq_account", property = "qqAccount", jdbcType = JdbcType.BIGINT), @Result(column = "joined_groups",
         property = "joinedGroups", jdbcType = JdbcType.VARCHAR)})
-    Email selectByQQAcount(Integer qq);
+    Email selectByQQAcount(Long qq);
     
     @Insert({"insert into email (_id, qq_account, ", "joined_groups)",
-        "values (#{id,jdbcType=INTEGER}, #{qqAccount," + "jdbcType=INTEGER}, ", "#{joinedGroups,jdbcType=VARCHAR} on " +
-        "duplicate key update _id=#{id,jdbcType=INTEGER}, " + "qq_account=#{qqAccount,jdbcType=INTEGER}," +
-        "joined_groups=#{joinedGroups,jdbcType=VARCHAR})"})
+        "values (#{id,jdbcType=INTEGER}, #{qqAccount," + "jdbcType=BIGINT}, ", "#{joinedGroups,jdbcType=VARCHAR}) on " +
+        "duplicate key update _id=#{id,jdbcType=INTEGER}, " + "qq_account=#{qqAccount,jdbcType=BIGINT}," +
+        "joined_groups=#{joinedGroups,jdbcType=VARCHAR}"})
     int insertOrUpdate(Email record);
 }

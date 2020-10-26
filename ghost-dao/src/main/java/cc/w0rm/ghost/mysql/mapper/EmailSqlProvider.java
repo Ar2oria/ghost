@@ -33,7 +33,7 @@ public class EmailSqlProvider {
         }
         
         if (record.getQqAccount() != null) {
-            sql.VALUES("qq_account", "#{qqAccount,jdbcType=INTEGER}");
+            sql.VALUES("qq_account", "#{qqAccount,jdbcType=BIGINT}");
         }
         
         if (record.getJoinedGroups() != null) {
@@ -74,7 +74,7 @@ public class EmailSqlProvider {
         }
         
         if (record.getQqAccount() != null) {
-            sql.SET("qq_account = #{record.qqAccount,jdbcType=INTEGER}");
+            sql.SET("qq_account = #{record.qqAccount,jdbcType=BIGINT}");
         }
         
         if (record.getJoinedGroups() != null) {
@@ -90,7 +90,7 @@ public class EmailSqlProvider {
         sql.UPDATE("email");
         
         sql.SET("_id = #{record.id,jdbcType=INTEGER}");
-        sql.SET("qq_account = #{record.qqAccount,jdbcType=INTEGER}");
+        sql.SET("qq_account = #{record.qqAccount,jdbcType=BIGINT}");
         sql.SET("joined_groups = #{record.joinedGroups,jdbcType=VARCHAR}");
         
         EmailExample example = (EmailExample) parameter.get("example");
@@ -103,7 +103,7 @@ public class EmailSqlProvider {
         sql.UPDATE("email");
         
         if (record.getQqAccount() != null) {
-            sql.SET("qq_account = #{qqAccount,jdbcType=INTEGER}");
+            sql.SET("qq_account = #{qqAccount,jdbcType=BIGINT}");
         }
         
         if (record.getJoinedGroups() != null) {

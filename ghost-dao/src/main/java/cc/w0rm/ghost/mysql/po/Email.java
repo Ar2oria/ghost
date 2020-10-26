@@ -12,7 +12,7 @@ import lombok.ToString;
 public class Email {
     private Integer id;
 
-    private Integer qqAccount;
+    private Long qqAccount;
 
     private String joinedGroups;
 
@@ -24,11 +24,11 @@ public class Email {
         this.id = id;
     }
 
-    public Integer getQqAccount() {
+    public Long getQqAccount() {
         return qqAccount;
     }
 
-    public void setQqAccount(Integer qqAccount) {
+    public void setQqAccount(Long qqAccount) {
         this.qqAccount = qqAccount;
     }
 

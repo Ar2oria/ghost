@@ -1,4 +1,4 @@
-package cc.w0rm.ghost.service;
+package cc.w0rm.ghost.service.consumer;
 
 import cc.w0rm.ghost.api.MsgConsumer;
 import cc.w0rm.ghost.config.AccountManagerConfig;
@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service("q1")
-public class MsgConsumerImpl implements MsgConsumer {
+public class MsgConsumerQ1Impl extends BaseConsumer {
     
     /**
      * @param botInfo 账号信息
@@ -35,10 +37,18 @@ public class MsgConsumerImpl implements MsgConsumer {
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
         log.debug("[q1] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]", botInfo.getBotCode(), msgGet.getId(), group);
-        Set<String> botGroups = botInfo.getSender().GETTER.getGroupList().stream().map(Group::getCode)
-            .collect(Collectors.toSet());
-        if (botGroups.contains(group)) {
-            botInfo.getSender().SENDER.sendGroupMsg(group, msgGet.getMsg());
-        }
+        super.consume(botInfo, group, msgGet);
+    }
+    
+    // TODO 可以改成配置文件 但是我懒得改
+    @Override
+    public Map<String, Object> buildParameter() {
+        Map<String, Object> ret = new HashMap<>();
+        ret.put("apikey", "");
+        ret.put("pid_2", "");
+        ret.put("pid_3", "");
+        ret.put("appkey", "");
+        ret.put("sercet", "");
+        return ret;
     }
 }

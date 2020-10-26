@@ -18,19 +18,16 @@ public class EmailDALImpl {
     @Resource
     private EmailMapper emailMapper;
     
-    public Set<String> getTargetQQJoinedGroups(String qq) {
+    public Email getEmail(String qq) {
         if (!StringUtils.isNumber(qq)) {
-            return new HashSet<>();
+            return null;
         }
         try {
-            Email email = emailMapper.selectByQQAcount(Integer.parseInt(qq));
-            if (!StringUtils.isEmpty(email.getJoinedGroups())) {
-                return new HashSet<>(Arrays.asList(email.getJoinedGroups().split(",")));
-            }
+            return emailMapper.selectByQQAcount(Long.parseLong(qq));
         } catch (Exception e) {
-            log.error("email信息查询失败 查询qq信息:{}", qq);
+            log.error("email信息查询失败 查询qq信息:{}", qq, e);
         }
-        return new HashSet<>();
+        return null;
     }
     
     public void addEmail(Email email, Set<String> joinedGroups) {
@@ -38,7 +35,7 @@ public class EmailDALImpl {
         try {
             emailMapper.insertOrUpdate(email);
         } catch (Exception e) {
-            log.error("email信息添加失败 查询qq信息:{}", email.toString());
+            log.error("email信息添加失败 查询qq信息:{}", email.toString(), e);
         }
     }
 }

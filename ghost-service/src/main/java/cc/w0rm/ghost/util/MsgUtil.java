@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
  * @date : 2020/10/22 6:36 下午
  */
 public class MsgUtil {
+    public static final String CHINESE = "[\\u4e00-\\u9fa5]";
+    public static final Pattern CHINESESE_PATTERN = Pattern.compile(CHINESE);
     public static final String FILE_REGEX = "\\[CQ:image,file=\\{(.+)}[.].*]";
     public static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";

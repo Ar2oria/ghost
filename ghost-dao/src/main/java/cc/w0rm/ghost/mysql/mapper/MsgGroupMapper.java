@@ -25,7 +25,7 @@ public interface MsgGroupMapper {
         "insert into msg_group (_id, commodity_id, ",
         "group, insert_time)",
         "values (#{id,jdbcType=INTEGER}, #{commodityId,jdbcType=VARCHAR}, ",
-        "#{group,jdbcType=INTEGER}, #{insertTime,jdbcType=LONGVARCHAR})"
+        "#{group,jdbcType=BIGINT}, #{insertTime,jdbcType=LONGVARCHAR})"
     })
     int insert(MsgGroup record);
 
@@ -36,7 +36,7 @@ public interface MsgGroupMapper {
     @Results({
         @Result(column="_id", property="id", jdbcType=JdbcType.INTEGER, id=true),
         @Result(column="commodity_id", property="commodityId", jdbcType=JdbcType.VARCHAR),
-        @Result(column="group", property="group", jdbcType=JdbcType.INTEGER),
+        @Result(column="group", property="group", jdbcType=JdbcType.BIGINT),
         @Result(column="insert_time", property="insertTime", jdbcType=JdbcType.LONGVARCHAR)
     })
     List<MsgGroup> selectByExampleWithBLOBs(MsgGroupExample example);
@@ -45,7 +45,7 @@ public interface MsgGroupMapper {
     @Results({
         @Result(column="_id", property="id", jdbcType=JdbcType.INTEGER, id=true),
         @Result(column="commodity_id", property="commodityId", jdbcType=JdbcType.VARCHAR),
-        @Result(column="group", property="group", jdbcType=JdbcType.INTEGER)
+        @Result(column="group", property="group", jdbcType=JdbcType.BIGINT)
     })
     List<MsgGroup> selectByExample(MsgGroupExample example);
 
@@ -58,7 +58,7 @@ public interface MsgGroupMapper {
     @Results({
         @Result(column="_id", property="id", jdbcType=JdbcType.INTEGER, id=true),
         @Result(column="commodity_id", property="commodityId", jdbcType=JdbcType.VARCHAR),
-        @Result(column="group", property="group", jdbcType=JdbcType.INTEGER),
+        @Result(column="group", property="group", jdbcType=JdbcType.BIGINT),
         @Result(column="insert_time", property="insertTime", jdbcType=JdbcType.LONGVARCHAR)
     })
     MsgGroup selectByPrimaryKey(Integer id);
@@ -78,7 +78,7 @@ public interface MsgGroupMapper {
     @Update({
         "update msg_group",
         "set commodity_id = #{commodityId,jdbcType=VARCHAR},",
-          "group = #{group,jdbcType=INTEGER},",
+          "group = #{group,jdbcType=BIGINT},",
           "insert_time = #{insertTime,jdbcType=LONGVARCHAR}",
         "where _id = #{id,jdbcType=INTEGER}"
     })
@@ -87,18 +87,18 @@ public interface MsgGroupMapper {
     @Update({
         "update msg_group",
         "set commodity_id = #{commodityId,jdbcType=VARCHAR},",
-          "group = #{group,jdbcType=INTEGER}",
+          "group = #{group,jdbcType=BIGINT}",
         "where _id = #{id,jdbcType=INTEGER}"
     })
     int updateByPrimaryKey(MsgGroup record);
     
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.VARCHAR, id = true), @Result(column =
-        "groups", property = "groups", jdbcType = JdbcType.VARCHAR), @Result(column = "commodity_id", property =
+        "group", property = "group", jdbcType = JdbcType.BIGINT), @Result(column = "commodity_id", property =
         "commodityId", jdbcType = JdbcType.LONGVARCHAR)})
     List<MsgGroup> selectByCommdityId(String id);
     
     @Insert({"insert into msg_group (_id, commodity_id, ", "groups)", "values (#{id,jdbcType=INTEGER}, #{commodityId," +
-        "jdbcType=VARCHAR}, ", "#{groups,jdbcType=VARCHAR}) on duplicate key update _id = #{id,jdbcType=INTEGER}," +
-        "commodity_id=#{commodityId,jdbcType=VARCHAR},groups=#{groups,jdbcType=VARCHAR}"})
+        "jdbcType=VARCHAR}, ", "#{groups,jdbcType=BIGINT}) on duplicate key update _id = #{id,jdbcType=INTEGER}," +
+        "commodity_id=#{commodityId,jdbcType=VARCHAR},group=#{group,jdbcType=BIGINT}"})
     int insertOrUpdate(MsgGroup record);
 }

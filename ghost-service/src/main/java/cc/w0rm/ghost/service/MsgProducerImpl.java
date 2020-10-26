@@ -10,7 +10,11 @@ import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.mysql.dao.CommodityDALImpl;
 import cc.w0rm.ghost.mysql.mapper.CommodityMapper;
 import cc.w0rm.ghost.mysql.po.Commodity;
+import cc.w0rm.ghost.util.HttpUtils;
+import cc.w0rm.ghost.util.JacksonUtils;
+import cc.w0rm.ghost.util.MsgUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.beans.messages.result.GroupList;
@@ -23,10 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
 
 /**
  * @author : xuyang
@@ -55,27 +58,27 @@ public class MsgProducerImpl implements MsgProducer {
         
         // 1. 解析消息
         String msg = groupMsg.getMsg();
+        if (!(isFilterByTB(msg) || isFilterByChineseCount(msg))) {
+            return;
+        }
         List<String> msgGroupByCode = accountManagerConfig.getMsgGroupByCode(groupMsg.getThisCode());
-        //// 2. 判断解析结果 TODO
-        //String commoditysku = "";
-        //String commodityId = "";
-        //if (StringUtils.isEmpty(commodityId) || StringUtils.isEmpty(commoditysku)) {
-        //    log.debug("消息生产者，商品解析空返，请查看解析逻辑 msgId[{}]", groupMsg.getId());
-        //    return;
-        //}
-        //// 3. 存储数据库
-        //Commodity commodity = new Commodity();
-        //commodity.setCommodityId(commodityId);
-        //commodity.setSku(commoditysku);
-        //try {
-        //    Set<String> targetCommodityPushedGroups = commodityDAL.getTargetCommodityPushedGroups(commodityId);
-        //    if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
-        //        return;
-        //    }
-        //    commodityDAL.addCommodity(commodity, groupMsg.getGroup());
-        //} catch (Exception exp) {
-        //    log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
-        //}
+        // 2. 判断解析结果
+        Commodity commodity = parseMsg(msg);
+        if (null == commodity || StringUtils.isEmpty(commodity.getCommodityId())) {
+            log.debug("消息生产者，商品解析空返，请查看解析逻辑 msgId[{}]", groupMsg.getId());
+            return;
+        }
+        // 3. 存储数据库
+        try {
+            Set<String> targetCommodityPushedGroups = commodityDAL
+                .getTargetCommodityPushedGroups(commodity.getCommodityId());
+            if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
+                return;
+            }
+            commodityDAL.addCommodity(commodity, groupMsg.getGroup());
+        } catch (Exception exp) {
+            log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
+        }
         //4. 使用协调者转发消息 coordinator.forward()
         try {
             for (String msgGroup : msgGroupByCode) {
@@ -84,6 +87,47 @@ public class MsgProducerImpl implements MsgProducer {
         } catch (Exception exp) {
             log.error("消息生产者，转发消息失败 msgId[{}]", groupMsg.getId(), exp);
         }
+    }
+    
+    private Commodity parseMsg(String msg) {
+        Map<String, Object> requestParameters = new HashMap<>();
+        requestParameters.put("text", msg);
+        String data = HttpUtils.get("http://47.98.45.40:5001/get_self_tkl", requestParameters, new HashMap<>());
+        if (StringUtils.isEmpty(data)) {
+            return null;
+        }
+        Map<String, String> commodityMap = JacksonUtils
+            .jsonString2Object(data, new TypeReference<Map<String, String>>() {});
+        if (!"0".equals(commodityMap.getOrDefault("flag", "-1"))) {
+            return null;
+        }
+        String goodDetail = commodityMap.getOrDefault("good_id", "");
+        if (StringUtils.isEmpty(goodDetail)) {
+            return null;
+        }
+        Map<String, String> goodsMap = JacksonUtils
+            .jsonString2Object(goodDetail, new TypeReference<Map<String, String>>() {});
+        Commodity commodity = new Commodity();
+        commodity.setCommodityId(goodsMap.getOrDefault("activity_id", ""));
+        commodity.setSku(commodityMap.getOrDefault("desc", ""));
+        return commodity;
+    }
+    
+    
+    private boolean isFilterByTB(String msg) {
+        return MsgUtil.TAO_KOU_LING_PATTERN.matcher(msg).find();
+    }
+    
+    private boolean isFilterByChineseCount(String msg) {
+        int chineseCount = 0;
+        Matcher matcher = MsgUtil.CHINESESE_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            chineseCount++;
+        }
+        if (chineseCount < 20) {
+            return MsgUtil.FILE_PATTERN.matcher(msg).find() || MsgUtil.URL_PATTERN.matcher(msg).find();
+        }
+        return true;
     }
 }
 

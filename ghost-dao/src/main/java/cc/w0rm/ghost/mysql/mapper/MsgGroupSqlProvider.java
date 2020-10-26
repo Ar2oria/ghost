@@ -37,7 +37,7 @@ public class MsgGroupSqlProvider {
         }
         
         if (record.getGroup() != null) {
-            sql.VALUES("group", "#{group,jdbcType=INTEGER}");
+            sql.VALUES("group", "#{group,jdbcType=BIGINT}");
         }
         
         if (record.getInsertTime() != null) {
@@ -102,7 +102,7 @@ public class MsgGroupSqlProvider {
         }
         
         if (record.getGroup() != null) {
-            sql.SET("group = #{record.group,jdbcType=INTEGER}");
+            sql.SET("group = #{record.group,jdbcType=BIGINT}");
         }
         
         if (record.getInsertTime() != null) {
@@ -119,7 +119,7 @@ public class MsgGroupSqlProvider {
         
         sql.SET("_id = #{record.id,jdbcType=INTEGER}");
         sql.SET("commodity_id = #{record.commodityId,jdbcType=VARCHAR}");
-        sql.SET("group = #{record.group,jdbcType=INTEGER}");
+        sql.SET("group = #{record.group,jdbcType=BIGINT}");
         sql.SET("insert_time = #{record.insertTime,jdbcType=LONGVARCHAR}");
         
         MsgGroupExample example = (MsgGroupExample) parameter.get("example");
@@ -133,7 +133,7 @@ public class MsgGroupSqlProvider {
         
         sql.SET("_id = #{record.id,jdbcType=INTEGER}");
         sql.SET("commodity_id = #{record.commodityId,jdbcType=VARCHAR}");
-        sql.SET("group = #{record.group,jdbcType=INTEGER}");
+        sql.SET("group = #{record.group,jdbcType=BIGINT}");
         
         MsgGroupExample example = (MsgGroupExample) parameter.get("example");
         applyWhere(sql, example, true);
@@ -149,7 +149,7 @@ public class MsgGroupSqlProvider {
         }
         
         if (record.getGroup() != null) {
-            sql.SET("group = #{group,jdbcType=INTEGER}");
+            sql.SET("group = #{group,jdbcType=BIGINT}");
         }
         
         if (record.getInsertTime() != null) {

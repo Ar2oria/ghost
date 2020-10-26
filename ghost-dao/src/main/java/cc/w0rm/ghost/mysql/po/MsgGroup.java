@@ -14,7 +14,7 @@ public class MsgGroup {
 
     private String commodityId;
 
-    private Integer group;
+    private Long group;
 
     private String insertTime;
 
@@ -34,11 +34,11 @@ public class MsgGroup {
         this.commodityId = commodityId == null ? null : commodityId.trim();
     }
 
-    public Integer getGroup() {
+    public Long getGroup() {
         return group;
     }
 
-    public void setGroup(Integer group) {
+    public void setGroup(Long group) {
         this.group = group;
     }
 

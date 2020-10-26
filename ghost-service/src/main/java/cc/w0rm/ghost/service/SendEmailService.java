@@ -3,7 +3,9 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.listener.GroupIncreaseListener;
 import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
 import cc.w0rm.ghost.mysql.po.Email;
+import cc.w0rm.ghost.util.HttpUtils;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
+import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.result.GroupList;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
@@ -19,6 +21,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ResourceUtils;
+import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -26,9 +29,10 @@ import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -51,31 +55,127 @@ public class SendEmailService {
     @Value("${spring.mail.username}")
     private String from;
     
-    public void execute(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
+    public void increase(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
             String qq = groupMemberIncrease.getBeOperatedQQ();
-            Set<String> targetQQJoinedGroups = emailDAL.getTargetQQJoinedGroups(qq);
             GroupList groupList = msgSender.GETTER.getGroupList();
             List<String> curQQGroups = groupList.stream().map(Group::getGroupCode).collect(Collectors.toList());
-            curQQGroups.removeAll(targetQQJoinedGroups);
             if (CollectionUtils.isEmpty(curQQGroups)) {
                 return;
             }
             sendTextMail("3372342316@qq.com", "新成员加入" + qq, "发送的群号为:" + curQQGroups.get(0));
-            File file = ResourceUtils.getFile("classpath:templates/emailTemplate.html");
-            Context context = new Context();
-            context.setVariable("qq", qq);
-            String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
-            sendHtmlMail("3372342316@qq.com", "主题:您好请点击激活账号", emailContent);
-            //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
-            Email email = new Email();
-            email.setQqAccount(Integer.parseInt(qq));
-            targetQQJoinedGroups.add(curQQGroups.get(0));
-            emailDAL.addEmail(email, targetQQJoinedGroups);
+            process(qq, curQQGroups, "classpath:templates/emailTemplate.html");
+            // 发送测试邮件
         } catch (Exception e) {
-            log.error("新成员加入邮件发送失败 成员qq:{} 群组:{}", groupMemberIncrease.getBeOperatedQQ(), groupMemberIncrease
-                .getGroup(), e);
+            log.error("新成员加入邮件发送失败 成员qq:{}", groupMemberIncrease.getBeOperatedQQ(), e);
         }
+    }
+    
+    public void reduce(GroupMemberReduce groupMemberReduce) {
+        try {
+            String qq = groupMemberReduce.getBeOperatedQQ();
+            String group = groupMemberReduce.getGroupCode();
+            // 发送测试邮件
+            sendTextMail("3372342316@qq.com", "成员退出" + qq, "发送的群号为:" + group);
+            simpleProcess(qq, group, "classpath:templates/emailReduceTemplate.html");
+        } catch (Exception e) {
+            log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
+        }
+    }
+    
+    private void simpleProcess(String qq, String group, String filePath) throws IOException {
+        // 解析设置的h5文件
+        File file = ResourceUtils.getFile(filePath);
+        // 获取该群的加入链接
+        String groupQsig = getGroupQsig(group);
+        if (StringUtils.isEmpty(groupQsig)) {
+            return;
+        }
+        groupQsig = groupQsig.replace("\\u0026", group);
+        // 设置上下文 和h5文件交互
+        Context context = new Context();
+        context.setVariable("qqGroupUrl", groupQsig);
+        String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
+        // 发送h5邮件
+        sendHtmlMail("3372342316@qq.com", "你真的舍得就这么走了吗", emailContent);
+        //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+    }
+    
+    private void process(String qq, List<String> curQQGroups, String filePath) throws IOException {
+        Email email = emailDAL.getEmail(qq);
+        if (email == null) {
+            email = new Email();
+        }
+        Set<String> targetQQJoinedGroups = StringUtils
+            .isEmpty(email.getJoinedGroups()) ? new HashSet<>() : new HashSet<>(Arrays
+            .asList(email.getJoinedGroups().split(",")));
+        curQQGroups.removeAll(targetQQJoinedGroups);
+        // 解析设置的h5文件
+        File file = ResourceUtils.getFile(filePath);
+        // 获取该群的加入链接
+        String groupQsig = getGroupQsig(curQQGroups.get(0));
+        log.info("[腾讯加群解析测试日志] 二级解析 ret:{}", groupQsig);
+        if (StringUtils.isEmpty(groupQsig)) {
+            return;
+        }
+        groupQsig = groupQsig.replace("\\u0026", curQQGroups.get(0));
+        // 设置上下文 和h5文件交互
+        Context context = new Context();
+        context.setVariable("qqGroupUrl", groupQsig);
+        String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
+        // 发送h5邮件
+        sendHtmlMail("3372342316@qq.com", "隐藏福利开启", emailContent);
+        //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+        // 添加数据库
+        email.setQqAccount(Long.parseLong(qq));
+        targetQQJoinedGroups.add(curQQGroups.get(0));
+        emailDAL.addEmail(email, targetQQJoinedGroups);
+    }
+    
+    private String getGroupQsig(String group) {
+        String groupKey = getGroupKey(group);
+        log.info("[腾讯加群解析测试日志] 一级解析 key:{}", groupKey);
+        if (StringUtils.isEmpty(groupKey)) {
+            return null;
+        }
+        Map<String, String> header = new HashMap<>();
+        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
+        header.put("Content-Type", "utf-8");
+        header
+            .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
+                "Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        header.put("Accept", "*/*");
+        String data = HttpUtils.get("http://shang.qq.com/wpa/qunwpa?idkey=" + groupKey, new HashMap<>(), header);
+        if (StringUtils.isEmpty(data) || !data.contains("tencent")) {
+            return null;
+        }
+        String[] firstSplit = data.split("tencent");
+        if (firstSplit.length < 2) {
+            return null;
+        }
+        String[] secondSplit = firstSplit[1].split("\";");
+        return "tencent" + secondSplit[0];
+    }
+    
+    
+    private String getGroupKey(String group) {
+        Map<String, String> header = new HashMap<>();
+        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
+        header.put("Content-Type", "utf-8");
+        header
+            .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
+                "Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        header.put("Accept", "*/*");
+        String data = HttpUtils.get("https://shang.qq.com/wpa/g_wpa_get?guin=" + group, new HashMap<>(), header);
+        if (StringUtils.isEmpty(data) || !data.contains("key")) {
+            return null;
+        }
+        String[] afterSplit = data.split("key\":\"");
+        if (afterSplit.length < 2) {
+            return null;
+        }
+        String groupKey = afterSplit[1];
+        return groupKey.split("\"}")[0];
     }
     
     
