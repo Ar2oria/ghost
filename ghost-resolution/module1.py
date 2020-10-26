@@ -5,10 +5,10 @@ import requests
 import json
 import top.api
 
-#1.获得原始淘口令
-#2.解析出商品id
-#3.根据id转换成land_rul
-#4.生成新的淘口令
+# 1.获得原始淘口令
+# 2.解析出商品id
+# 3.根据id转换成land_rul
+# 4.生成新的淘口令
 
 
 def creat_tkl(land_url:str,appkey:str,secret:str)->str:
@@ -44,7 +44,10 @@ def get_tao_land_url(good_id:str,apikey = 'DBopyqYPJz',pid_2='2114750177',pid_3=
         'adzoneid':pid_3,
         'uid':uid
     }
-    response = requests.post(url='https://api.taokouling.com/tkl/TbkPrivilegeGet',data=json.dumps(data))
+    requests.DEFAULT_RETRIES = 5
+    s = requests.session()
+    s.keep_alive = False
+    response = requests.post(url='https://api.taokouling.com/tkl/TbkPrivilegeGet',data=json.dumps(data),verify=False)
     my_tkl = json.loads(response.text)
     return my_tkl['result']['data']['coupon_click_url']
 
@@ -63,7 +66,7 @@ def get_goods_id(tao_kou_ling:str)->str:
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
     }
 
-    response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header)
+    response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
     cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
     session_id = cookie_map['sessionid'].value
     csrftoken = cookie_map['csrftoken'].value
@@ -75,7 +78,7 @@ def get_goods_id(tao_kou_ling:str)->str:
     header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
     header['X-CSRFToken'] = csrftoken
 
-    response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header)
+    response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
     good_info = json.loads(response.text)
     return good_info['data']['goods_id'],good_info
 
