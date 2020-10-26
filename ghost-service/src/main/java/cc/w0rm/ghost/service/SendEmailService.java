@@ -66,7 +66,8 @@ public class SendEmailService {
             Context context = new Context();
             context.setVariable("qq", qq);
             String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
-            sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+            sendHtmlMail("3372342316@qq.com", "主题:您好请点击激活账号", emailContent);
+            //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
             Email email = new Email();
             email.setQqAccount(Integer.parseInt(qq));
             targetQQJoinedGroups.add(curQQGroups.get(0));

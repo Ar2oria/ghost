@@ -56,24 +56,26 @@ public class MsgProducerImpl implements MsgProducer {
         // 1. 解析消息
         String msg = groupMsg.getMsg();
         List<String> msgGroupByCode = accountManagerConfig.getMsgGroupByCode(groupMsg.getThisCode());
-        log.info("[MsgProducerImpl] accountManagerConfig:{} id:{}", accountManagerConfig.toString(), msgGroupByCode);
-        // 2. 判断解析结果 TODO
-        String commoditysku = "";
-        String commodityId = "";
-        
-        // 3. 存储数据库
-        Commodity commodity = new Commodity();
-        commodity.setCommodityId(commodityId);
-        commodity.setSku(commoditysku);
-        try {
-            Set<String> targetCommodityPushedGroups = commodityDAL.getTargetCommodityPushedGroups(commodityId);
-            if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
-                return;
-            }
-            commodityDAL.addCommodity(commodity, groupMsg.getGroup());
-        } catch (Exception exp) {
-            log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
-        }
+        //// 2. 判断解析结果 TODO
+        //String commoditysku = "";
+        //String commodityId = "";
+        //if (StringUtils.isEmpty(commodityId) || StringUtils.isEmpty(commoditysku)) {
+        //    log.debug("消息生产者，商品解析空返，请查看解析逻辑 msgId[{}]", groupMsg.getId());
+        //    return;
+        //}
+        //// 3. 存储数据库
+        //Commodity commodity = new Commodity();
+        //commodity.setCommodityId(commodityId);
+        //commodity.setSku(commoditysku);
+        //try {
+        //    Set<String> targetCommodityPushedGroups = commodityDAL.getTargetCommodityPushedGroups(commodityId);
+        //    if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
+        //        return;
+        //    }
+        //    commodityDAL.addCommodity(commodity, groupMsg.getGroup());
+        //} catch (Exception exp) {
+        //    log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
+        //}
         //4. 使用协调者转发消息 coordinator.forward()
         try {
             for (String msgGroup : msgGroupByCode) {
