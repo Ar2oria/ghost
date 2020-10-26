@@ -1,7 +1,6 @@
 package cc.w0rm.ghost.config;
 
 import cc.w0rm.ghost.common.util.TypeUtil;
-import cc.w0rm.ghost.config.color.InterceptContext;
 import cc.w0rm.ghost.config.color.InterceptNode;
 import cc.w0rm.ghost.config.role.ConfigRole;
 import cc.w0rm.ghost.config.role.Consumer;
@@ -13,6 +12,7 @@ import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.bot.BotInfo;
 import com.forte.qqrobot.bot.BotManager;
+import com.forte.qqrobot.intercept.Interceptor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -309,12 +309,45 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
             producerPre = prTmp;
             consumerPre = coTmp;
         }
-        producerPre.setNext(getRepeatMessageIntercept());
+
+        producerPre.setNext(getCustomerInterceptor(RoleEnum.PRODUCER));
+        consumerPre.setNext(getCustomerInterceptor(RoleEnum.CONSUMER));
 
         this.producerIntercept = producerRoot.getNext();
         this.consumerIntercept = consumerRoot.getNext();
 
         log.info("加载消息拦截器完成");
+    }
+
+    private InterceptNode getCustomerInterceptor(RoleEnum roleEnum) {
+        List<Interceptor> strategyList = null;
+        switch (roleEnum){
+            case PRODUCER:
+                strategyList = interceptContext.getProducerInterceptors();
+                break;
+            case CONSUMER:
+                strategyList = interceptContext.getConsumerInterceptors();
+                break;
+            default:
+                break;
+        }
+
+        if (CollUtil.isEmpty(strategyList)){
+            return null;
+        }
+
+        InterceptNode root = new InterceptNode();
+        InterceptNode pre = root;
+
+        for (Interceptor strategy: strategyList){
+            InterceptNode tmp = new InterceptNode();
+            tmp.setIntercept(strategy);
+
+            pre.setNext(tmp);
+            pre = tmp;
+        }
+
+        return root.getNext();
     }
 
 
@@ -326,12 +359,6 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         InterceptNode interceptNode = new InterceptNode();
         interceptNode.setIntercept(interceptContext.getInterceptStrategy(configRole));
 
-        return interceptNode;
-    }
-
-    private InterceptNode getRepeatMessageIntercept() {
-        InterceptNode interceptNode = new InterceptNode();
-        interceptNode.setIntercept(interceptContext.getRepeatMessageHandleStrategy());
         return interceptNode;
     }
 

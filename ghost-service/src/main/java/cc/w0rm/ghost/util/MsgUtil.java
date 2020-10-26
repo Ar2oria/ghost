@@ -2,6 +2,7 @@ package cc.w0rm.ghost.util;
 
 import cc.w0rm.ghost.enums.MsgHashMode;
 import com.google.common.collect.Lists;
+import com.simplerobot.modules.utils.KQCodeUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
@@ -13,21 +14,23 @@ import java.util.regex.Pattern;
  * @date : 2020/10/22 6:36 下午
  */
 public class MsgUtil {
-    private static final String FILE_REGEX = "\\[CQ:image,file=\\{(.+)}[.].*]";
-    private static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
-    private static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
-    private static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
-    private static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
-    private static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
-    private static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
-    private static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
-    private static final String SPECIFIC_SYMBOL_REGEX = "[亓元个条只件包套枚块片斤米尺寸千克瓶盒箱杯桶罐gGmMlL\\s]*";
-    private static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
-    private static final String ORDER_MSG_REGEX = "^\\d[-.]";
-    private static final Pattern ORDER_MSG_PATTERN = Pattern.compile(ORDER_MSG_REGEX);
-    private static final List<Pattern> PATTERNS = Lists.newArrayList(ORDER_MSG_PATTERN,
+    public static final String FILE_REGEX = "\\[CQ:image,file=\\{(.+)}[.].*]";
+    public static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
+    public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
+    public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
+    public static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
+    public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
+    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
+    public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
+    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元个条只件包套枚块片斤米尺寸千克瓶盒箱杯桶罐gGmMlL\\s]*";
+    public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
+    public static final String ORDER_MSG_REGEX = "^\\d[-.]";
+    public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
+    public static final String AT_ALL_MSG = KQCodeUtils.INSTANCE.toCq("at", "qq=all");
+    public static final Pattern AT_ALL_PATTERN = Pattern.compile(AT_ALL_REGEX);
+    public static final Pattern ORDER_MSG_PATTERN = Pattern.compile(ORDER_MSG_REGEX);
+    public static final List<Pattern> PATTERNS = Lists.newArrayList(ORDER_MSG_PATTERN,
             FILE_PATTERN, URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
-
 
     public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {
@@ -98,6 +101,14 @@ public class MsgUtil {
         return ORDER_MSG_PATTERN.matcher(msg).find();
     }
 
+    public static String replaceAtAll(String msg) {
+        if (Strings.isBlank(msg)) {
+            return msg;
+        }
+
+        return AT_ALL_PATTERN.matcher(msg).replaceAll(AT_ALL_MSG);
+    }
+
     public static int hashCode(String msg) {
         return hashCode(msg, MsgHashMode.MINIMUM);
     }
@@ -123,6 +134,14 @@ public class MsgUtil {
     private static String replace(String str) {
         if (Strings.isBlank(str)) {
             return Strings.EMPTY;
+        }
+
+        Map<String, String> fileMap = getFile(str);
+        if (fileMap.size() == 1) {
+            String fileStr = (String) fileMap.values().toArray()[0];
+            if (fileStr.equals(str)) {
+                return fileStr;
+            }
         }
 
         String returnVal = str;
