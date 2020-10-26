@@ -129,10 +129,10 @@ def full(text:str,#输入的qq信息
                 land_url = get_tao_land_url(good_id,apikey ,pid_2,pid_3,uid)
                 print('2->转成自己的商品land_url:',land_url)
                 tkl_my = creat_tkl(land_url,appkey,secret)
-                print('3->生成新的淘口令:',tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
-                text = text.replace(tkl[0],tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
+                print('3->生成新的淘口令:',tkl_my['tbk_tpwd_create_response']['data']['model'])
+                #text = text.replace(tkl[0],tkl_my['tbk_tpwd_create_response']['data']['password_simple'])
             print('4->返回新的文本:',text)
-            return 0,text,good_info
+            return 0,tkl_my['tbk_tpwd_create_response']['data']['model'],good_info
         except Exception as e:
             print('异常！')
             print(e)
