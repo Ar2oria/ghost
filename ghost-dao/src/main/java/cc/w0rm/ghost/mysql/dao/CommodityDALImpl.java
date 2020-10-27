@@ -35,7 +35,7 @@ public class CommodityDALImpl {
         try {
             List<MsgGroup> msgGroups = msgGroupMapper.selectByCommdityId(commodityId);
             return msgGroups.stream()
-                .filter(item -> !(!StringUtils.isNumber(item.getInsertTime()) || System.currentTimeMillis() - Long
+                .filter(item -> !(StringUtils.isNumber(item.getInsertTime()) || System.currentTimeMillis() - Long
                     .valueOf(item.getInsertTime()) > 6 * HOURS)).map(item -> String.valueOf(item.getGroup()))
                 .collect(Collectors.toSet());
         } catch (Exception exp) {

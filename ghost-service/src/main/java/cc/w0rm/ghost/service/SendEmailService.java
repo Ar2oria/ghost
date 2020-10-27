@@ -90,7 +90,7 @@ public class SendEmailService {
         if (StringUtils.isEmpty(groupQsig)) {
             return;
         }
-        groupQsig = groupQsig.replace("\\u0026", group);
+        groupQsig = groupQsig.replace("\\u0026", "&");
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
