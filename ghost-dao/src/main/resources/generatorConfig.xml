@@ -43,7 +43,8 @@
         </javaClientGenerator>
         <!-- 指定数据库表 -->
         <!--<table schema="" tableName="%"></table>-->
-        <table schema="" tableName="%"></table>
+        <table schema="commondity" tableName="%"></table>
+        <table schema="email" tableName="%"></table>
 
     </context>
 </generatorConfiguration>
