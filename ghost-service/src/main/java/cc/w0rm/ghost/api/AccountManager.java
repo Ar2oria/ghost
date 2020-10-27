@@ -3,10 +3,12 @@ package cc.w0rm.ghost.api;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.entity.GroupRule;
+import cc.w0rm.ghost.entity.platform.GetAble;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,4 +66,11 @@ public interface AccountManager {
     boolean isProducer(String code);
 
     boolean isProducer(ThisCodeAble codeAble);
+
+    /**
+     * 返回平台下不同消息组的账户配置，key ： 消息组名称 ， value ：消息组使用的平台账户配置
+     * @param platform
+     * @return
+     */
+    Map<String, GetAble> getPlatformConfig(String platform);
 }

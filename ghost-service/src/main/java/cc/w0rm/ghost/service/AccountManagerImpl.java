@@ -8,6 +8,8 @@ import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.config.role.Producer;
 import cc.w0rm.ghost.entity.GroupRule;
 import cc.w0rm.ghost.entity.Rule;
+import cc.w0rm.ghost.entity.platform.GetAble;
+import cc.w0rm.ghost.entity.platform.Parser;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
@@ -16,10 +18,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,6 +30,9 @@ public class AccountManagerImpl implements AccountManager {
 
     @Autowired
     private AccountManagerConfig accountManagerConfig;
+
+    @Autowired
+    private Map<String, Parser> parserMap;
 
     /**
      * 通过消息组标识获取组
@@ -202,5 +204,22 @@ public class AccountManagerImpl implements AccountManager {
         }
 
         return isProducer(codesAble.getThisCode());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, GetAble> getPlatformConfig(String platform) {
+        if (Strings.isBlank(platform)){
+            return Collections.emptyMap();
+        }
+        Parser parser = parserMap.get(platform);
+        if (parser == null){
+            throw new IllegalArgumentException("不支持的平台，请制定解析器");
+        }
+
+        Object o = accountManagerConfig.get("platform");
+        parser.parse((LinkedHashMap<String, Object>)o);
+
+        return parser.getMsgGroupConfig();
     }
 }
