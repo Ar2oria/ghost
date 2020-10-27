@@ -3,12 +3,9 @@ package cc.w0rm.ghost.util;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Type;
 
 /**
  * @author panyupeng
@@ -37,36 +34,6 @@ public class JacksonUtils {
         }
     }
     
-    public static <T> T jsonString2Object(String jsonStr, JavaType javaType, boolean ignoreUnknowField) {
-        if (null == jsonStr || jsonStr.isEmpty()) {
-            return null;
-        }
-        objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, !ignoreUnknowField);
-        
-        try {
-            return objectMapper.readValue(jsonStr, javaType);
-        } catch (Exception e) {
-            LOG.error("Json parse error! {}", e);
-            return null;
-        }
-    }
-    
-    public static <T> T jsonString2Object(String jsonStr, TypeReference valueTypeRef, boolean ignoreUnknowField) {
-        if (null == jsonStr || jsonStr.isEmpty()) {
-            return null;
-        }
-        objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, !ignoreUnknowField);
-        
-        try {
-            return objectMapper.readValue(jsonStr, valueTypeRef);
-        } catch (Exception e) {
-            LOG.error("Json parse error! {}", e);
-            return null;
-        }
-    }
-    
     public static <T> T jsonString2Object(String jsonStr, TypeReference valueTypeRef) {
         if (null == jsonStr || jsonStr.isEmpty()) {
             return null;
@@ -78,24 +45,6 @@ public class JacksonUtils {
             LOG.error("Json parse error!", e);
             return null;
         }
-    }
-    
-    public static <T> T jsonString2Object(String jsonStr, JavaType javaType) {
-        if (null == jsonStr || jsonStr.isEmpty()) {
-            return null;
-        }
-        objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-        
-        try {
-            return objectMapper.readValue(jsonStr, javaType);
-        }catch (Exception e){
-            LOG.error("Json parse error!", e);
-            return null;
-        }
-    }
-    
-    public static JavaType getJavaType(Type type){
-        return objectMapper.getTypeFactory().constructType(type);
     }
     
     

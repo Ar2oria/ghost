@@ -9,8 +9,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Map;
 
 /**
@@ -20,12 +22,12 @@ import java.util.Map;
 @Slf4j
 public class HttpUtils {
     
-    public static String get(String uri, Map<String, Object> requestParams, Map<String, String> header) {
+    public static String get(String uri, Map<String, String> requestParams, Map<String, String> header) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         // 参数
         StringBuilder params = new StringBuilder();
-        for (Map.Entry<String, Object> entry : requestParams.entrySet()) {
-            params.append("&").append(entry.getKey()).append("=").append(entry.getValue());
+        for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+            params.append("&").append(entry.getKey()).append("=").append(URLEncoder.encode(entry.getValue()));
         }
         String paramStr = "";
         if (params.length() > 0) {

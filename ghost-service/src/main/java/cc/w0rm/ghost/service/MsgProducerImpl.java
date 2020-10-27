@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -93,26 +94,35 @@ public class MsgProducerImpl implements MsgProducer {
     }
     
     private Commodity parseMsg(String msg) {
-        Map<String, Object> requestParameters = new HashMap<>();
+        Map<String, String> requestParameters = new HashMap<>();
         requestParameters.put("text", msg);
         String data = HttpUtils.get(path, requestParameters, new HashMap<>());
         if (StringUtils.isEmpty(data)) {
             return null;
         }
-        Map<String, String> commodityMap = JacksonUtils
-            .jsonString2Object(data, new TypeReference<Map<String, String>>() {});
-        if (!"0".equals(commodityMap.getOrDefault("flag", "-1"))) {
+        Map<String, Object> commodityMap = JacksonUtils
+            .jsonString2Object(data, new TypeReference<Map<String, Object>>() {});
+        if (CollectionUtils.isEmpty(commodityMap) || !"0".equals(commodityMap.getOrDefault("flag", "-1"))) {
             return null;
         }
-        String goodDetail = commodityMap.getOrDefault("good_id", "");
-        if (StringUtils.isEmpty(goodDetail)) {
+        String firstGoodDetail = (String) commodityMap.get("good_id");
+        if (StringUtils.isEmpty(firstGoodDetail)) {
+            return null;
+        }
+        Map<String, Object> secondGoodDetail = JacksonUtils
+            .jsonString2Object(firstGoodDetail, new TypeReference<Map<String, Object>>() {});
+        if (CollectionUtils.isEmpty(secondGoodDetail)) {
+            return null;
+        }
+        String thirdGoodDetail = (String) secondGoodDetail.get("data");
+        if (StringUtils.isEmpty(thirdGoodDetail)) {
             return null;
         }
         Map<String, String> goodsMap = JacksonUtils
-            .jsonString2Object(goodDetail, new TypeReference<Map<String, String>>() {});
+            .jsonString2Object(thirdGoodDetail, new TypeReference<Map<String, String>>() {});
         Commodity commodity = new Commodity();
-        commodity.setCommodityId(goodsMap.getOrDefault("activity_id", ""));
-        commodity.setSku(commodityMap.getOrDefault("desc", ""));
+        commodity.setCommodityId(goodsMap.getOrDefault("good_id", ""));
+        commodity.setSku(goodsMap.getOrDefault("title", ""));
         return commodity;
     }
     
@@ -126,6 +136,9 @@ public class MsgProducerImpl implements MsgProducer {
         Matcher matcher = MsgUtil.CHINESESE_PATTERN.matcher(msg);
         while (matcher.find()) {
             chineseCount++;
+        }
+        if (chineseCount == 0) {
+            return false;
         }
         if (chineseCount < 20) {
             return MsgUtil.FILE_PATTERN.matcher(msg).find() || MsgUtil.URL_PATTERN.matcher(msg).find();

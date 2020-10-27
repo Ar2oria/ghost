@@ -37,8 +37,8 @@ public class MsgConsumerQ2Impl extends BaseConsumer {
     }
     
     @Override
-    public Map<String, Object> buildParameter() {
-        Map<String, Object> ret = new HashMap<>();
+    public Map<String, String> buildParameter() {
+        Map<String, String> ret = new HashMap<>();
         ret.put("apikey", "");
         ret.put("pid_2", "");
         ret.put("pid_3", "");
