@@ -39,7 +39,7 @@ public class CommodityDALImpl {
                     .valueOf(item.getInsertTime()) > 6 * HOURS)).map(item -> String.valueOf(item.getGroup()))
                 .collect(Collectors.toSet());
         } catch (Exception exp) {
-            log.error("商品分发群组查询失败 商品id:{}", commodityId);
+            log.error("商品分发群组查询失败 商品id:{}", commodityId, exp);
         }
         return new HashSet<>();
     }
@@ -53,7 +53,7 @@ public class CommodityDALImpl {
         try {
             commodityMapper.insert(commodity);
         } catch (Exception exp) {
-            log.error("商品信息添加失败 商品信息:{}", commodity.toString());
+            log.error("商品信息添加失败 商品信息:{}", commodity.toString(), exp);
         }
         if (StringUtils.isEmpty(groups)) {
             return;
@@ -65,7 +65,7 @@ public class CommodityDALImpl {
             msgGroup.setInsertTime(String.valueOf(System.currentTimeMillis()));
             msgGroupMapper.insertOrUpdate(msgGroup);
         } catch (Exception exp) {
-            log.error("商品信息添加失败 商品信息:{}", commodity.toString());
+            log.error("商品群组信息添加失败 商品信息:{}", commodity.toString(), exp);
         }
     }
 }

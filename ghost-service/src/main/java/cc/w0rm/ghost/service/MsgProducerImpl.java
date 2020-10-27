@@ -102,27 +102,28 @@ public class MsgProducerImpl implements MsgProducer {
         }
         Map<String, Object> commodityMap = JacksonUtils
             .jsonString2Object(data, new TypeReference<Map<String, Object>>() {});
-        if (CollectionUtils.isEmpty(commodityMap) || !"0".equals(commodityMap.getOrDefault("flag", "-1"))) {
+        log.info("[解析测试日志] commodityMap:{}", commodityMap);
+        if (CollectionUtils.isEmpty(commodityMap) || 0 != (Integer) commodityMap.get("flag")) {
             return null;
         }
-        String firstGoodDetail = (String) commodityMap.get("good_id");
-        if (StringUtils.isEmpty(firstGoodDetail)) {
+        Map<String,Object> firstGoodDetail = (Map<String,Object>) commodityMap.get("good_id");
+        log.info("[解析测试日志] firstGoodDetail:{}", firstGoodDetail);
+        if (CollectionUtils.isEmpty(firstGoodDetail)) {
             return null;
         }
-        Map<String, Object> secondGoodDetail = JacksonUtils
-            .jsonString2Object(firstGoodDetail, new TypeReference<Map<String, Object>>() {});
-        if (CollectionUtils.isEmpty(secondGoodDetail)) {
+        Map<String,Object> goodsMap =  (Map<String,Object>) firstGoodDetail.get("data");
+        log.info("[解析测试日志] secondGoodDetail:{}", goodsMap);
+        if (CollectionUtils.isEmpty(goodsMap)) {
             return null;
         }
-        String thirdGoodDetail = (String) secondGoodDetail.get("data");
-        if (StringUtils.isEmpty(thirdGoodDetail)) {
+        String goodId = (String) goodsMap.get("goods_id");
+        log.info("[解析测试日志] goodId:{}", goodId);
+        if (StringUtils.isEmpty(goodId)) {
             return null;
         }
-        Map<String, String> goodsMap = JacksonUtils
-            .jsonString2Object(thirdGoodDetail, new TypeReference<Map<String, String>>() {});
         Commodity commodity = new Commodity();
-        commodity.setCommodityId(goodsMap.getOrDefault("good_id", ""));
-        commodity.setSku(goodsMap.getOrDefault("title", ""));
+        commodity.setCommodityId(goodId);
+        commodity.setSku((String)goodsMap.get("title"));
         return commodity;
     }
     

@@ -37,7 +37,7 @@ public abstract class BaseConsumer implements MsgConsumer {
         //}
         if ("830628164".equals(group)) {
             String sendMsg = buildMsg(msgGet.getMsg());
-            if (StringUtils.isEmpty(sendMsg) || "-1".equals(sendMsg)) {
+            if (StringUtils.isEmpty(sendMsg) || !"0".equals(sendMsg)) {
                 sendMsg = msgGet.getMsg();
             }
             botInfo.getSender().SENDER.sendGroupMsg("830628164", sendMsg);
