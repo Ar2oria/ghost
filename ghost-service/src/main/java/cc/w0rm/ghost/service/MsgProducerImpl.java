@@ -67,20 +67,20 @@ public class MsgProducerImpl implements MsgProducer {
         List<String> msgGroupByCode = accountManagerConfig.getMsgGroupByCode(groupMsg.getThisCode());
         // 2. 判断解析结果
         Commodity commodity = parseMsg(msg);
-        if (null == commodity || StringUtils.isEmpty(commodity.getCommodityId())) {
-            log.debug("消息生产者，商品解析空返，请查看解析逻辑 msgId[{}]", groupMsg.getId());
-            return;
-        }
-        // 3. 存储数据库
-        try {
-            Set<String> targetCommodityPushedGroups = commodityDAL
-                .getTargetCommodityPushedGroups(commodity.getCommodityId());
-            if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
-                return;
+        if (null != commodity && !StringUtils.isEmpty(commodity.getCommodityId())) {
+            // 3. 存储数据库
+            try {
+                Set<String> targetCommodityPushedGroups = commodityDAL
+                    .getTargetCommodityPushedGroups(commodity.getCommodityId());
+                if (targetCommodityPushedGroups.contains(groupMsg.getGroup())) {
+                    return;
+                }
+                commodityDAL.addCommodity(commodity, groupMsg.getGroup());
+            } catch (Exception exp) {
+                log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
             }
-            commodityDAL.addCommodity(commodity, groupMsg.getGroup());
-        } catch (Exception exp) {
-            log.error("消息生产者，商品记录失败 msgId[{}]", groupMsg.getId(), exp);
+        } else {
+            log.debug("消息生产者，商品解析空返，请查看解析逻辑 msgId[{}]", groupMsg.getId());
         }
         //4. 使用协调者转发消息 coordinator.forward()
         try {
