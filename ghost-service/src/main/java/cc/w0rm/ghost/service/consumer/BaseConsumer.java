@@ -6,6 +6,7 @@ import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.bot.BotInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,6 +21,10 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public abstract class BaseConsumer implements MsgConsumer {
+    
+    
+    @Value("${parse.transfer.path}")
+    private String path;
     
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
@@ -38,6 +43,6 @@ public abstract class BaseConsumer implements MsgConsumer {
     
     private String buildMsg() {
         Map<String, Object> requestParameters = buildParameter();
-        return HttpUtils.get("http://47.98.45.40:5001/XXX", requestParameters, new HashMap<>());
+        return HttpUtils.get(path, requestParameters, new HashMap<>());
     }
 }

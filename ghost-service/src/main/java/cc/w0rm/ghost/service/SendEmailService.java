@@ -1,17 +1,14 @@
 package cc.w0rm.ghost.service;
 
-import cc.w0rm.ghost.listener.GroupIncreaseListener;
 import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
 import cc.w0rm.ghost.mysql.po.Email;
 import cc.w0rm.ghost.util.HttpUtils;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce;
-import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.result.GroupList;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.sender.MsgSender;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +26,6 @@ import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
@@ -55,6 +51,9 @@ public class SendEmailService {
     @Value("${spring.mail.username}")
     private String from;
     
+    @Value("${spring.mail.test}")
+    private String testEmailTo;
+    
     public void increase(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
             String qq = groupMemberIncrease.getBeOperatedQQ();
@@ -63,7 +62,7 @@ public class SendEmailService {
             if (CollectionUtils.isEmpty(curQQGroups)) {
                 return;
             }
-            sendTextMail("3372342316@qq.com", "新成员加入" + qq, "发送的群号为:" + curQQGroups.get(0));
+            sendTextMail(testEmailTo, "新成员加入" + qq, "发送的群号为:" + curQQGroups.get(0));
             process(qq, curQQGroups, "classpath:templates/emailTemplate.html");
             // 发送测试邮件
         } catch (Exception e) {
@@ -76,7 +75,7 @@ public class SendEmailService {
             String qq = groupMemberReduce.getBeOperatedQQ();
             String group = groupMemberReduce.getGroupCode();
             // 发送测试邮件
-            sendTextMail("3372342316@qq.com", "成员退出" + qq, "发送的群号为:" + group);
+            sendTextMail(testEmailTo, "成员退出" + qq, "发送的群号为:" + group);
             simpleProcess(qq, group, "classpath:templates/emailReduceTemplate.html");
         } catch (Exception e) {
             log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
@@ -97,7 +96,7 @@ public class SendEmailService {
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
         // 发送h5邮件
-        sendHtmlMail("3372342316@qq.com", "你真的舍得就这么走了吗", emailContent);
+        sendHtmlMail(testEmailTo, "你真的舍得就这么走了吗", emailContent);
         //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
     }
     
@@ -124,7 +123,7 @@ public class SendEmailService {
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
         // 发送h5邮件
-        sendHtmlMail("3372342316@qq.com", "隐藏福利开启", emailContent);
+        sendHtmlMail(testEmailTo, "隐藏福利开启", emailContent);
         //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
         // 添加数据库
         email.setQqAccount(Long.parseLong(qq));

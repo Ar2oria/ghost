@@ -48,6 +48,9 @@ public class MsgProducerImpl implements MsgProducer {
     @Autowired
     private AccountManagerConfig accountManagerConfig;
     
+    @Value("${parse.info.path}")
+    private String path;
+    
     private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 60,
         TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactoryBuilder()
         .setDaemon(true).setNameFormat("MsgProducer-ThreadPool").build());
@@ -92,7 +95,7 @@ public class MsgProducerImpl implements MsgProducer {
     private Commodity parseMsg(String msg) {
         Map<String, Object> requestParameters = new HashMap<>();
         requestParameters.put("text", msg);
-        String data = HttpUtils.get("http://47.98.45.40:5001/get_self_tkl", requestParameters, new HashMap<>());
+        String data = HttpUtils.get(path, requestParameters, new HashMap<>());
         if (StringUtils.isEmpty(data)) {
             return null;
         }
