@@ -1,16 +1,9 @@
 package cc.w0rm.ghost.service.consumer;
 
-import cc.w0rm.ghost.api.MsgConsumer;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.bot.BotInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author : xuyang
@@ -36,14 +29,4 @@ public class MsgConsumerQ2Impl extends BaseConsumer {
         super.consume(botInfo, group, msgGet);
     }
     
-    @Override
-    public Map<String, String> buildParameter() {
-        Map<String, String> ret = new HashMap<>();
-        ret.put("apikey", "");
-        ret.put("pid_2", "");
-        ret.put("pid_3", "");
-        ret.put("appkey", "");
-        ret.put("sercet", "");
-        return ret;
-    }
 }

@@ -73,4 +73,11 @@ public interface AccountManager {
      * @return
      */
     Map<String, GetAble> getPlatformConfig(String platform);
+    
+    /**
+     * 通过消息组标识获取组成员的所有可分发群号
+     * @param flag
+     * @return
+     */
+    Set<String> getMsgGroupConsumerMemberGroups(String flag);
 }

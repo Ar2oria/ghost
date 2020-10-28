@@ -7,6 +7,7 @@ import cc.w0rm.ghost.mysql.po.MsgGroup;
 import com.alibaba.druid.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.HashSet;
@@ -34,9 +35,12 @@ public class CommodityDALImpl {
         
         try {
             List<MsgGroup> msgGroups = msgGroupMapper.selectByCommdityId(commodityId);
-            return msgGroups.stream()
-                .filter(item -> !(StringUtils.isNumber(item.getInsertTime()) || System.currentTimeMillis() - Long
-                    .valueOf(item.getInsertTime()) > 6 * HOURS)).map(item -> String.valueOf(item.getGroup()))
+            if (CollectionUtils.isEmpty(msgGroups)) {
+                return new HashSet<>();
+            }
+            return msgGroups.stream().filter(item -> item != null && null != item.getInsertTime() && (StringUtils
+                .isNumber(item.getInsertTime()) || System.currentTimeMillis() - Long
+                .valueOf(item.getInsertTime()) > 6 * HOURS)).map(item -> String.valueOf(item.getGroup()))
                 .collect(Collectors.toSet());
         } catch (Exception exp) {
             log.error("商品分发群组查询失败 商品id:{}", commodityId, exp);

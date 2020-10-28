@@ -52,7 +52,7 @@ public interface EmailMapper {
         "jdbcType=VARCHAR}", "where _id = #{id,jdbcType=INTEGER}"})
     int updateByPrimaryKey(Email record);
     
-    @Select({"select", "_id, qq_account, joined_groups", "from email", "where qq_account = #{qq,jdbcType=INTEGER}"})
+    @Select({"select", "_id, qq_account, joined_groups", "from email", "where qq_account = #{qq,jdbcType=BIGINT}"})
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.INTEGER, id = true), @Result(column =
         "qq_account", property = "qqAccount", jdbcType = JdbcType.BIGINT), @Result(column = "joined_groups",
         property = "joinedGroups", jdbcType = JdbcType.VARCHAR)})

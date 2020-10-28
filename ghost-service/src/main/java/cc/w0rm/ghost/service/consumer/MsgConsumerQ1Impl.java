@@ -1,20 +1,9 @@
 package cc.w0rm.ghost.service.consumer;
 
-import cc.w0rm.ghost.api.MsgConsumer;
-import cc.w0rm.ghost.config.AccountManagerConfig;
-import cc.w0rm.ghost.config.role.MsgGroup;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.bot.BotInfo;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author : xuyang
@@ -40,15 +29,4 @@ public class MsgConsumerQ1Impl extends BaseConsumer {
         super.consume(botInfo, group, msgGet);
     }
     
-    // TODO 可以改成配置文件 但是我懒得改
-    @Override
-    public Map<String, String> buildParameter() {
-        Map<String, String> ret = new HashMap<>();
-        ret.put("apikey", "");
-        ret.put("pid_2", "");
-        ret.put("pid_3", "");
-        ret.put("appkey", "");
-        ret.put("sercet", "");
-        return ret;
-    }
 }
