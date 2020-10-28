@@ -36,7 +36,7 @@ def get_tao_land_url(good_id:str,apikey = 'DBopyqYPJz',pid_2='2114750177',pid_3=
     #pid_2='2114750177'
     #pid_3='110957100054'
     #uid='2416280559'
-    url = 'https://api.taokouling.com/tkl/TbkPrivilegeGet'
+    url = 'http://api.taokouling.com/tkl/TbkPrivilegeGet'
     data = {
         'apikey':apikey,
         'itemid':good_id,
@@ -47,58 +47,78 @@ def get_tao_land_url(good_id:str,apikey = 'DBopyqYPJz',pid_2='2114750177',pid_3=
     requests.DEFAULT_RETRIES = 5
     s = requests.session()
     s.keep_alive = False
-    response = requests.post(url='https://api.taokouling.com/tkl/TbkPrivilegeGet',data=json.dumps(data),verify=False)
+    response = requests.post(url='http://api.taokouling.com/tkl/TbkPrivilegeGet',data=json.dumps(data),verify=False)
     my_tkl = json.loads(response.text)
     return my_tkl['result']['data']['coupon_click_url']
 
 def get_goods_id(tao_kou_ling:str)->str:
     try:
+        global  session_id
+        global  csrftoken
+        global header
+        print('尝试使用现有session_id:')
+        print(session_id)
+        print(csrftoken)
+        data = {
+            'tkl': tao_kou_ling
+            }
         header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
         header['X-CSRFToken'] = csrftoken
         response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
         good_info = json.loads(response.text)
+        print('现有id调用正常')
         return good_info['data']['goods_id'],good_info
-    except:
-            data = {
-                'mobile': '13104080302',
-                'pwd': 'xuyang1001'
-            }
 
-            header = {
-                'Cookie': 'csrftoken=aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
-                'X-CSRFToken': 'aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
-                'Content-Type': 'application/json',
-                'Host': 'm.mzsmn.com',
-                'Origin': 'http://m.mzsmn.com',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
-            }
+    except Exception as e:
+        print('调用原有登录session异常：',e)
+        print('需要重新获取登陆状态')
+        data = {
+            'mobile': '13104080302',
+            'pwd': 'xuyang1001'
+        }
 
-            response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
-            cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
-            session_id = cookie_map['sessionid'].value
-            csrftoken = cookie_map['csrftoken'].value
+        header = {
+            'Cookie': 'csrftoken=aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+            'X-CSRFToken': 'aYiy12GqMojlfOia8ICzsemx1acrVDsuSC8E5kDtMXvMbfDgnh8TiW0oyMVjhV4g',
+            'Content-Type': 'application/json',
+            'Host': 'm.mzsmn.com',
+            'Origin': 'http://m.mzsmn.com',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
+        }
 
-            data = {
-                'tkl': tao_kou_ling
-            }
-            header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
-            header['X-CSRFToken'] = csrftoken
+        response = requests.post(url='http://m.mzsmn.com/login', data=json.dumps(data), headers=header,verify=False)
+        cookie_map = response.cookies._cookies['m.mzsmn.com']['/']
+        session_id = cookie_map['sessionid'].value
+        csrftoken = cookie_map['csrftoken'].value
 
-            response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
-            good_info = json.loads(response.text)
-            return good_info['data']['goods_id'],good_info
+        data = {
+            'tkl': tao_kou_ling
+        }
+        print('获得登录口令：',csrftoken,session_id)
+        header['Cookie'] = 'csrftoken=' + csrftoken + ";sessionid=" + session_id
+        header['X-CSRFToken'] = csrftoken
+
+        response = requests.post(url='http://m.mzsmn.com/tool/tkl_decrypt', data=json.dumps(data), headers=header,verify=False)
+       
+        good_info = json.loads(response.text)
+        print('获得商品ID:',good_info['data']['goods_id'])
+        return good_info['data']['goods_id'],good_info
 
 def get_tao_kou_ling(text: str) -> str:
-    symbol = "\₰|\/|\//|\¥|\\(|\\)|\《|\￥|\€|\\$|\₤|\₳|\¢|\¤|\฿|\฿|\₵|\₡|\₫|\₲|\₭|£|\₥|\₦|\₱|\〒|\₮|\₩|\₴|\₪|\៛|\﷼|\₢|\ℳ|\₯|\₠|\₣|\₧|\ƒ"
-    pattern = '((' + symbol + ')([a-zA-Z0-9]{11})('+ symbol+'))'
-    result = re.compile(pattern).findall(text)
+    global patterner_tkl
+    #symbol = "\₰|\/|\//|\¥|\\(|\\)|\《|\￥|\€|\\$|\₤|\₳|\¢|\¤|\฿|\฿|\₵|\₡|\₫|\₲|\₭|£|\₥|\₦|\₱|\〒|\₮|\₩|\₴|\₪|\៛|\﷼|\₢|\ℳ|\₯|\₠|\₣|\₧|\ƒ"
+    #pattern = '((' + symbol + ')([a-zA-Z0-9]{11})('+ symbol+'))'
+    #result = re.compile(pattern).findall(text)
+    result = patterner_tkl.findall(text)
     if len(result)>0:
         return True,result
     return False,None
  
 def get_tao_url(text:str)->str:
-    pattern = "((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?)"
-    full_result = re.compile(pattern).findall(text)
+    global patterner_url
+    #pattern = "((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?)"
+    #full_result = re.compile(pattern).findall(text)
+    full_result = patterner_url.findall(text)
     if len(full_result)>0:
         return True,full_result
     return False,None
@@ -120,7 +140,7 @@ def full(text:str,#输入的qq信息
             for tkl in res:
                 print('0->解析淘口令:',tkl[0])
                 good_id,good_info  = get_goods_id(tkl[0])
-                print(good_info)
+                #print(good_info)
                 print('1->解析商品ID:',good_id)
                 land_url = get_tao_land_url(good_id,apikey ,pid_2,pid_3,uid)
                 print('2->转成自己的商品land_url:',land_url)
@@ -141,6 +161,24 @@ def full(text:str,#输入的qq信息
             return -2,-2,-2
     else:
         return -1,-1,-1
+
+def full_only_goodinfo(text:str)->str:
+    #return -1  未识别到淘口令
+    #return -2 识别到淘口令但在转化过程中出现异常
+    #return 0 返回正常
+    f,res = get_tao_kou_ling(text)
+    if f:
+        try:
+            for tkl in res:
+                print('0->解析淘口令:',tkl[0])
+                good_id,good_info  = get_goods_id(tkl[0])
+            return 0,good_info
+        except Exception as e:
+            print('异常！')
+            print(e)
+            return -2,-2
+    else:
+        return -1,-1
 
 #############################################################
 #Flask服务
@@ -179,10 +217,26 @@ def get_self_tkl():
         }
     return json.dumps(res)
 
+@app.route('/get_good_info', methods=['GET', 'POST'])
+def get_good_info():
+    data = request_parse(request)
+    text=data.get("text")
+
+    f,good_info = full_only_goodinfo(text)
+    res={
+        'flag':f,
+        'good_id':good_info
+        }
+    return json.dumps(res)
 
 #############################################################
 
 if __name__ == '__main__':
+    symbol = "\₰|\/|\//|\¥|\\(|\\)|\《|\￥|\€|\\$|\₤|\₳|\¢|\¤|\฿|\฿|\₵|\₡|\₫|\₲|\₭|£|\₥|\₦|\₱|\〒|\₮|\₩|\₴|\₪|\៛|\﷼|\₢|\ℳ|\₯|\₠|\₣|\₧|\ƒ"
+    pattern = '((' + symbol + ')([a-zA-Z0-9]{11})('+ symbol+'))'
+    patterner_tkl = re.compile(pattern)
+    pattern = "((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?)"
+    patterner_url = re.compile(pattern)
     data = {
         'mobile': '13104080302',
         'pwd': 'xuyang1001'
@@ -202,12 +256,13 @@ if __name__ == '__main__':
     session_id = cookie_map['sessionid'].value
     csrftoken = cookie_map['csrftoken'].value
 
-    app.run(host='0.0.0.0',port='5001')
+    #app.run(host='0.0.0.0',port='5001')
     
-    #test_str = '6.9   健美创研凡士林管状唇膏3g https://s.click.taobao.com/aNgS3vu (eHnhcRJ10Sq)/'
-    #f,get_txt,good_info = full(test_str)
+    test_str = '楼上的红包随手领了大伙有什么需要的，翻翻聊天记录。如果群里没发的话，可以去自助网站搜搜看￥8WzNc8asHPf￥//。http://lajic.cn/'
+    f,get_txt,good_info = full(test_str)
+    f,good_info = full_only_goodinfo(test_str)
     ##idd = get_goods_id('￥w9WocRo0VdJ￥/')
-    ##print('--------------------------------------------------------------')
-    #print(get_txt)
+    #print('--------------------------------------------------------------')
+    print(get_txt)
 
  
