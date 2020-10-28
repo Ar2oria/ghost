@@ -256,13 +256,13 @@ if __name__ == '__main__':
     session_id = cookie_map['sessionid'].value
     csrftoken = cookie_map['csrftoken'].value
 
-    #app.run(host='0.0.0.0',port='5001')
+    app.run(host='0.0.0.0',port='5001')
     
-    test_str = '楼上的红包随手领了大伙有什么需要的，翻翻聊天记录。如果群里没发的话，可以去自助网站搜搜看￥8WzNc8asHPf￥//。http://lajic.cn/'
-    f,get_txt,good_info = full(test_str)
-    f,good_info = full_only_goodinfo(test_str)
+    #test_str = '楼上的红包随手领了大伙有什么需要的，翻翻聊天记录。如果群里没发的话，可以去自助网站搜搜看￥8WzNc8asHPf￥//。http://lajic.cn/'
+    #f,get_txt,good_info = full(test_str)
+    #f,good_info = full_only_goodinfo(test_str)
     ##idd = get_goods_id('￥w9WocRo0VdJ￥/')
     #print('--------------------------------------------------------------')
-    print(get_txt)
+    #print(get_txt)
 
  
