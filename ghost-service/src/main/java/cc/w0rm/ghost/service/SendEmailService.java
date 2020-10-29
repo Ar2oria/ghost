@@ -3,12 +3,8 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
 import cc.w0rm.ghost.mysql.po.Email;
 import cc.w0rm.ghost.util.HttpUtils;
-import cc.w0rm.ghost.util.JacksonUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce;
-import com.forte.qqrobot.beans.messages.result.GroupList;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.sender.MsgSender;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -31,8 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 
 /**
@@ -128,7 +122,7 @@ public class SendEmailService {
         if (StringUtils.isEmpty(groupQsig)) {
             return;
         }
-        groupQsig = "https://qm.qq.com/cgi-bin/qm/qr?k=" + groupQsig + "&jump_from=webapi";
+        groupQsig = groupQsig.replace("\\u0026", "&");
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
@@ -143,30 +137,49 @@ public class SendEmailService {
     }
     
     private String getGroupQsig(String group) {
+        String groupKey = getGroupKey(group);
+        log.info("[腾讯加群解析测试日志] 一级解析 key:{}", groupKey);
+        if (StringUtils.isEmpty(groupKey)) {
+            return null;
+        }
         Map<String, String> header = new HashMap<>();
-        Map<String, String> params = new HashMap<>();
-        params.put("bkn", "1380053855");
-        params.put("gc", group);
-        header.put("Referer", "https://qun.qq.com/proxy.html?callback=1&id=1");
-        header.put("Content-Type", "application/x-www-form-urlencoded");
+        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
+        header.put("Content-Type", "utf-8");
         header
             .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
                 "Gecko) Chrome/86.0.4240.111 Safari/537.36");
         header.put("Accept", "*/*");
+        String data = HttpUtils.get("http://shang.qq.com/wpa/qunwpa?idkey=" + groupKey, new HashMap<>(), header);
+        if (StringUtils.isEmpty(data) || !data.contains("tencent")) {
+            return null;
+        }
+        String[] firstSplit = data.split("tencent");
+        if (firstSplit.length < 2) {
+            return null;
+        }
+        String[] secondSplit = firstSplit[1].split("\";");
+        return "tencent" + secondSplit[0];
+    }
+    
+    
+    private String getGroupKey(String group) {
+        Map<String, String> header = new HashMap<>();
+        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
+        header.put("Content-Type", "utf-8");
         header
-            .put("Cookie", "pgv_info=ssid=s9625610669; pgv_pvid=6863400768; RK=JmpAk9wjGU; " + "ptcz" +
-                "=c8df89f1eaa700612cb39c65aba945b7a2fc1dc8155d1bb5f57b9a9c4373b716; pgv_pvi=3055724544; " + "pgv_si" + "=s9864925184; eas_sid=21w6V012l3d110H2f0z31138T9; lplqqcomrouteLine=a20200918s10_a20200918s10;" + " " + "lolqqcomrouteLine=index-tool_index-page; tokenParams=%3Fe_code%3D507042; p_uin=o1208385859; " + "traceid=7b9e50f8ee; " + "verifysession" + "=h013b4969305b536263f6b18bc9a527d37b9924444e86e80a43e570fda38d676e94eebf5a40ae20bd85; " + "pac_uid" + "=1_1208385859; tvfe_boss_uuid=204266b89114ab29; " + "pt4_token=*0f8j72GbgPC*YR" + "*cMlAs8zAsjocAsAKQNcVKPqMrNk_; " + "p_skey=51nzO0u6KUXGJptwc-wuENW5hAofU5V9wHOgm-4dwNM_; " + "o_cookie=3372342316; uin=o1208385859; " + "ptui_loginuin=1208385859; skey=@uf4uagb5W; " + "_qpsvr_localtk=1603878836418");
-        header.put("Origin", "https://qun.qq.com");
-        String data = HttpUtils.get("https://admin.qun.qq.com/cgi-bin/qun_admin/get_join_k", params, header);
-        if (StringUtils.isEmpty(data)) {
+            .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
+                "Gecko) Chrome/86.0.4240.111 Safari/537.36");
+        header.put("Accept", "*/*");
+        String data = HttpUtils.get("https://shang.qq.com/wpa/g_wpa_get?guin=" + group, new HashMap<>(), header);
+        if (StringUtils.isEmpty(data) || !data.contains("key")) {
             return null;
         }
-        Map<String, String> parsedData = JacksonUtils
-            .jsonString2Object(data, new TypeReference<Map<String, String>>() {});
-        if (CollectionUtils.isEmpty(parsedData)) {
+        String[] afterSplit = data.split("key\":\"");
+        if (afterSplit.length < 2) {
             return null;
         }
-        return parsedData.getOrDefault("k", "");
+        String groupKey = afterSplit[1];
+        return groupKey.split("\"}")[0];
     }
     
     
