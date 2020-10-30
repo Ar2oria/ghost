@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class BaoZouIFeignInterceptor implements RequestInterceptor {
+public class BaoZouFeignInterceptor implements RequestInterceptor {
     private static final Pattern CSRF = Pattern.compile("^csrftoken=(.*?);\\s");
     private static final Pattern SESSION = Pattern.compile("^sessionid=(.*?);\\s");
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient().newBuilder()
@@ -49,6 +50,14 @@ public class BaoZouIFeignInterceptor implements RequestInterceptor {
 
     @Autowired
     private RequestProperties requestProperties;
+
+    @PostConstruct
+    public void init(){
+        BaoZouSession session = getSession();
+        if (session != null) {
+            SESSION_CACHE.put(CACHE, session);
+        }
+    }
 
     private BaoZouSession getSession() {
         MyRequestProperties myRequestProperties = requestProperties.getProps("baozou");
