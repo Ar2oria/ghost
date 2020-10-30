@@ -14,10 +14,10 @@ public class TklInfoDTO implements Serializable {
 	private Double endPrice;
 	private Double monthSale;
 	private String title;
-	private Double twoHourSale;
+	private String twoHourSale;
 	private String pirUrl;
 	private Double money;
-	private Double todaySale;
+	private String todaySale;
 	private Double price;
 	private String activityId;
 	private Double couponMoney;

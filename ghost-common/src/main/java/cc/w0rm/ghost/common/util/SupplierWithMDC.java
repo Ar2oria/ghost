@@ -6,34 +6,36 @@ import org.slf4j.MDC;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * @author : xuyang
- * @date : 2020/10/22 1:12 下午
+ * @date : 2020/10/30 11:06 下午
  */
-public class RunnableWithMDC implements Runnable {
-    private final Runnable runnable;
+public class SupplierWithMDC<U> implements Supplier<U> {
+    private final Supplier<U> supplier;
     private final Map MdcMap;
 
-    public RunnableWithMDC(Runnable runnable) {
-        this(runnable, MDC.getCopyOfContextMap());
+    public SupplierWithMDC(Supplier<U> supplier) {
+        this(supplier, MDC.getCopyOfContextMap());
     }
 
-    public RunnableWithMDC(Runnable runnable, Map MdcMap) {
-        Preconditions.checkArgument(Objects.nonNull(runnable));
-        this.runnable = runnable;
+    public SupplierWithMDC(Supplier<U> supplier, Map MdcMap) {
+        Preconditions.checkArgument(Objects.nonNull(supplier));
+        this.supplier = supplier;
         this.MdcMap = MdcMap;
     }
 
     @Override
-    public void run() {
+    public U get() {
         if (MdcMap != null && MdcMap.size() > 0) {
             MDC.setContextMap(MdcMap);
         } else {
             MDC.put("request_id", UUID.randomUUID().toString());
         }
+
         try {
-            runnable.run();
+            return supplier.get();
         } finally {
             MDC.clear();
         }

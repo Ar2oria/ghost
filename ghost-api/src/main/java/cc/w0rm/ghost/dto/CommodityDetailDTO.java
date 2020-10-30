@@ -15,6 +15,11 @@ public class CommodityDetailDTO {
      * 商品id
      */
     private String commodityId;
+
+    /**
+     * 商品优惠卷id
+     */
+    private String activityId;
     /**
      * 原始文本
      */

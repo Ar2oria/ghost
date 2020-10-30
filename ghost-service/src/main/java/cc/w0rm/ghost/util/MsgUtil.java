@@ -16,21 +16,30 @@ import java.util.regex.Pattern;
 public class MsgUtil {
     public static final String FILE_REGEX = "\\[CQ:image,file=\\{(.+)}[.].*]";
     public static final Pattern FILE_PATTERN = Pattern.compile(FILE_REGEX);
+
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
     public static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
-    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/(]\\s?(\\w{9,12})\\s?[\\p{Sc}/)]+";
+
+    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]";
     public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
-    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元个条只件包套枚块片斤米尺寸千克瓶盒箱杯桶罐gGmMlL\\s]*";
+    public static final String TAOBAO_CLICK_URL_REGEX = "https://s[.]click[.]taobao[.]com/\\w{5,9}";
+    public static final Pattern TAOBAO_CLICK_URL_PATTERN = Pattern.compile(TAOBAO_CLICK_URL_REGEX);
+    public static final String TAOBAO_SHORT_URL_REGEX = "https://m[.]tb[.]cn/h[.]\\w{5,9}";
+    public static final Pattern TAOBAO_SHORT_URL_PATTERN = Pattern.compile(TAOBAO_SHORT_URL_REGEX);
+
+    public static final String JD_SHORT_URL_REGEX = "https://u[.]jd[.]com/\\w{5,9}";
+    public static final Pattern JD_SHORT_URL_PATTERN = Pattern.compile(JD_SHORT_URL_REGEX);
+    public static final String JD_COUPON_URL_REGEX = "https://coupon[.]m[.]jd[.]com/[-\\[\\]\\d\\w:/.?=&%;,()]+";
+    public static final Pattern JD_COUPON_URL_PATTERN = Pattern.compile(JD_COUPON_URL_REGEX);
+
+    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s]*";
     public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
-    public static final String ORDER_MSG_REGEX = "^\\d[-.]";
+
     public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
     public static final String AT_ALL_MSG = KQCodeUtils.INSTANCE.toCq("at", "qq=all");
     public static final Pattern AT_ALL_PATTERN = Pattern.compile(AT_ALL_REGEX);
-    public static final Pattern ORDER_MSG_PATTERN = Pattern.compile(ORDER_MSG_REGEX);
-    public static final List<Pattern> PATTERNS = Lists.newArrayList(ORDER_MSG_PATTERN,
-            FILE_PATTERN, URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
 
     public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {
@@ -78,7 +87,7 @@ public class MsgUtil {
     }
 
 
-    public static Map<String, String> getTaoKouLing(String msg) {
+    public static Map<String, String> getTaokouling(String msg) {
         if (Strings.isBlank(msg)) {
             return Collections.emptyMap();
         }
@@ -86,19 +95,11 @@ public class MsgUtil {
         Map<String, String> result = new HashMap<>(1);
         Matcher matcher = TAO_KOU_LING_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String code = matcher.group(1);
+            String code = "￥" + matcher.group(1) + "￥";
             result.put(code, matcher.group(0));
         }
 
         return result;
-    }
-
-    public static boolean isOrderMsg(String msg) {
-        if (Strings.isBlank(msg)) {
-            return false;
-        }
-
-        return ORDER_MSG_PATTERN.matcher(msg).find();
     }
 
     public static String replaceAtAll(String msg) {
@@ -145,11 +146,69 @@ public class MsgUtil {
         }
 
         String returnVal = str;
-        for (Pattern pattern : PATTERNS) {
+
+        List<Pattern> patterns = Lists.newArrayList(FILE_PATTERN,
+                URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
+        for (Pattern pattern : patterns) {
             returnVal = pattern.matcher(returnVal).replaceAll("");
         }
 
         return returnVal;
     }
 
+    public static List<String> listTbClickUrls(String msg) {
+        if (Strings.isBlank(msg)) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>(1);
+        Matcher matcher = TAOBAO_CLICK_URL_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            result.add(matcher.group(0));
+        }
+
+        return result;
+    }
+
+    public static List<String> listTbShortUrls(String msg) {
+        if (Strings.isBlank(msg)) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>(1);
+        Matcher matcher = TAOBAO_SHORT_URL_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            result.add(matcher.group(0));
+        }
+
+        return result;
+    }
+
+    public static List<String> listJdShortUrls(String msg) {
+        if (Strings.isBlank(msg)) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>(1);
+        Matcher matcher = JD_SHORT_URL_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            result.add(matcher.group(0));
+        }
+
+        return result;
+    }
+
+    public static List<String> listJdCouponUrls(String msg) {
+        if (Strings.isBlank(msg)) {
+            return Collections.emptyList();
+        }
+
+        List<String> result = new ArrayList<>(1);
+        Matcher matcher = JD_COUPON_URL_PATTERN.matcher(msg);
+        while (matcher.find()) {
+            result.add(matcher.group(0));
+        }
+
+        return result;
+    }
 }

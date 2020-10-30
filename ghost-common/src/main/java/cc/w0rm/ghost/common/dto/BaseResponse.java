@@ -41,6 +41,10 @@ public class BaseResponse<T> implements Serializable {
         return new BaseResponse<>(responseCodeEnum.getCode(), responseCodeEnum.getMessage(), data, pageInfo);
     }
 
+    public static <T> BaseResponse<T> let(Integer code, String msg, T data) {
+        return new BaseResponse<>(code, msg, data, null);
+    }
+
     public static <T> BaseResponse<T> success() {
         return success(null);
     }
@@ -62,6 +66,6 @@ public class BaseResponse<T> implements Serializable {
     }
 
     public static <T> BaseResponse<T> failure(Integer code, String msg, T data) {
-        return new BaseResponse<>(code, msg, data, null);
+        return let(code, msg, data);
     }
 }

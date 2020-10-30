@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.api;
 
 import cc.w0rm.ghost.dto.MsgInfoDTO;
+import lombok.NonNull;
 
 /**
  * @author : xuyang
@@ -13,9 +14,10 @@ public interface MsgResolver {
     /**
      * 解析消息，返回商品信息 + 转换后的消息
      * @param msg
-     * @param pid
+     * @param group
      * @return
      */
-    MsgInfoDTO resolve(String msg, String pid);
+    @NonNull
+    MsgInfoDTO resolve(String msg, String group);
 
 }
