@@ -1,9 +1,5 @@
-package cc.w0rm.ghost.config;
+package cc.w0rm.ghost.config.color;
 
-import cc.w0rm.ghost.config.color.AllPassStrategy;
-import cc.w0rm.ghost.config.color.BlackStrategy;
-import cc.w0rm.ghost.config.color.InterceptStrategy;
-import cc.w0rm.ghost.config.color.WhiteStrategy;
 import cc.w0rm.ghost.config.role.ConfigRole;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.intercept.Context;

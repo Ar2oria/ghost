@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.config;
 
 import cc.w0rm.ghost.common.util.TypeUtil;
+import cc.w0rm.ghost.config.color.InterceptContext;
 import cc.w0rm.ghost.config.color.InterceptNode;
 import cc.w0rm.ghost.config.role.ConfigRole;
 import cc.w0rm.ghost.config.role.Consumer;

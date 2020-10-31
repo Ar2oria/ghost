@@ -228,6 +228,12 @@
                 <version>${jackson.annotations.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.annotations.version}</version>
+            </dependency>
+
             <!--okhttp -->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>

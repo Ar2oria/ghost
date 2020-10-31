@@ -1,4 +1,4 @@
-package cc.w0rm.ghost.config;
+package cc.w0rm.ghost.config.color;
 
 import cc.w0rm.ghost.config.color.InterceptStrategy;
 
