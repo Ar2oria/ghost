@@ -67,7 +67,6 @@ public class SendEmailService {
                 return;
             }
             List<String> whiteGroupsList = new ArrayList<>(whiteGroup);
-            sendTextMail(testEmailTo, "新成员加入" + qq, "发送的群号为:" + whiteGroupsList.get(0));
             process(qq, whiteGroupsList, "classpath:templates/emailTemplate.html");
             // 发送测试邮件
         } catch (Exception e) {
@@ -80,7 +79,6 @@ public class SendEmailService {
             String qq = groupMemberReduce.getBeOperatedQQ();
             String group = groupMemberReduce.getGroupCode();
             // 发送测试邮件
-            sendTextMail(testEmailTo, "成员退出" + qq, "发送的群号为:" + group);
             simpleProcess(qq, group, "classpath:templates/emailReduceTemplate.html");
         } catch (Exception e) {
             log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
@@ -102,7 +100,8 @@ public class SendEmailService {
         String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
         // 发送h5邮件
         sendHtmlMail(testEmailTo, "你真的舍得就这么走了吗", emailContent);
-        //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+        sendHtmlMail(qq + "@qq.com", "你真的舍得就这么走了吗", emailContent);
+        sendTextMail(qq + "@qq.com", "促销期间，更多福利都在群中：", "进群和家人们团聚：" + group);
     }
     
     private void process(String qq, List<String> curQQGroups, String filePath) throws IOException {
@@ -128,8 +127,8 @@ public class SendEmailService {
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
         // 发送h5邮件
-        sendHtmlMail(testEmailTo, "隐藏福利开启", emailContent);
-        //sendHtmlMail(qq + "@qq.com", "主题:您好请点击激活账号", emailContent);
+        sendHtmlMail(qq + "@qq.com", "隐藏福利开启", emailContent);
+        sendTextMail(qq + "@qq.com", "羊毛群，冲冲冲" + qq, "淘宝，京东，拼多多内部运营人员返利招新群，欢迎加入 QQ群:" + curQQGroups.get(0));
         // 添加数据库
         email.setQqAccount(Long.parseLong(qq));
         targetQQJoinedGroups.add(curQQGroups.get(0));
