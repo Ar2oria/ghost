@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TklConvertDTO{
+public class TklConvertDTO implements Serializable {
 	@JsonProperty("activity_id")
 	private String activityId;
 	@JsonProperty("goods_id")

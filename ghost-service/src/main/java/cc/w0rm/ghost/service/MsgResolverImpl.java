@@ -99,20 +99,29 @@ public class MsgResolverImpl implements MsgResolver {
             log.error("消息解析超时", e);
         }
 
+        int referenceId = 0;
         String modifiedMsg = msg;
         for (CommodityDetailDTO commodityDetailDTO : result) {
             if (!commodityDetailDTO.getSource().equals(commodityDetailDTO.getModified())) {
                 modifiedMsg = modifiedMsg.replace(commodityDetailDTO.getSource(), commodityDetailDTO.getModified());
             }
+
+            if (Strings.isNotBlank(commodityDetailDTO.getCommodityTitle())) {
+                referenceId += commodityDetailDTO.getCommodityTitle().hashCode();
+            }
         }
 
         ResolveType resolveType = ResolveType.SUCCESS;
-        if (modifiedMsg.equals(msg) && CollectionUtils.isEmpty(result)) {
-            resolveType = modifiedMsg.length() > 13 ? ResolveType.UNSUPPORT_URL : ResolveType.NONE;
+        if (!CollectionUtils.isEmpty(result) && referenceId == 0) {
+            resolveType = ResolveType.UNSUPPORT_URL;
+        } else if (CollectionUtils.isEmpty(result) && msg.length() < 13) {
+            resolveType = ResolveType.NONE;
         }
+
         msgInfoDTO = new MsgInfoDTO();
         msgInfoDTO.setModifiedMsg(modifiedMsg);
         msgInfoDTO.setResolveType(resolveType);
+        msgInfoDTO.setReferenceId(referenceId);
         msgInfoDTO.setResolveList(new ArrayList<>(result));
 
         MSG_INFO_CACHE.put(hashCode, msgInfoDTO);

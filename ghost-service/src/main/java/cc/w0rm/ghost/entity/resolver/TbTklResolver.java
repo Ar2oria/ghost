@@ -2,15 +2,13 @@ package cc.w0rm.ghost.entity.resolver;
 
 import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.common.util.Strings;
-import cc.w0rm.ghost.dto.BaozouResponseDTO;
-import cc.w0rm.ghost.dto.CommodityDetailDTO;
-import cc.w0rm.ghost.dto.TklConvertDTO;
-import cc.w0rm.ghost.dto.TklInfoDTO;
+import cc.w0rm.ghost.dto.*;
 import cc.w0rm.ghost.entity.platform.GetAble;
 import cc.w0rm.ghost.entity.resolver.detect.PreTestText;
 import cc.w0rm.ghost.enums.CommodityType;
 import cc.w0rm.ghost.enums.TextType;
 import cc.w0rm.ghost.rpc.baozou.BaozouService;
+import cc.w0rm.ghost.rpc.taokouling.TaokoulingService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +37,9 @@ public class TbTklResolver implements Resolver {
     private BaozouService baoZouService;
 
     @Resource
+    private TaokoulingService taokoulingService;
+
+    @Resource
     private AccountManager accountManager;
 
     @Override
@@ -59,13 +60,35 @@ public class TbTklResolver implements Resolver {
         String tkl = preTestText.getFind();
         BaozouResponseDTO<TklInfoDTO> responseDTO = baoZouService.tklDecrypt(tkl);
         if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
-            return buildUnresolvedDTO(preTestText);
+            return tryResolveFromItemInfo(preTestText, account);
         }
 
         return getCommodityDetail(responseDTO.getData(), preTestText.getSource(), account);
     }
 
     @NotNull
+    private CommodityDetailDTO tryResolveFromItemInfo(PreTestText preTestText, GetAble account) {
+        String tkl = preTestText.getFind();
+        String apikey = account.get("apikey");
+
+        TklJmDTO tklJmDTO = new TklJmDTO(apikey, tkl);
+        TklResponseDTO tklResponseDTO = taokoulingService.tklJm(tklJmDTO);
+        if (tklResponseDTO == null || tklResponseDTO.getCode() != 1){
+            return buildUnresolvedDTO(preTestText);
+        }
+
+        CommodityDetailDTO commodityDetailDTO = new CommodityDetailDTO();
+        commodityDetailDTO.setCommodityType(CommodityType.TAOBAO_TAOKOULING);
+        commodityDetailDTO.setSource(preTestText.getSource());
+        commodityDetailDTO.setModified(preTestText.getSource());
+        commodityDetailDTO.setCommodityTitle(tklResponseDTO.getContent());
+        commodityDetailDTO.setAttachments(tklResponseDTO.getPicUrl());
+        commodityDetailDTO.setCommodityDesc(tklResponseDTO.getUrl());
+
+        return commodityDetailDTO;
+    }
+
+
     private CommodityDetailDTO buildUnresolvedDTO(PreTestText preTestText) {
         CommodityDetailDTO commodityDetailDTO = new CommodityDetailDTO();
         commodityDetailDTO.setCommodityType(getCommodityType());

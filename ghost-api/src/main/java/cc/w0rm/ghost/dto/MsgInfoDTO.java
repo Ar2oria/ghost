@@ -12,6 +12,7 @@ import java.util.List;
 
 @Data
 public class MsgInfoDTO {
+    private int referenceId;
     private ResolveType resolveType;
     private List<CommodityDetailDTO> resolveList;
     private String modifiedMsg;
