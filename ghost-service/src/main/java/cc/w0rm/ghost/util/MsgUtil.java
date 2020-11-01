@@ -19,7 +19,7 @@ public class MsgUtil {
 
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
-    public static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
+    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%;,()\\[\\]]*";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
     public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]";
@@ -71,16 +71,16 @@ public class MsgUtil {
         return result;
     }
 
-    public static List<String> listUrls(String msg) {
+    public static Map<String, String> listUrls(String msg) {
         if (Strings.isBlank(msg)) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
-        List<String> result = new ArrayList<>(1);
+        Map<String, String> result = new HashMap<>(1);
         Matcher matcher = URL_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String url = matcher.group(0);
-            result.add(url);
+            String url = matcher.group(2);
+            result.put(url, matcher.group());
         }
 
         return result;

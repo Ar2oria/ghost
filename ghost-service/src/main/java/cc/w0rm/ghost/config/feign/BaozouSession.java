@@ -8,7 +8,7 @@ import lombok.Data;
  */
 
 @Data
-public class BaoZouSession {
+public class BaozouSession {
     private String csrf;
     private String session;
 }

@@ -13,8 +13,8 @@ public interface MsgResolver {
 
     /**
      * 解析消息，返回商品信息 + 转换后的消息
-     * @param msg
-     * @param group
+     * @param msg 消息内容
+     * @param group 消息组名称
      * @return
      */
     @NonNull

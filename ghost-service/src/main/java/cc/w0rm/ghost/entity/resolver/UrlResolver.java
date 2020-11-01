@@ -1,15 +1,28 @@
 package cc.w0rm.ghost.entity.resolver;
 
-import cc.w0rm.ghost.enums.CommodityType;
-
-import java.util.List;
+import cc.w0rm.ghost.dto.CommodityDetailDTO;
+import cc.w0rm.ghost.entity.resolver.detect.PreTestText;
+import cc.w0rm.ghost.enums.TextType;
 
 /**
  * @author : xuyang
- * @date : 2020/10/31 2:50 上午
+ * @date : 2020/11/2 12:43 上午
  */
-public interface UrlResolver extends Resolver {
-    List<String> getUrlList(String msg);
+public abstract class UrlResolver implements Resolver {
 
-    CommodityType getCommodityType();
+    public abstract CommodityDetailDTO resolve(String url, String group);
+
+    public abstract Domain getResolveDomain();
+
+    @Override
+    public CommodityDetailDTO resolve(PreTestText preTestText, String group) {
+        if (preTestText.getTextType() != TextType.URL) {
+            return null;
+        }
+        if (!getResolveDomain().equals(preTestText.getFind())) {
+            return null;
+        }
+
+        return resolve(preTestText.getSource(), group);
+    }
 }

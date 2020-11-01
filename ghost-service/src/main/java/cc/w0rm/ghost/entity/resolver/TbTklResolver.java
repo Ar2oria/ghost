@@ -1,38 +1,33 @@
 package cc.w0rm.ghost.entity.resolver;
 
+import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.common.util.Strings;
 import cc.w0rm.ghost.dto.BaozouResponseDTO;
 import cc.w0rm.ghost.dto.CommodityDetailDTO;
 import cc.w0rm.ghost.dto.TklConvertDTO;
 import cc.w0rm.ghost.dto.TklInfoDTO;
 import cc.w0rm.ghost.entity.platform.GetAble;
+import cc.w0rm.ghost.entity.resolver.detect.PreTestText;
 import cc.w0rm.ghost.enums.CommodityType;
-import cc.w0rm.ghost.rpc.baozou.BaoZouService;
-import cc.w0rm.ghost.util.MsgUtil;
+import cc.w0rm.ghost.enums.TextType;
+import cc.w0rm.ghost.rpc.baozou.BaozouService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author : xuyang
  * @date : 2020/10/30 11:43 下午
  */
 
-/**
- * 解析器名称分为两段，第一段为平台名称，第二段为具体的解析器名称
- */
 @Slf4j
-@Component("taobao-tkl")
+@Component
 public class TbTklResolver implements Resolver {
     private static final Cache<Integer, CommodityDetailDTO> TKL_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
@@ -41,47 +36,45 @@ public class TbTklResolver implements Resolver {
             .build();
 
     @Resource
-    private BaoZouService baoZouService;
+    private BaozouService baoZouService;
 
-    /**
-     * 使用暴走工具箱解析，后续替换成淘口令网接口
-     *
-     * @param msg
-     * @param account
-     * @return
-     */
+    @Resource
+    private AccountManager accountManager;
+
     @Override
-    public List<CommodityDetailDTO> resolve(String msg, GetAble account) {
-        if (Strings.isBlank(msg) || Objects.isNull(account)) {
+    public CommodityDetailDTO resolve(PreTestText preTestText, String group) {
+        if (preTestText.getTextType() != TextType.TAOKOULING) {
             return null;
         }
 
-        Map<String, String> tklMap = MsgUtil.getTaokouling(msg);
-        if (CollectionUtils.isEmpty(tklMap)) {
-            return null;
+        if (Strings.isBlank(group)) {
+            throw new IllegalArgumentException("解析淘口令失败，消息组为空");
         }
 
-        return tklMap.keySet().stream()
-                .map(tkl -> {
-                    BaozouResponseDTO<TklInfoDTO> responseDTO = baoZouService.tklDecrypt(tkl);
-                    if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
-                        return new UrlUnmodifyResolver() {
-                            @Override
-                            public List<String> getUrlList(String msg) {
-                                return Collections.singletonList(tklMap.get(tkl));
-                            }
+        GetAble account = accountManager.getPlatformConfig("taobao").get(group);
+        if (Objects.isNull(account)) {
+            throw new IllegalArgumentException("解析淘口令失败，无平台配置文件");
+        }
 
-                            @Override
-                            public CommodityType getCommodityType() {
-                                return CommodityType.TAOBAO_TAOKOULING;
-                            }
-                        }.resolve(msg, account).get(0);
-                    }
-                    return getCommodityDetail(responseDTO.getData(), account, tklMap.get(tkl));
-                }).collect(Collectors.toList());
+        String tkl = preTestText.getFind();
+        BaozouResponseDTO<TklInfoDTO> responseDTO = baoZouService.tklDecrypt(tkl);
+        if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
+            return buildUnresolvedDTO(preTestText);
+        }
+
+        return getCommodityDetail(responseDTO.getData(), preTestText.getSource(), account);
     }
 
-    private CommodityDetailDTO getCommodityDetail(TklInfoDTO tklInfoDTO, GetAble account, String source) {
+    @NotNull
+    private CommodityDetailDTO buildUnresolvedDTO(PreTestText preTestText) {
+        CommodityDetailDTO commodityDetailDTO = new CommodityDetailDTO();
+        commodityDetailDTO.setCommodityType(getCommodityType());
+        commodityDetailDTO.setSource(preTestText.getSource());
+        commodityDetailDTO.setModified(preTestText.getSource());
+        return commodityDetailDTO;
+    }
+
+    private CommodityDetailDTO getCommodityDetail(TklInfoDTO tklInfoDTO, String source, GetAble account) {
         String goodsId = tklInfoDTO.getGoodsId();
         String pid = account.get("pid");
         Integer hashCode = (goodsId + pid).hashCode();
@@ -122,5 +115,10 @@ public class TbTklResolver implements Resolver {
         }
 
         return commodityDetailDTO;
+    }
+
+    @Override
+    public CommodityType getCommodityType() {
+        return CommodityType.TAOBAO_TAOKOULING;
     }
 }

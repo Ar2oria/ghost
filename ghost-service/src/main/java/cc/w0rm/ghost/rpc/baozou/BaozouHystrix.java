@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
  @Slf4j
 @Component
-public class BaoZouHystrix implements BaoZouService {
+public class BaozouHystrix implements BaozouService {
     @Override
     public BaozouResponseDTO<TklInfoDTO> tklDecrypt(String tkl) {
         log.error("请求淘口令信息失败，服务已降级，请求参数 tkl={},", tkl);

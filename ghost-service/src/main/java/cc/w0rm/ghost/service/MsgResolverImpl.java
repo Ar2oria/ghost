@@ -1,16 +1,19 @@
 package cc.w0rm.ghost.service;
 
-import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.api.MsgResolver;
 import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.common.util.Strings;
 import cc.w0rm.ghost.dto.CommodityDetailDTO;
 import cc.w0rm.ghost.dto.MsgInfoDTO;
 import cc.w0rm.ghost.entity.resolver.Resolver;
+import cc.w0rm.ghost.entity.resolver.detect.Detector;
+import cc.w0rm.ghost.entity.resolver.detect.PreTestText;
 import cc.w0rm.ghost.enums.ResolveType;
+import cc.w0rm.ghost.enums.TextType;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,9 +21,11 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author : xuyang
@@ -30,7 +35,7 @@ import java.util.concurrent.*;
 @Slf4j
 @Service
 public class MsgResolverImpl implements MsgResolver {
-    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4,
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(20,
             Integer.MAX_VALUE,
             60,
             TimeUnit.SECONDS,
@@ -46,10 +51,10 @@ public class MsgResolverImpl implements MsgResolver {
             .softValues()
             .build();
     @Resource
-    private AccountManager accountManager;
+    private List<Detector> detectorList;
 
     @Resource
-    private Map<String, Resolver> resolverMap;
+    private List<Resolver> resolverList;
 
     @Override
     public MsgInfoDTO resolve(String msg, String group) {
@@ -62,18 +67,32 @@ public class MsgResolverImpl implements MsgResolver {
             return msgInfoDTO;
         }
 
-        LinkedBlockingQueue<CommodityDetailDTO> result = new LinkedBlockingQueue<>(resolverMap.size());
-        CompletableFuture<?>[] completableFutures = resolverMap.keySet().stream()
-                .map(name -> CompletableFutureWithMDC.supplyAsyncWithMdc(() ->
-                        resolverMap.get(name).resolve(msg, accountManager.getPlatformConfig(name.split("-")[0]).get(group)), EXECUTOR_SERVICE)
-                        .whenComplete((t, u) -> {
-                            if (u != null) {
-                                log.error("消息解析失败", u);
-                            } else if (!CollectionUtils.isEmpty(t)) {
-                                result.addAll(t);
-                            }
-                        }))
-                .toArray(CompletableFuture[]::new);
+        ArrayList<PreTestText> preTestTexts = Lists.newArrayList(new PreTestText(TextType.SOURCE_TEXT, msg, msg));
+        List<PreTestText> texts = detectorList.parallelStream()
+                .flatMap(detector -> {
+                    try {
+                        return detector.detect(msg).stream();
+                    } catch (Exception exp) {
+                        log.error("文本预处理器出现异常", exp);
+                    }
+                    return Stream.empty();
+                }).collect(Collectors.toList());
+
+        preTestTexts.addAll(texts);
+
+        LinkedBlockingQueue<CommodityDetailDTO> result = new LinkedBlockingQueue<>();
+        CompletableFuture<?>[] completableFutures = resolverList.stream()
+                .flatMap(resolver -> preTestTexts.stream().map(preTestText ->
+                        CompletableFutureWithMDC.supplyAsyncWithMdc(() ->
+                                resolver.resolve(preTestText, group), EXECUTOR_SERVICE)
+                                .whenComplete((t, e) -> {
+                                    if (e != null) {
+                                        log.error("解析消息失败", e);
+                                    } else if (Objects.nonNull(t)) {
+                                        result.add(t);
+                                    }
+                                }))
+                ).toArray(CompletableFuture[]::new);
         try {
             CompletableFuture.allOf(completableFutures).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
