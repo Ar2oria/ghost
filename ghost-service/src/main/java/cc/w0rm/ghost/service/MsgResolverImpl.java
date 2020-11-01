@@ -107,7 +107,7 @@ public class MsgResolverImpl implements MsgResolver {
             }
 
             if (Strings.isNotBlank(commodityDetailDTO.getCommodityTitle())) {
-                referenceId += commodityDetailDTO.getCommodityTitle().hashCode();
+                referenceId |= commodityDetailDTO.getCommodityTitle().hashCode();
             }
         }
 
