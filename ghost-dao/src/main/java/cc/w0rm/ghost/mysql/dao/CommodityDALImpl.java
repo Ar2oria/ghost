@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,18 +27,17 @@ public class CommodityDALImpl {
     @Resource
     MsgGroupMapper msgGroupMapper;
     
-    private static final long HOURS = 60 * 60 * 1000L;
     
-    public Set<String> getTargetCommodityPushedGroups(String commodityId) {
+    public Set<MsgGroup> getTargetCommodityPushedGroups(String commodityId) {
         
         try {
             List<MsgGroup> msgGroups = msgGroupMapper.selectByCommdityId(commodityId);
+            log.info("mysql qq群:{}", msgGroups);
             if (CollectionUtils.isEmpty(msgGroups)) {
                 return new HashSet<>();
             }
-            return msgGroups.stream().filter(item -> !(item != null && null != item.getInsertTime() && (StringUtils
-                .isNumber(item.getInsertTime()) && System.currentTimeMillis() - Long
-                .valueOf(item.getInsertTime()) > 6 * HOURS))).map(item -> String.valueOf(item.getGroup()))
+            return msgGroups.stream().filter(item -> item != null && null != item.getInsertTime() && (StringUtils
+                .isNumber(item.getInsertTime())))
                 .collect(Collectors.toSet());
         } catch (Exception exp) {
             log.error("商品分发群组查询失败 商品id:{}", commodityId, exp);
@@ -48,7 +45,7 @@ public class CommodityDALImpl {
         return new HashSet<>();
     }
     
-    public void addCommodity(Commodity commodity, String groups) {
+    public void addCommodity(Commodity commodity, MsgGroup msgGroup) {
         
         String commodityId = commodity.getCommodityId();
         if (StringUtils.isEmpty(commodityId)) {
@@ -59,12 +56,10 @@ public class CommodityDALImpl {
         } catch (Exception exp) {
             log.error("商品信息添加失败 商品信息:{}", commodity.toString(), exp);
         }
-        if (StringUtils.isEmpty(groups)) {
+        if (null == msgGroup) {
             return;
         }
         try {
-            MsgGroup msgGroup = new MsgGroup();
-            msgGroup.setGroup(Long.parseLong(groups));
             msgGroup.setCommodityId(commodityId);
             msgGroup.setInsertTime(String.valueOf(System.currentTimeMillis()));
             msgGroupMapper.insertOrUpdate(msgGroup);

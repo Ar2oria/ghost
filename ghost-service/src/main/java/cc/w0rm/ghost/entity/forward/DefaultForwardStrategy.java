@@ -54,6 +54,8 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
         .concurrencyLevel(Integer.MAX_VALUE).expireAfterAccess(5, TimeUnit.MINUTES).softValues().build();
     
+    private static final long HOURS = 60 * 60 * 1000L;
+    
     @Autowired
     private AccountManager accountManager;
     
@@ -131,21 +133,27 @@ public class DefaultForwardStrategy implements ForwardStrategy {
         return consumerSet.stream().flatMap(consumer -> {
             GroupMsgExt groupExt = (GroupMsgExt) msgGet;
             Set<String> groupCodes = getGroupCodeFromCache(consumer);
-            String commodityUniqueId = StringUtils.isNotBlank(groupExt.getCommodityId()) ? groupExt.getCommodityId() : String
-                .valueOf(msgGet.getMsg().hashCode());
+            String commodityUniqueId = StringUtils.isNotBlank(groupExt.getCommodityId()) ? groupExt
+                .getCommodityId() : String.valueOf(msgGet.getMsg().hashCode());
             // 获取数据库里已经推过的QQ群
-            Set<String> targetCommodityPushedGroups = commodityDAL
+            Set<cc.w0rm.ghost.mysql.po.MsgGroup> recordedGroups = commodityDAL
                 .getTargetCommodityPushedGroups(commodityUniqueId);
-            groupCodes.removeAll(targetCommodityPushedGroups);
+            Map<String, cc.w0rm.ghost.mysql.po.MsgGroup> pushedGroups = recordedGroups.stream()
+                .filter(item -> System.currentTimeMillis() - Long.valueOf(item.getInsertTime()) > 6 * HOURS)
+                .collect(Collectors.toMap(k -> String.valueOf(k.getGroup()), v -> v));
+            Set<Long> noPushedGroups = recordedGroups.stream()
+                .filter(t -> !pushedGroups.containsKey(String.valueOf(t.getGroup())))
+                .map(cc.w0rm.ghost.mysql.po.MsgGroup::getGroup).collect(Collectors.toSet());
+            groupCodes.removeIf(t -> noPushedGroups.contains(Long.valueOf(t)) || !canForward(msgGet, t));
             return groupCodes.parallelStream().map(groupCode -> CompletableFutureWithMDC.runAsyncWithMdc(() -> {
-                if (!canForward(msgGet, groupCode)) {
-                    return;
-                }
                 // 3. 存储数据库
                 try {
                     Commodity commodity = new Commodity();
                     commodity.setCommodityId(commodityUniqueId);
-                    commodityDAL.addCommodity(commodity, groupCode);
+                    cc.w0rm.ghost.mysql.po.MsgGroup msgGroup = pushedGroups
+                        .getOrDefault(groupCode, new cc.w0rm.ghost.mysql.po.MsgGroup());
+                    msgGroup.setGroup(Long.valueOf(groupCode));
+                    commodityDAL.addCommodity(commodity, msgGroup);
                 } catch (Exception exp) {
                     log.error("消息生产者，商品记录失败", exp);
                 }
