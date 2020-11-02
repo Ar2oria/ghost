@@ -36,7 +36,7 @@ public class MsgUtil {
     public static final String JD_COUPON_URL_REGEX = "https://coupon[.]m[.]jd[.]com/[-\\[\\]\\d\\w:/.?=&%;,()]+";
     public static final Pattern JD_COUPON_URL_PATTERN = Pattern.compile(JD_COUPON_URL_REGEX);
 
-    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s\\pP\\pS]*";
+    public static final String SPECIFIC_SYMBOL_REGEX = "[劵券亓元\\w\\s\\pP\\pS]*";
     public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
 
     public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
