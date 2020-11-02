@@ -62,7 +62,7 @@ public class MsgProducerImpl implements MsgProducer {
             for (String msgGroup : msgGroupByCode) {
                 MsgInfoDTO msgInfoDTO = msgResolverImpl.resolve(msg, msgGroup);
                 if (null == msgInfoDTO || CollectionUtils.isEmpty(msgInfoDTO.getResolveList()) || StringUtils
-                    .isEmpty(msgInfoDTO.getModifiedMsg()) || msgInfoDTO.getResolveType() != ResolveType.SUCCESS) {
+                    .isEmpty(msgInfoDTO.getModifiedMsg())) {
                     continue;
                 }
                 groupMsg.setMsg(msgInfoDTO.getModifiedMsg());
