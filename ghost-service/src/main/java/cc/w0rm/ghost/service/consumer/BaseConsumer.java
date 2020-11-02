@@ -13,19 +13,11 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public abstract class BaseConsumer implements MsgConsumer {
-    
-    
+
 
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
-        //if (botGroups.contains(group)) {
-        //    String sendMsg = buildMsg();
-        //    botInfo.getSender().SENDER.sendGroupMsg(group, sendMsg);
-        //}
-        
-        if ("830628164".equals(group)) {
-            botInfo.getSender().SENDER.sendGroupMsg("830628164", msgGet.getMsg());
-        }
+        botInfo.getSender().SENDER.sendGroupMsg(group, msgGet.getMsg());
     }
-    
+
 }

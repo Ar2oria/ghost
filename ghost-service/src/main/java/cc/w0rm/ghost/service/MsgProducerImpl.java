@@ -3,33 +3,22 @@ package cc.w0rm.ghost.service;
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.api.MsgProducer;
 import cc.w0rm.ghost.config.AccountManagerConfig;
-import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.dto.MsgInfoDTO;
-import cc.w0rm.ghost.entity.platform.GetAble;
 import cc.w0rm.ghost.enums.ResolveType;
 import cc.w0rm.ghost.mysql.dao.CommodityDALImpl;
-import cc.w0rm.ghost.mysql.po.Commodity;
 import cc.w0rm.ghost.util.FilterUtils;
-import cc.w0rm.ghost.util.HttpUtils;
-import cc.w0rm.ghost.util.JacksonUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
-import com.forte.qqrobot.beans.messages.result.GroupList;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.forte.qqrobot.sender.MsgSender;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 /**
  * @author : xuyang
@@ -53,14 +42,7 @@ public class MsgProducerImpl implements MsgProducer {
     
     @Resource
     private MsgResolverImpl msgResolverImpl;
-    
-    @Value("${parse.info.path}")
-    private String infoPath;
-    
-    @Value("${parse.transfer.path}")
-    private String transferPath;
-    
-    
+
     private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 60,
         TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactoryBuilder()
         .setDaemon(true).setNameFormat("MsgProducer-ThreadPool").build());
