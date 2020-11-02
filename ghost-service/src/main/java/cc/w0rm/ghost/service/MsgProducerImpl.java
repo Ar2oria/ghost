@@ -5,6 +5,8 @@ import cc.w0rm.ghost.api.MsgProducer;
 import cc.w0rm.ghost.config.AccountManagerConfig;
 import cc.w0rm.ghost.config.role.Consumer;
 import cc.w0rm.ghost.dto.MsgInfoDTO;
+import cc.w0rm.ghost.entity.GroupMsgExt;
+import cc.w0rm.ghost.entity.GroupMsgWrap;
 import cc.w0rm.ghost.entity.platform.GetAble;
 import cc.w0rm.ghost.enums.ResolveType;
 import cc.w0rm.ghost.mysql.dao.CommodityDALImpl;
@@ -84,8 +86,10 @@ public class MsgProducerImpl implements MsgProducer {
                     continue;
                 }
                 groupMsg.setMsg(msgInfoDTO.getModifiedMsg());
+                GroupMsgExt newGroupMsg = new GroupMsgExt(groupMsg,msgGroup);
+                newGroupMsg.setCommodityId(msgInfoDTO.getResolveList().get(0).getCommodityId());
                 // 6. 异步转发 不关心结果
-                CompletableFuture.runAsync(() -> coordinator.forward(msgGroup, groupMsg), EXECUTOR_SERVICE);
+                CompletableFuture.runAsync(() -> coordinator.forward(msgGroup, newGroupMsg), EXECUTOR_SERVICE);
             }
         } catch (Exception exp) {
             log.error("消息生产者，转发消息失败 msgId[{}]", groupMsg.getId(), exp);
