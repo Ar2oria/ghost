@@ -67,7 +67,7 @@ public class MsgProducerImpl implements MsgProducer {
                 }
                 groupMsg.setMsg(msgInfoDTO.getModifiedMsg());
                 GroupMsgExt newGroupMsg = new GroupMsgExt(groupMsg,msgGroup);
-                newGroupMsg.setCommodityId(msgInfoDTO.getResolveList().get(0).getCommodityId());
+                newGroupMsg.setCommodityId(String.valueOf(msgInfoDTO.getReferenceId()));
                 // 6. 异步转发 不关心结果
                 CompletableFuture.runAsync(() -> coordinator.forward(msgGroup, newGroupMsg), EXECUTOR_SERVICE);
             }

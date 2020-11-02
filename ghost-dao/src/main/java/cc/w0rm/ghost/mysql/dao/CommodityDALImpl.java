@@ -38,9 +38,9 @@ public class CommodityDALImpl {
             if (CollectionUtils.isEmpty(msgGroups)) {
                 return new HashSet<>();
             }
-            return msgGroups.stream().filter(item -> item != null && null != item.getInsertTime() && (StringUtils
-                .isNumber(item.getInsertTime()) || System.currentTimeMillis() - Long
-                .valueOf(item.getInsertTime()) > 6 * HOURS)).map(item -> String.valueOf(item.getGroup()))
+            return msgGroups.stream().filter(item -> !(item != null && null != item.getInsertTime() && (StringUtils
+                .isNumber(item.getInsertTime()) && System.currentTimeMillis() - Long
+                .valueOf(item.getInsertTime()) > 6 * HOURS))).map(item -> String.valueOf(item.getGroup()))
                 .collect(Collectors.toSet());
         } catch (Exception exp) {
             log.error("商品分发群组查询失败 商品id:{}", commodityId, exp);
