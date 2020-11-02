@@ -19,7 +19,7 @@ public class MsgUtil {
 
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
-    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%;]*";
+    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%]*";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
     public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]+";
