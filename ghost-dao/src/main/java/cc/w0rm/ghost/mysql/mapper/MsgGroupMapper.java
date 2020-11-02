@@ -71,8 +71,9 @@ public interface MsgGroupMapper {
     @Select({"select", "_id, commodity_id, _group, insert_time", "from msg_group", "where commodity_id = #{id," +
         "jdbcType=LONGVARCHAR}"})
     @Results({@Result(column = "_id", property = "id", jdbcType = JdbcType.INTEGER, id = true), @Result(column =
-        "_group", property = "group", jdbcType = JdbcType.BIGINT), @Result(column = "commodity_id", property =
-        "commodityId", jdbcType = JdbcType.LONGVARCHAR)})
+        "commodity_id", property = "commodityId", jdbcType = JdbcType.VARCHAR), @Result(column = "_group", property =
+        "group", jdbcType = JdbcType.BIGINT), @Result(column = "insert_time", property = "insertTime", jdbcType =
+        JdbcType.LONGVARCHAR)})
     List<MsgGroup> selectByCommdityId(String id);
     
     @Insert({"insert into msg_group (_id,commodity_id,_group,insert_time)", "values (#{id,jdbcType=INTEGER}, " +
