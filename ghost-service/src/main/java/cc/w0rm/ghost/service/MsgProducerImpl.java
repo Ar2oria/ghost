@@ -83,10 +83,6 @@ public class MsgProducerImpl implements MsgProducer {
                     .isEmpty(msgInfoDTO.getModifiedMsg()) || msgInfoDTO.getResolveType() != ResolveType.SUCCESS) {
                     continue;
                 }
-                Set<String> groupCode = accountManagerImpl.getMsgGroupConsumerMemberGroups(msgGroup);
-                // 记录信息到数据库 暂时用处不大
-                groupCode.parallelStream().forEach(group -> CompletableFuture
-                    .runAsync(() -> addCommodityData(msgInfoDTO, group), EXECUTOR_SERVICE));
                 groupMsg.setMsg(msgInfoDTO.getModifiedMsg());
                 // 6. 异步转发 不关心结果
                 CompletableFuture.runAsync(() -> coordinator.forward(msgGroup, groupMsg), EXECUTOR_SERVICE);
