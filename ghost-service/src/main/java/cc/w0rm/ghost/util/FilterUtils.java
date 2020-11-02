@@ -30,9 +30,6 @@ public class FilterUtils {
         if (msg.startsWith("@")) {
             return chineseCount < CHINESE_THRESHOLD;
         }
-        if (msg.contains("https://u.jd.com")||msg.contains("京东")) {
-            return false;
-        }
         if (chineseCount < CHINESE_THRESHOLD) {
             return MsgUtil.FILE_PATTERN.matcher(msg).find() || msg.contains("http");
         }
