@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class BaoZouFeignInterceptor implements RequestInterceptor {
+public class BaozouFeignInterceptor implements RequestInterceptor {
     private static final Pattern CSRF = Pattern.compile("^csrftoken=(.*?);\\s");
     private static final Pattern SESSION = Pattern.compile("^sessionid=(.*?);\\s");
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient().newBuilder()
@@ -36,7 +36,7 @@ public class BaoZouFeignInterceptor implements RequestInterceptor {
             .writeTimeout(30, TimeUnit.SECONDS)
             .build();
 
-    private static final Cache<String, BaoZouSession> SESSION_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<String, BaozouSession> SESSION_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
             .expireAfterAccess(2, TimeUnit.HOURS)
             .softValues()
@@ -53,13 +53,13 @@ public class BaoZouFeignInterceptor implements RequestInterceptor {
 
     @PostConstruct
     public void init(){
-        BaoZouSession session = getSession();
+        BaozouSession session = getSession();
         if (session != null) {
             SESSION_CACHE.put(CACHE, session);
         }
     }
 
-    private BaoZouSession getSession() {
+    private BaozouSession getSession() {
         MyRequestProperties myRequestProperties = requestProperties.getProps("baozou");
         String csrf = myRequestProperties.getArgs().get("csrf").toString();
         String url = myRequestProperties.getUrl();
@@ -71,7 +71,7 @@ public class BaoZouFeignInterceptor implements RequestInterceptor {
             return null;
         }
 
-        BaoZouSession baoZouSession = new BaoZouSession();
+        BaozouSession baoZouSession = new BaozouSession();
         List<String> sessionList = response.headers("Set-Cookie");
         sessionList.forEach(str -> {
             Matcher matcher = CSRF.matcher(str);
@@ -140,7 +140,7 @@ public class BaoZouFeignInterceptor implements RequestInterceptor {
             }
         }
 
-        BaoZouSession baoZouSession = SESSION_CACHE.getIfPresent(CACHE);
+        BaozouSession baoZouSession = SESSION_CACHE.getIfPresent(CACHE);
         if (baoZouSession == null) {
             baoZouSession = getSession();
             if (baoZouSession == null) {

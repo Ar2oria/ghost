@@ -2,7 +2,6 @@ package cc.w0rm.ghost.config.feign;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.netflix.hystrix.*;
 import feign.*;
 import feign.codec.Decoder;
@@ -17,10 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Configuration
 @Slf4j
@@ -48,7 +44,6 @@ public class FeignConfig {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true);
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
         return new JacksonDecoder(objectMapper);
     }
 

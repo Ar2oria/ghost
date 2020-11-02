@@ -18,8 +18,8 @@ import org.springframework.cloud.netflix.feign.FeignClient;
         name = "baoZouSerivce",
         url = "${url.baozou}",
         configuration = FeignConfig.class,
-        fallback = BaoZouHystrix.class)
-public interface BaoZouService {
+        fallback = BaozouHystrix.class)
+public interface BaozouService {
 
     @RequestLine(value = "POST /tool/tkl_decrypt")
     @Headers({"Content-Type: application/json",

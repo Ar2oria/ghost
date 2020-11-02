@@ -21,7 +21,7 @@ public class MsgUtil {
 
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
-    public static final String URL_REGEX = "http[-\\[\\]\\d\\w:/.?=&%;,()]+";
+    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%;,()\\[\\]]*";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
     public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]";
@@ -51,8 +51,7 @@ public class MsgUtil {
         Map<String, String> result = new HashMap<>(1);
         Matcher matcher = FILE_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String id = matcher.group(1);
-            result.put(id, matcher.group(0));
+            result.put(matcher.group(), matcher.group(1));
         }
 
         return result;
@@ -73,16 +72,15 @@ public class MsgUtil {
         return result;
     }
 
-    public static List<String> listUrls(String msg) {
+    public static Map<String, String> listUrls(String msg) {
         if (Strings.isBlank(msg)) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
 
-        List<String> result = new ArrayList<>(1);
+        Map<String, String> result = new HashMap<>(1);
         Matcher matcher = URL_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String url = matcher.group(0);
-            result.add(url);
+            result.put(matcher.group(), matcher.group(2));
         }
 
         return result;
@@ -98,7 +96,7 @@ public class MsgUtil {
         Matcher matcher = TAO_KOU_LING_PATTERN.matcher(msg);
         while (matcher.find()) {
             String code = "￥" + matcher.group(1) + "￥";
-            result.put(code, matcher.group(0));
+            result.put(matcher.group(), code);
         }
 
         return result;
@@ -139,16 +137,7 @@ public class MsgUtil {
             return Strings.EMPTY;
         }
 
-        Map<String, String> fileMap = getFile(str);
-        if (fileMap.size() == 1) {
-            String fileStr = (String) fileMap.values().toArray()[0];
-            if (fileStr.equals(str)) {
-                return fileStr;
-            }
-        }
-
         String returnVal = str;
-
         List<Pattern> patterns = Lists.newArrayList(FILE_PATTERN,
                 URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
         for (Pattern pattern : patterns) {

@@ -8,8 +8,12 @@ import java.io.Serializable;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BaozouResponseDTO<T> implements Serializable {
+public class TklResponseDTO implements Serializable {
+	private String ret;
+	private String msg;
+	private String picUrl;
 	private int code;
-	private T data;
-	private String errmsg;
+	private String validDate;
+	private String url;
+	private String content;
 }
