@@ -29,8 +29,8 @@ public class TklDetector implements Detector {
                 .map(tkl->{
                     PreTestText preTestText = new PreTestText();
                     preTestText.setTextType(TextType.TAOKOULING);
-                    preTestText.setFind(tkl);
-                    preTestText.setSource(taokouling.get(tkl));
+                    preTestText.setFind(taokouling.get(tkl));
+                    preTestText.setSource(tkl);
                     return preTestText;
                 }).collect(Collectors.toList());
     }

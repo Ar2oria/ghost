@@ -27,11 +27,11 @@ public class UrlDetector implements Detector {
         Map<String, String> urlMap = MsgUtil.listUrls(msg);
 
         return urlMap.keySet().stream()
-                .map(domain->{
+                .map(url->{
                     PreTestText preTestText = new PreTestText();
                     preTestText.setTextType(TextType.URL);
-                    preTestText.setFind(domain);
-                    preTestText.setSource(urlMap.get(domain));
+                    preTestText.setFind(urlMap.get(url));
+                    preTestText.setSource(url);
                     return preTestText;
                 }).collect(Collectors.toList());
     }

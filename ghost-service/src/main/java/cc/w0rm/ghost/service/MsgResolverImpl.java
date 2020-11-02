@@ -50,6 +50,8 @@ public class MsgResolverImpl implements MsgResolver {
             .expireAfterAccess(5, TimeUnit.MINUTES)
             .softValues()
             .build();
+
+    private static final Integer MSG_LENGTH_THRESHOLD = 13;
     @Resource
     private List<Detector> detectorList;
 
@@ -112,9 +114,9 @@ public class MsgResolverImpl implements MsgResolver {
         }
 
         ResolveType resolveType = ResolveType.SUCCESS;
-        if (!CollectionUtils.isEmpty(result) && referenceId == 0) {
+        if (referenceId == 0 && msg.length() >= MSG_LENGTH_THRESHOLD) {
             resolveType = ResolveType.UNSUPPORT_URL;
-        } else if (CollectionUtils.isEmpty(result) && msg.length() < 13) {
+        } else if (CollectionUtils.isEmpty(result) && msg.length() < MSG_LENGTH_THRESHOLD) {
             resolveType = ResolveType.NONE;
         }
 
