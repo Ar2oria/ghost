@@ -21,10 +21,10 @@ public class MsgUtil {
 
     public static final String SHORT_URL_REGEX = "http[\\d\\w:/.]+";
     public static final Pattern SHORT_URL_PATTERN = Pattern.compile(SHORT_URL_REGEX);
-    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%;,()\\[\\]]*";
+    public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%]*";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
-    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]";
+    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]+";
     public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
     public static final String TAOBAO_CLICK_URL_REGEX = "https://s[.]click[.]taobao[.]com/\\w{5,9}";
     public static final Pattern TAOBAO_CLICK_URL_PATTERN = Pattern.compile(TAOBAO_CLICK_URL_REGEX);
@@ -36,7 +36,7 @@ public class MsgUtil {
     public static final String JD_COUPON_URL_REGEX = "https://coupon[.]m[.]jd[.]com/[-\\[\\]\\d\\w:/.?=&%;,()]+";
     public static final Pattern JD_COUPON_URL_PATTERN = Pattern.compile(JD_COUPON_URL_REGEX);
 
-    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s]*";
+    public static final String SPECIFIC_SYMBOL_REGEX = "[亓元\\s\\pP\\pS]*";
     public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
 
     public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
