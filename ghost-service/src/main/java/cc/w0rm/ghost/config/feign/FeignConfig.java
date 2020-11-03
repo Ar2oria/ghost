@@ -82,7 +82,7 @@ public class FeignConfig {
             HystrixCommandProperties.Setter setter = HystrixCommandProperties.Setter()
                     .withFallbackEnabled(true)
                     .withExecutionTimeoutEnabled(true)
-                    .withExecutionTimeoutInMilliseconds(1000 * 20)
+                    .withExecutionTimeoutInMilliseconds(1000 * 15)
                     .withExecutionIsolationThreadInterruptOnTimeout(false)
                     .withMetricsRollingStatisticalWindowInMilliseconds(1000 * 60)
                     .withCircuitBreakerErrorThresholdPercentage(80)

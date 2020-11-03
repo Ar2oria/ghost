@@ -27,7 +27,7 @@ public class MsgUtil {
     public static final String CHINESE_REGEX = "[\\u4e00-\\u9fa5]+";
     public static final Pattern CHINESE_PATTERN = Pattern.compile(CHINESE_REGEX);
 
-    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?([a-zA-Z0-9]{11})\\s?[\\p{Sc}/()]+";
+    public static final String TAO_KOU_LING_REGEX = "([\\p{Sc}/()]|[\\uD83C\\uDF00-\\uD83D\\uDDFF]|[\\uD83E\\uDD00-\\uD83E\\uDDFF]|[\\uD83D\\uDE00-\\uD83D\\uDE4F])\\s?([a-zA-Z0-9]{11})\\s?([\\p{Sc}/()]+|[\\uD83C\\uDF00-\\uD83D\\uDDFF]|[\\uD83E\\uDD00-\\uD83E\\uDDFF]|[\\uD83D\\uDE00-\\uD83D\\uDE4F])";
     public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
     public static final String TAOBAO_CLICK_URL_REGEX = "https://s[.]click[.]taobao[.]com/\\w{5,9}";
     public static final Pattern TAOBAO_CLICK_URL_PATTERN = Pattern.compile(TAOBAO_CLICK_URL_REGEX);
@@ -98,7 +98,7 @@ public class MsgUtil {
         Map<String, String> result = new HashMap<>(1);
         Matcher matcher = TAO_KOU_LING_PATTERN.matcher(msg);
         while (matcher.find()) {
-            String code = "￥" + matcher.group(1) + "￥";
+            String code = "￥" + matcher.group(2) + "￥";
             result.put(matcher.group(), code);
         }
 
@@ -142,9 +142,9 @@ public class MsgUtil {
 
         // 1. 对只包含一张图片的消息单独处理
         Matcher matcher = FILE_PATTERN.matcher(str);
-        if (matcher.find()){
+        if (matcher.find()) {
             String image = matcher.group();
-            if (str.trim().equals(image)){
+            if (str.trim().equals(image)) {
                 return matcher.group(1);
             }
         }
@@ -152,12 +152,12 @@ public class MsgUtil {
         // 2. 全部字符替换
         StringBuilder stringBuilder = new StringBuilder();
         Matcher chn = CHINESE_PATTERN.matcher(str);
-        while (chn.find()){
+        while (chn.find()) {
             stringBuilder.append(chn.group());
         }
 
         String chnMsg = stringBuilder.toString();
-        if (Strings.isBlank(chnMsg)){
+        if (Strings.isBlank(chnMsg)) {
             return str;
         }
 
