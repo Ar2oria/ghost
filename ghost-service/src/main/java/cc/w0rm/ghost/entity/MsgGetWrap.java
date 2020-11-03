@@ -2,6 +2,7 @@ package cc.w0rm.ghost.entity;
 
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.function.Function;
@@ -13,6 +14,14 @@ import java.util.function.Function;
 public abstract class MsgGetWrap implements MsgGet {
     @Getter
     private MsgGet msgGet;
+    
+    /**
+     * 商品id
+     * @param msgGet
+     */
+    @Getter
+    @Setter
+    private String commodityId;
 
     public MsgGetWrap(MsgGet msgGet){
         this.msgGet = msgGet;

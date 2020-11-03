@@ -23,7 +23,7 @@ public class GroupMsgListener {
 
     @Resource(name = "msgProducer")
     private MsgProducer msgProducer;
-
+    
     public void listen(MsgSender msgSender, GroupMsg groupMsg) {
         try {
             msgProducer.make(msgSender, groupMsg);
