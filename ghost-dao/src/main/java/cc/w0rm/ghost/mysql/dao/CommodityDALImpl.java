@@ -37,15 +37,14 @@ public class CommodityDALImpl {
                 return new HashSet<>();
             }
             return msgGroups.stream().filter(item -> item != null && null != item.getInsertTime() && (StringUtils
-                .isNumber(item.getInsertTime())))
-                .collect(Collectors.toSet());
+                .isNumber(item.getInsertTime()))).collect(Collectors.toSet());
         } catch (Exception exp) {
             log.error("商品分发群组查询失败 商品id:{}", commodityId, exp);
         }
         return new HashSet<>();
     }
     
-    public void addCommodity(Commodity commodity, MsgGroup msgGroup) {
+    public void addCommodity(Commodity commodity) {
         
         String commodityId = commodity.getCommodityId();
         if (StringUtils.isEmpty(commodityId)) {
@@ -56,6 +55,10 @@ public class CommodityDALImpl {
         } catch (Exception exp) {
             log.error("商品信息添加失败 商品信息:{}", commodity.toString(), exp);
         }
+    }
+    
+    public void addMsgGroup(String commodityId, MsgGroup msgGroup) {
+        
         if (null == msgGroup) {
             return;
         }
@@ -64,7 +67,7 @@ public class CommodityDALImpl {
             msgGroup.setInsertTime(String.valueOf(System.currentTimeMillis()));
             msgGroupMapper.insertOrUpdate(msgGroup);
         } catch (Exception exp) {
-            log.error("商品群组信息添加失败 商品信息:{}", commodity.toString(), exp);
+            log.error("商品群组信息添加失败 商品信息:{}", commodityId, exp);
         }
     }
 }

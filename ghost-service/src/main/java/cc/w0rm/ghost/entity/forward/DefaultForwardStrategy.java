@@ -23,14 +23,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -130,11 +128,29 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     @NotNull
     private Stream<CompletableFuture<Void>> getCompletableFutureStream(MsgGet msgGet, MsgConsumer msgConsumer,
                                                                        Set<Consumer> consumerSet) {
+        // 存储商品
+        GroupMsgExt groupExt = (GroupMsgExt) msgGet;
+        String commodityUniqueId = StringUtils.isNotBlank(groupExt.getCommodityId()) ? groupExt
+            .getCommodityId() : String.valueOf(msgGet.getMsg().hashCode());
+        Commodity commodity = new Commodity();
+        commodity.setCommodityId(commodityUniqueId);
+        commodity.setSku(msgGet.getMsg());
+        commodityDAL.addCommodity(commodity);
+        
         return consumerSet.stream().flatMap(consumer -> {
-            GroupMsgExt groupExt = (GroupMsgExt) msgGet;
             Set<String> groupCodes = getGroupCodeFromCache(consumer);
-            String commodityUniqueId = StringUtils.isNotBlank(groupExt.getCommodityId()) ? groupExt
-                .getCommodityId() : String.valueOf(msgGet.getMsg().hashCode());
+            // 解析失败直接转发
+            if ("0".equals(commodityUniqueId)) {
+                groupCodes.removeIf(t -> !canForward(msgGet, t));
+                return groupCodes.parallelStream().map(groupCode -> CompletableFutureWithMDC.runAsyncWithMdc(() -> {
+                    try {
+                        msgConsumer.consume(consumer, groupCode, msgGet);
+                    } catch (Exception exp) {
+                        log.error("消息处理异常，消费者[{}], 群[{}], 消息[{}]", consumer.getQQCode(), groupCode, msgGet
+                            .getId(), exp);
+                    }
+                }, EXECUTOR_SERVICE));
+            }
             // 获取数据库里已经推过的QQ群
             Set<cc.w0rm.ghost.mysql.po.MsgGroup> recordedGroups = commodityDAL
                 .getTargetCommodityPushedGroups(commodityUniqueId);
@@ -148,12 +164,10 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             return groupCodes.parallelStream().map(groupCode -> CompletableFutureWithMDC.runAsyncWithMdc(() -> {
                 // 3. 存储数据库
                 try {
-                    Commodity commodity = new Commodity();
-                    commodity.setCommodityId(commodityUniqueId);
                     cc.w0rm.ghost.mysql.po.MsgGroup msgGroup = pushedGroups
                         .getOrDefault(groupCode, new cc.w0rm.ghost.mysql.po.MsgGroup());
                     msgGroup.setGroup(Long.valueOf(groupCode));
-                    commodityDAL.addCommodity(commodity, msgGroup);
+                    commodityDAL.addMsgGroup(commodityUniqueId, msgGroup);
                 } catch (Exception exp) {
                     log.error("消息生产者，商品记录失败", exp);
                 }
