@@ -13,10 +13,13 @@ import cc.w0rm.ghost.entity.platform.Parser;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
+import com.forte.qqrobot.beans.messages.result.GroupList;
+import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -247,5 +250,20 @@ public class AccountManagerImpl implements AccountManager {
         parser.parse((LinkedHashMap<String, Object>)o);
 
         return parser.getMsgGroupConfig();
+    }
+
+    @Override
+    public Set<String> getMsgGroupConsumerMemberGroups(String flag) {
+        Set<String> allGroups = new HashSet<>();
+        Set<Consumer> msgGroupConsumerMember = getMsgGroupConsumerMember(flag);
+        msgGroupConsumerMember.forEach(consumer -> {
+            if (!CollectionUtils.isEmpty(consumer.getWhiteSet())) {
+                allGroups.addAll(consumer.getWhiteSet());
+            } else {
+                GroupList groupList = consumer.getSender().GETTER.getGroupList();
+                allGroups.addAll(groupList.stream().map(Group::getCode).collect(Collectors.toSet()));
+            }
+        });
+        return allGroups;
     }
 }
