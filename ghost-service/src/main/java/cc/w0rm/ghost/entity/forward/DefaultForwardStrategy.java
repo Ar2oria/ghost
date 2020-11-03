@@ -134,7 +134,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             .getCommodityId() : String.valueOf(msgGet.getMsg().hashCode());
         Commodity commodity = new Commodity();
         commodity.setCommodityId(commodityUniqueId);
-        commodity.setSku(msgGet.getMsg());
+        commodity.setSku(msgGet.getMsg().substring(0, Math.min(10, msgGet.getMsg().length())));
         commodityDAL.addCommodity(commodity);
         
         return consumerSet.stream().flatMap(consumer -> {
