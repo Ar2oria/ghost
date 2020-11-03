@@ -2,6 +2,7 @@ package cc.w0rm.ghost.entity;
 
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author : xuyang
@@ -9,7 +10,11 @@ import lombok.Getter;
  */
 public class GroupMsgExt extends GroupMsgWrap {
     @Getter
-    private String msgGroupName;
+    private final String msgGroupName;
+
+    @Getter
+    @Setter
+    private String modifiedMsg;
 
     public GroupMsgExt(GroupMsg groupMsg, String msgGroupName) {
         super(groupMsg);

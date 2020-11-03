@@ -29,6 +29,8 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
             .softValues()
             .build();
 
+    private static final String GLOBAL_CODE = "#";
+
 
     @Override
     public boolean intercept(Context context, ConfigRole configRole) {
@@ -48,13 +50,13 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
             return false;
         }
 
-        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
+        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(GLOBAL_CODE);
         if (msgHash == null) {
             synchronized (this) {
-                msgHash = ACCOUNT_MSG_FILTER.getIfPresent(msgGet.getThisCode());
+                msgHash = ACCOUNT_MSG_FILTER.getIfPresent(GLOBAL_CODE);
                 if (msgHash == null) {
                     msgHash = new ConcurrentHashSet<>();
-                    ACCOUNT_MSG_FILTER.put(msgGet.getThisCode(), msgHash);
+                    ACCOUNT_MSG_FILTER.put(GLOBAL_CODE, msgHash);
                 }
             }
         }

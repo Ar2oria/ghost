@@ -116,7 +116,7 @@ public class Room implements IndexAble<Long> {
             @Override
             public int compareTo(@NotNull MsgGetWrap o) {
                 int cmp = (int) (msgGet.getTime() - o.getMsgGet().getTime());
-                return cmp == 0 ? msgGet.getId().compareTo(o.getMsgGet().getId()) : cmp;
+                return cmp == 0 ? msgGet.getMsg().compareTo(o.getMsgGet().getMsg()) : cmp;
             }
 
 
@@ -129,7 +129,7 @@ public class Room implements IndexAble<Long> {
             public boolean equals(Object obj) {
                 if (obj instanceof MsgGetWrap) {
                     MsgGetWrap other = (MsgGetWrap) obj;
-                    return other.getMsgGet().getId().equals(this.getMsgGet().getId());
+                    return other.getMsgGet().equals(this.getMsgGet());
                 }
                 return false;
             }

@@ -13,13 +13,10 @@ import cc.w0rm.ghost.entity.platform.Parser;
 import cc.w0rm.ghost.enums.RoleEnum;
 import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
-import com.forte.qqrobot.beans.messages.result.GroupList;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,13 +27,13 @@ import java.util.stream.Collectors;
  */
 @Component
 public class AccountManagerImpl implements AccountManager {
-    
+
     @Autowired
     private AccountManagerConfig accountManagerConfig;
-    
+
     @Autowired
     private Map<String, Parser> parserMap;
-    
+
     /**
      * 通过消息组标识获取组
      *
@@ -48,10 +45,10 @@ public class AccountManagerImpl implements AccountManager {
         if (Strings.isBlank(flag)) {
             return null;
         }
-        
+
         return accountManagerConfig.getMsgGroup(flag);
     }
-    
+
     /**
      * 通过qq信息获取组
      *
@@ -63,11 +60,25 @@ public class AccountManagerImpl implements AccountManager {
         if (codesAble == null) {
             return null;
         }
-        
+
         Set<String> msgGroupFlag = getMsgGroupFlag(codesAble);
-        return msgGroupFlag.stream().map(this::getMsgGroup).collect(Collectors.toList());
+        return msgGroupFlag.stream()
+                .map(this::getMsgGroup)
+                .collect(Collectors.toList());
     }
-    
+
+    @Override
+    public List<MsgGroup> listLeadGroup(ThisCodeAble codesAble) {
+        if (codesAble == null) {
+            return null;
+        }
+        Set<String> msgGroupFlag = getMsgGroupFlag(codesAble);
+        return msgGroupFlag.stream()
+                .filter(flag -> isProducer(codesAble.getThisCode(), flag))
+                .map(this::getMsgGroup)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 通过消息组标识获取组成员
      *
@@ -79,11 +90,12 @@ public class AccountManagerImpl implements AccountManager {
         if (Strings.isBlank(flag)) {
             return Collections.emptySet();
         }
-        
+
         MsgGroup msgGroup = accountManagerConfig.getMsgGroup(flag);
-        return msgGroup == null ? Collections.emptySet() : msgGroup.getConsumer();
+        return msgGroup == null?
+                Collections.emptySet(): msgGroup.getConsumer();
     }
-    
+
     /**
      * 通过qq信息获取组成员
      *
@@ -91,19 +103,21 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public Set<Consumer> listMsgGroupConsumerMember(ThisCodeAble codesAble) {
+    public Set<Consumer> getMsgGroupConsumerMember(ThisCodeAble codesAble) {
         if (codesAble == null) {
             return Collections.emptySet();
         }
-        
+
         List<MsgGroup> msgGroups = listMsgGroup(codesAble);
-        if (CollUtil.isEmpty(msgGroups)) {
+        if (CollUtil.isEmpty(msgGroups)){
             return Collections.emptySet();
         }
-        
-        return msgGroups.stream().flatMap(msgGroup -> msgGroup.getConsumer().stream()).collect(Collectors.toSet());
+
+        return msgGroups.stream()
+                .flatMap(msgGroup -> msgGroup.getConsumer().stream())
+                .collect(Collectors.toSet());
     }
-    
+
     /**
      * 通过qq号获取消息组标识
      *
@@ -115,10 +129,10 @@ public class AccountManagerImpl implements AccountManager {
         if (Strings.isBlank(code)) {
             return Collections.emptySet();
         }
-        
+
         return new HashSet<>(accountManagerConfig.getMsgGroupByCode(code));
     }
-    
+
     /**
      * 通过qq信息获取消息组标识
      *
@@ -130,10 +144,10 @@ public class AccountManagerImpl implements AccountManager {
         if (codesAble == null) {
             return Collections.emptySet();
         }
-        
+
         return getMsgGroupFlag(codesAble.getThisCode());
     }
-    
+
     /**
      * 通过qq信息获取群管理/转发规则
      *
@@ -142,95 +156,96 @@ public class AccountManagerImpl implements AccountManager {
      */
     @Override
     public GroupRule getGroupRuler(ThisCodeAble codesAble) {
-        if (codesAble == null) {
+        if (codesAble == null){
             return null;
         }
-        
+
         Set<String> producerBlack = accountManagerConfig.getBlackSet(codesAble.getThisCode(), RoleEnum.PRODUCER);
         Set<String> producerWhite = accountManagerConfig.getWhiteSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
-        
+
         Set<String> consumerBlack = accountManagerConfig.getBlackSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
         Set<String> consumerWhite = accountManagerConfig.getWhiteSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
-        
+
         Rule producerRule = new Rule(producerBlack, producerWhite);
         Rule consumerRule = new Rule(consumerBlack, consumerWhite);
-        
+
         GroupRule groupRule = new GroupRule();
         groupRule.setCode(codesAble.getThisCode());
         groupRule.setProducer(producerRule);
         groupRule.setConsumer(consumerRule);
-        
+
         return groupRule;
     }
-    
+
     @Override
     public boolean isProducer(String code) {
-        if (Strings.isBlank(code)) {
+        if (Strings.isBlank(code)){
             return false;
         }
-        
+
         List<String> msgGroup = accountManagerConfig.getMsgGroupByCode(code);
-        if (CollUtil.isEmpty(msgGroup)) {
+        if (CollUtil.isEmpty(msgGroup)){
             return false;
         }
-        
-        for (String groupName : msgGroup) {
+
+        for (String groupName : msgGroup){
             MsgGroup group = accountManagerConfig.getMsgGroup(groupName);
-            if (group == null) {
+            if (group == null){
                 continue;
             }
-            
+
             ImmutableSet<Producer> producer = group.getProducer();
-            if (CollUtil.isNotEmpty(producer)) {
-                Set<String> qqSet = producer.stream().map(DefaultRole::getBotCode).collect(Collectors.toSet());
-                if (qqSet.contains(code)) {
+            if (CollUtil.isNotEmpty(producer)){
+                Set<String> qqSet = producer.stream()
+                        .map(DefaultRole::getBotCode)
+                        .collect(Collectors.toSet());
+                if (qqSet.contains(code)){
                     return true;
                 }
             }
         }
-        
+
         return false;
     }
-    
-    
+
     @Override
-    public boolean isProducer(ThisCodeAble codesAble) {
-        if (codesAble == null) {
+    public boolean isProducer(String code, String group) {
+        if (code == null || group == null){
             return false;
         }
-        
+
+        MsgGroup msgGroup = accountManagerConfig.getMsgGroup(code);
+        Set<String> collect = msgGroup.getProducer().stream()
+                .map(Producer::getQQCode)
+                .collect(Collectors.toSet());
+
+        return collect.contains(code);
+    }
+
+
+    @Override
+    public boolean isProducer(ThisCodeAble codesAble) {
+        if (codesAble == null){
+            return false;
+        }
+
         return isProducer(codesAble.getThisCode());
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public Map<String, GetAble> getPlatformConfig(String platform) {
-        if (Strings.isBlank(platform)) {
+        if (Strings.isBlank(platform)){
             return Collections.emptyMap();
         }
         Parser parser = parserMap.get(platform);
-        if (parser == null) {
+        if (parser == null){
             throw new IllegalArgumentException("不支持的平台，请制定解析器");
         }
-        
+
         Object o = accountManagerConfig.get("platform");
-        parser.parse((LinkedHashMap<String, Object>) o);
-        
+        parser.parse((LinkedHashMap<String, Object>)o);
+
         return parser.getMsgGroupConfig();
-    }
-    
-    @Override
-    public Set<String> getMsgGroupConsumerMemberGroups(String flag) {
-        Set<String> allGroups = new HashSet<>();
-        Set<Consumer> msgGroupConsumerMember = getMsgGroupConsumerMember(flag);
-        msgGroupConsumerMember.forEach(consumer -> {
-            if (!CollectionUtils.isEmpty(consumer.getWhiteSet())) {
-                allGroups.addAll(consumer.getWhiteSet());
-            } else {
-                GroupList groupList = consumer.getSender().GETTER.getGroupList();
-                allGroups.addAll(groupList.stream().map(Group::getCode).collect(Collectors.toSet()));
-            }
-        });
-        return allGroups;
     }
 }

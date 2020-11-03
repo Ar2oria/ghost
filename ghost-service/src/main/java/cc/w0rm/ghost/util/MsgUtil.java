@@ -1,7 +1,6 @@
 package cc.w0rm.ghost.util;
 
 import cc.w0rm.ghost.enums.MsgHashMode;
-import com.google.common.collect.Lists;
 import com.simplerobot.modules.utils.KQCodeUtils;
 import org.apache.logging.log4j.util.Strings;
 
@@ -135,7 +134,8 @@ public class MsgUtil {
         }
     }
 
-    private static String replace(String str) {
+
+    public static String replace(String str) {
         if (Strings.isBlank(str)) {
             return Strings.EMPTY;
         }
@@ -158,7 +158,7 @@ public class MsgUtil {
 
         String chnMsg = stringBuilder.toString();
         if (Strings.isBlank(chnMsg)) {
-            return str;
+            return Strings.EMPTY;
         }
 
         return SPECIFIC_SYMBOL_PATTERN.matcher(chnMsg)
@@ -220,4 +220,5 @@ public class MsgUtil {
 
         return result;
     }
+
 }

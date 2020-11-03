@@ -1,24 +1,31 @@
 package cc.w0rm.ghost.service;
 
+import cc.w0rm.ghost.api.AccountManager;
 import cc.w0rm.ghost.api.Coordinator;
 import cc.w0rm.ghost.api.MsgProducer;
-import cc.w0rm.ghost.config.AccountManagerConfig;
+import cc.w0rm.ghost.api.MsgResolver;
+import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.dto.MsgInfoDTO;
 import cc.w0rm.ghost.entity.GroupMsgExt;
-import cc.w0rm.ghost.mysql.dao.CommodityDALImpl;
-import cc.w0rm.ghost.util.FilterUtils;
+import cc.w0rm.ghost.enums.ResolveType;
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.sender.MsgSender;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.concurrent.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author : xuyang
@@ -27,67 +34,73 @@ import java.util.concurrent.*;
 @Slf4j
 @Service("msgProducer")
 public class MsgProducerImpl implements MsgProducer {
-    
+
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(20,
+            Integer.MAX_VALUE,
+            60,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("MsgProducer-ThreadPool")
+                    .build());
+
+    private static final Cache<String, Set<Integer>> MSG_FILTER_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .softValues()
+            .build();
+
     @Autowired
     private Coordinator coordinator;
-    
-    @Resource
-    private CommodityDALImpl commodityDAL;
-    
-    @Autowired
-    private AccountManagerConfig accountManagerConfig;
-    
-    @Resource
-    private AccountManagerImpl accountManagerImpl;
-    
-    @Resource
-    private MsgResolverImpl msgResolverImpl;
 
-    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 60,
-        TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactoryBuilder()
-        .setDaemon(true).setNameFormat("MsgProducer-ThreadPool").build());
-    
+    @Autowired
+    private MsgResolver msgResolver;
+
+    @Autowired
+    private AccountManager accountManager;
+
     @Override
     public void make(MsgSender msgSender, GroupMsg groupMsg) {
-        
-        String msg = groupMsg.getMsg();
-        // 一般过滤
-        if (!isNeedFilter(msg)) {
-            return;
-        }
-        // 获取当前消息qq号对应的消息组code
-        List<String> msgGroupByCode = accountManagerConfig.getMsgGroupByCode(groupMsg.getThisCode());
+        Set<String> msgGroupFlag = accountManager.getMsgGroupFlag(groupMsg);
         try {
-            // 循环将消息处理发送给每个组
-            for (String msgGroup : msgGroupByCode) {
-                MsgInfoDTO msgInfoDTO = msgResolverImpl.resolve(msg, msgGroup);
-                if (null == msgInfoDTO || CollectionUtils.isEmpty(msgInfoDTO.getResolveList()) || StringUtils
-                    .isEmpty(msgInfoDTO.getModifiedMsg())) {
-                    continue;
+            Map<String, MsgInfoDTO> msgInfoMap = msgGroupFlag.stream()
+                    .collect(Collectors.toMap(Function.identity(),
+                            flag -> msgResolver.resolve(groupMsg.getMsg(), flag)));
+
+            msgInfoMap.keySet().forEach(flag -> {
+                MsgInfoDTO msgInfoDTO = msgInfoMap.get(flag);
+                if (msgInfoDTO.getResolveType() == ResolveType.NONE) {
+                    return;
                 }
-                groupMsg.setMsg(msgInfoDTO.getModifiedMsg());
-                GroupMsgExt newGroupMsg = new GroupMsgExt(groupMsg,msgGroup);
-                newGroupMsg.setCommodityId(String.valueOf(msgInfoDTO.getReferenceId()));
-                // 6. 异步转发 不关心结果
-                CompletableFuture.runAsync(() -> coordinator.forward(msgGroup, newGroupMsg), EXECUTOR_SERVICE);
-            }
+
+                Set<Integer> filter = MSG_FILTER_CACHE.getIfPresent(flag);
+                if (filter == null) {
+                    synchronized (this) {
+                        filter = MSG_FILTER_CACHE.getIfPresent(flag);
+                        if (filter == null) {
+                            filter = new ConcurrentHashSet<>();
+                            MSG_FILTER_CACHE.put(flag, filter);
+                        }
+                    }
+                }
+
+                if (filter.contains(msgInfoDTO.getReferenceId())) {
+                    return;
+                } else {
+                    filter.add(msgInfoDTO.getReferenceId());
+                }
+
+                GroupMsgExt groupMsgExt = new GroupMsgExt(groupMsg, flag);
+                groupMsgExt.setModifiedMsg(msgInfoDTO.getModifiedMsg());
+                CompletableFutureWithMDC.runAsyncWithMdc(() -> coordinator.forward(flag, groupMsgExt), EXECUTOR_SERVICE);
+
+            });
+
         } catch (Exception exp) {
-            log.error("消息生产者，转发消息失败 msgId[{}]", groupMsg.getId(), exp);
+            log.error("消息生产者，转发消息失败 msgId[{}]",
+                    groupMsg.getId(), exp);
         }
+
     }
-   
-    
-    private boolean isNeedFilter(String msg) {
-        if (FilterUtils.isFilterByVideo(msg)) {
-            return false;
-        }
-        if (!(FilterUtils.isFilterByTB(msg) || FilterUtils.isFilterByChineseCount(msg))) {
-            return false;
-        }
-        return true;
-    }
-    
 }
-
-
-    
