@@ -119,9 +119,9 @@ public class MsgResolverImpl implements MsgResolver {
 
 
         ResolveType resolveType = ResolveType.SUCCESS;
-        if (referenceId == 0 && msg.length() >= MSG_LENGTH_THRESHOLD) {
+        if (msg.length() >= MSG_LENGTH_THRESHOLD) {
             resolveType = ResolveType.UNSUPPORT_URL;
-        } else if (CollectionUtils.isEmpty(result) && msg.length() < MSG_LENGTH_THRESHOLD) {
+        } else if (CollectionUtils.isEmpty(result)) {
             resolveType = ResolveType.NONE;
         }
 
