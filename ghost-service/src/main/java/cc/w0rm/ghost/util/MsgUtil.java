@@ -27,7 +27,7 @@ public class MsgUtil {
     public static final String CHINESE_REGEX = "[\\u4e00-\\u9fa5]+";
     public static final Pattern CHINESE_PATTERN = Pattern.compile(CHINESE_REGEX);
 
-    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]+";
+    public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?([a-zA-Z0-9]{11})\\s?[\\p{Sc}/()]+";
     public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
     public static final String TAOBAO_CLICK_URL_REGEX = "https://s[.]click[.]taobao[.]com/\\w{5,9}";
     public static final Pattern TAOBAO_CLICK_URL_PATTERN = Pattern.compile(TAOBAO_CLICK_URL_REGEX);
