@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.api.MsgConsumer;
+import cc.w0rm.ghost.entity.GroupMsgExt;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 import com.forte.qqrobot.bot.BotInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
  */
 
 @Slf4j
-@Service("q1")
-public class MsgConsumerImpl implements MsgConsumer {
+@Service("defaultMsgConsumer")
+public class DefaultMsgConsumerImpl implements MsgConsumer {
 
     /**
      * @param botInfo 账号信息
@@ -26,13 +27,15 @@ public class MsgConsumerImpl implements MsgConsumer {
      */
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
-        log.debug("[q1] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
+        log.debug("[default] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
                 botInfo.getBotCode(),
                 msgGet.getId(),
                 group);
 
-
-        botInfo.getSender().SENDER.sendGroupMsg(group, msgGet.getMsg());
+        if (msgGet instanceof GroupMsgExt) {
+            GroupMsgExt groupMsgExt = (GroupMsgExt) msgGet;
+            botInfo.getSender().SENDER.sendGroupMsg(group, groupMsgExt.getModifiedMsg());
+        }
     }
 
 }

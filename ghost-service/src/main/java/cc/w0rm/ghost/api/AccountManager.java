@@ -30,6 +30,13 @@ public interface AccountManager {
     List<MsgGroup> listMsgGroup(ThisCodeAble codesAble);
 
     /**
+     * 获取自己是producer的消费组
+     * @param codeAble
+     * @return
+     */
+    List<MsgGroup> listLeadGroup(ThisCodeAble codeAble);
+
+    /**
      * 通过消息组标识获取组成员
      * @param flag
      * @return
@@ -40,7 +47,7 @@ public interface AccountManager {
      * @param codesAble
      * @return
      */
-    Set<Consumer> listMsgGroupConsumerMember(ThisCodeAble codesAble);
+    Set<Consumer> getMsgGroupConsumerMember(ThisCodeAble codesAble);
 
     /**
      * 通过qq号获取消息组标识
@@ -64,6 +71,8 @@ public interface AccountManager {
     GroupRule getGroupRuler(ThisCodeAble codesAble);
 
     boolean isProducer(String code);
+
+    boolean isProducer(String code, String group);
 
     boolean isProducer(ThisCodeAble codeAble);
 

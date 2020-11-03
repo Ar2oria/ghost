@@ -125,7 +125,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         Room room = findRoom(msgTime);
         log.debug("ReorderMsgForwardStrategy: msg[{}] ==> room[{}]", msgGet.getId(), room);
 
-        if (room == null) {
+        if (room == null || curIdx() - getTimeIdx(msgTime) > waitCount) {
             log.warn("msg[{}] is expired, use expire strategy", msgGet.getId());
             msgExpireStrategy.accept(msgGet);
         } else if (!room.tryPut(msgGet)) {

@@ -8,8 +8,10 @@ import cc.w0rm.ghost.dto.MsgInfoDTO;
 import cc.w0rm.ghost.entity.resolver.Resolver;
 import cc.w0rm.ghost.entity.resolver.detect.Detector;
 import cc.w0rm.ghost.entity.resolver.detect.PreTestText;
+import cc.w0rm.ghost.enums.MsgHashMode;
 import cc.w0rm.ghost.enums.ResolveType;
 import cc.w0rm.ghost.enums.TextType;
+import cc.w0rm.ghost.util.MsgUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -114,7 +116,9 @@ public class MsgResolverImpl implements MsgResolver {
         }
 
         if (referenceId == 0) {
-            referenceId = msg.hashCode();
+            String replace = MsgUtil.replace(msg);
+            int len = replace.length() > MSG_LENGTH_THRESHOLD? MSG_LENGTH_THRESHOLD : replace.length();
+            referenceId = replace.substring(0, len).hashCode();
         }
 
 

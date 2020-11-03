@@ -67,6 +67,18 @@ public class AccountManagerImpl implements AccountManager {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<MsgGroup> listLeadGroup(ThisCodeAble codesAble) {
+        if (codesAble == null) {
+            return null;
+        }
+        Set<String> msgGroupFlag = getMsgGroupFlag(codesAble);
+        return msgGroupFlag.stream()
+                .filter(flag -> isProducer(codesAble.getThisCode(), flag))
+                .map(this::getMsgGroup)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 通过消息组标识获取组成员
      *
@@ -91,7 +103,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public Set<Consumer> listMsgGroupConsumerMember(ThisCodeAble codesAble) {
+    public Set<Consumer> getMsgGroupConsumerMember(ThisCodeAble codesAble) {
         if (codesAble == null) {
             return Collections.emptySet();
         }
@@ -194,6 +206,20 @@ public class AccountManagerImpl implements AccountManager {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean isProducer(String code, String group) {
+        if (code == null || group == null){
+            return false;
+        }
+
+        MsgGroup msgGroup = accountManagerConfig.getMsgGroup(code);
+        Set<String> collect = msgGroup.getProducer().stream()
+                .map(Producer::getQQCode)
+                .collect(Collectors.toSet());
+
+        return collect.contains(code);
     }
 
 

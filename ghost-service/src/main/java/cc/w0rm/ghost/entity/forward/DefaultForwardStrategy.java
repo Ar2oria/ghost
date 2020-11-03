@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 @Component
 public class DefaultForwardStrategy implements ForwardStrategy {
 
+    private static final String DEFAULT_MSG_CONSUMER = "defaultMsgConsumer";
     private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4,
             Integer.MAX_VALUE,
             60,
@@ -79,10 +80,6 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             return;
         }
 
-        if (!accountManager.isProducer(msgGet)) {
-            return;
-        }
-
         List<MsgGroup> msgGroups;
         if (msgGet instanceof GroupMsgExt) {
             GroupMsgExt groupMsgExt = (GroupMsgExt) msgGet;
@@ -94,7 +91,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             }
             msgGroups = Lists.newArrayList(msgGroup);
         } else {
-            msgGroups = accountManager.listMsgGroup(msgGet);
+            msgGroups = accountManager.listLeadGroup(msgGet);
         }
 
         CompletableFuture<?>[] taskArray = getFutureTaskArray(msgGet, msgGroups);
@@ -117,8 +114,8 @@ public class DefaultForwardStrategy implements ForwardStrategy {
                     String msgGroupName = msgGroup.getName();
                     MsgConsumer msgConsumer = msgConsumerMap.get(msgGroupName);
                     if (msgConsumer == null) {
-                        log.error("未找到对应消息组[{}]的消费者策略，请检查配置文件！", msgGroupName);
-                        return null;
+                        log.warn("未找到对应消息组[{}]的消费者策略，请检查消费者配置！", msgGroupName);
+                        msgConsumer = msgConsumerMap.get(DEFAULT_MSG_CONSUMER);
                     }
 
                     Set<Consumer> consumerSet = msgGroup.getConsumer();
