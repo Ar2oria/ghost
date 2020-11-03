@@ -27,6 +27,7 @@ import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -47,8 +48,11 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     
     
     private static final Cache<String, Set<String>> GROUP_CODE_CACHE = CacheBuilder.newBuilder()
-        .concurrencyLevel(Integer.MAX_VALUE).expireAfterAccess(1, TimeUnit.HOURS).initialCapacity(10).build();
-    
+            .softValues()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build();
+
     private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
         .concurrencyLevel(Integer.MAX_VALUE).expireAfterAccess(5, TimeUnit.MINUTES).softValues().build();
     
@@ -232,7 +236,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     @NotNull
     private Set<String> getGroupCodeFromCache(Consumer consumer) {
         Set<String> groupCodes = GROUP_CODE_CACHE.getIfPresent(consumer.getBotCode());
-        if (groupCodes == null) {
+        if (CollectionUtils.isEmpty(groupCodes)) {
             GroupList groupList = consumer.getSender().GETTER.getGroupList();
             groupCodes = groupList.stream().map(Group::getCode).collect(Collectors.toSet());
             GROUP_CODE_CACHE.put(consumer.getBotCode(), groupCodes);
