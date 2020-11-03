@@ -135,6 +135,16 @@ public class MsgUtil {
             return Strings.EMPTY;
         }
 
+        // 1. 对只包含一张图片的消息单独处理
+        Matcher matcher = FILE_PATTERN.matcher(str);
+        if (matcher.find()){
+            String image = matcher.group();
+            if (str.trim().equals(image)){
+                return matcher.group(1);
+            }
+        }
+
+        // 2. 全部字符替换
         String returnVal = str;
         List<Pattern> patterns = Lists.newArrayList(FILE_PATTERN,
                 URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
