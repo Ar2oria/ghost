@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -50,9 +51,10 @@ public class DefaultForwardStrategy implements ForwardStrategy {
 
 
     private static final Cache<String, Set<String>> GROUP_CODE_CACHE = CacheBuilder.newBuilder()
+            .softValues()
             .concurrencyLevel(Integer.MAX_VALUE)
             .expireAfterAccess(1, TimeUnit.HOURS)
-            .initialCapacity(10).build();
+            .build();
 
     private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
@@ -201,7 +203,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     @NotNull
     private Set<String> getGroupCodeFromCache(Consumer consumer) {
         Set<String> groupCodes = GROUP_CODE_CACHE.getIfPresent(consumer.getBotCode());
-        if (groupCodes == null) {
+        if (CollectionUtils.isEmpty(groupCodes)) {
             GroupList groupList = consumer.getSender().GETTER.getGroupList();
             groupCodes = groupList.stream()
                     .map(Group::getCode).collect(Collectors.toSet());
