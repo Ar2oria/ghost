@@ -110,10 +110,13 @@ public class MsgResolverImpl implements MsgResolver {
 
             if (Strings.isNotBlank(commodityDetailDTO.getCommodityId())) {
                 referenceId |= commodityDetailDTO.getCommodityId().hashCode();
-            }else if (Strings.isNotBlank(commodityDetailDTO.getCommodityTitle())){
-                referenceId |= commodityDetailDTO.getCommodityTitle().hashCode();
             }
         }
+
+        if (referenceId == 0) {
+            referenceId = msg.hashCode();
+        }
+
 
         ResolveType resolveType = ResolveType.SUCCESS;
         if (referenceId == 0 && msg.length() >= MSG_LENGTH_THRESHOLD) {
