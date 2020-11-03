@@ -24,6 +24,9 @@ public class MsgUtil {
     public static final String URL_REGEX = "http(s?)://([-.\\w\\d]+)[-\\d\\w/.?=&%]*";
     public static final Pattern URL_PATTERN = Pattern.compile(URL_REGEX);
 
+    public static final String CHINESE_REGEX = "[\\u4e00-\\u9fa5]+";
+    public static final Pattern CHINESE_PATTERN = Pattern.compile(CHINESE_REGEX);
+
     public static final String TAO_KOU_LING_REGEX = "[\\p{Sc}/()]\\s?(\\w{9,12})\\s?[\\p{Sc}/()]+";
     public static final Pattern TAO_KOU_LING_PATTERN = Pattern.compile(TAO_KOU_LING_REGEX);
     public static final String TAOBAO_CLICK_URL_REGEX = "https://s[.]click[.]taobao[.]com/\\w{5,9}";
@@ -36,7 +39,7 @@ public class MsgUtil {
     public static final String JD_COUPON_URL_REGEX = "https://coupon[.]m[.]jd[.]com/[-\\[\\]\\d\\w:/.?=&%;,()]+";
     public static final Pattern JD_COUPON_URL_PATTERN = Pattern.compile(JD_COUPON_URL_REGEX);
 
-    public static final String SPECIFIC_SYMBOL_REGEX = "[劵券亓元\\w\\s\\pP\\pS]*";
+    public static final String SPECIFIC_SYMBOL_REGEX = "[劵券亓元]*";
     public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
 
     public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
@@ -147,14 +150,19 @@ public class MsgUtil {
         }
 
         // 2. 全部字符替换
-        String returnVal = str;
-        List<Pattern> patterns = Lists.newArrayList(FILE_PATTERN,
-                URL_PATTERN, TAO_KOU_LING_PATTERN, SPECIFIC_SYMBOL_PATTERN);
-        for (Pattern pattern : patterns) {
-            returnVal = pattern.matcher(returnVal).replaceAll("");
+        StringBuilder stringBuilder = new StringBuilder();
+        Matcher chn = CHINESE_PATTERN.matcher(str);
+        while (chn.find()){
+            stringBuilder.append(chn.group());
         }
 
-        return returnVal;
+        String chnMsg = stringBuilder.toString();
+        if (Strings.isBlank(chnMsg)){
+            return str;
+        }
+
+        return SPECIFIC_SYMBOL_PATTERN.matcher(chnMsg)
+                .replaceAll("");
     }
 
     public static List<String> listTbClickUrls(String msg) {
