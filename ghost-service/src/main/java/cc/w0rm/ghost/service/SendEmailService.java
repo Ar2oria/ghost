@@ -11,16 +11,18 @@ import com.forte.qqrobot.sender.MsgSender;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ResourceUtils;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -28,9 +30,8 @@ import org.thymeleaf.context.Context;
 import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -52,56 +53,56 @@ public class SendEmailService {
     private static final String GROUP_URL_TEMPLATE = "https://qm.qq.com/cgi-bin/qm/qr?k=${groupKey}&jump_from=webapi";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     @Resource
     private JavaMailSender javaMailSender;
-    
+
     @Resource
     private AccountManagerImpl accountManagerImpl;
-    
+
     @Resource
     private EmailDALImpl emailDAL;
 
     @Autowired
     private QunConfigDAL qunConfigDAL;
-    
+
     @Value("${spring.mail.username}")
     private String from;
-    
+
     public void increase(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
             String qq = groupMemberIncrease.getBeOperatedQQ();
             Set<String> msgGroupByCode = accountManagerImpl
-                .getMsgGroupFlag(msgSender.GETTER.getLoginQQInfo().getQQCode());
+                    .getMsgGroupFlag(msgSender.GETTER.getLoginQQInfo().getQQCode());
             Set<String> whiteGroup = new HashSet<>();
             for (String msgGroup : msgGroupByCode) {
-                whiteGroup.addAll(accountManagerImpl.getGroupNumbersOfAllConsumers(msgGroup));
+                whiteGroup.addAll(accountManagerImpl.getAllAvailableGroupNumbers(msgGroup));
             }
             if (CollectionUtils.isEmpty(whiteGroup)) {
                 return;
             }
             List<String> whiteGroupsList = new ArrayList<>(whiteGroup);
-            process(qq, whiteGroupsList, "classpath:templates/emailTemplate.html");
+            process(qq, whiteGroupsList, "templates/emailTemplate.html");
             // 发送测试邮件
         } catch (Exception e) {
             log.error("新成员加入邮件发送失败 成员qq:{}", groupMemberIncrease.getBeOperatedQQ(), e);
         }
     }
-    
+
     public void reduce(GroupMemberReduce groupMemberReduce) {
         try {
             String qq = groupMemberReduce.getBeOperatedQQ();
             String group = groupMemberReduce.getGroupCode();
             // 发送测试邮件
-            simpleProcess(qq, group, "classpath:templates/emailReduceTemplate.html");
+            simpleProcess(qq, group, "templates/emailReduceTemplate.html");
         } catch (Exception e) {
             log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
         }
     }
-    
-    private void simpleProcess(String qq, String group, String filePath) throws IOException {
+
+    private void simpleProcess(String qq, String group, String filePath) {
         // 解析设置的h5文件
-        File file = ResourceUtils.getFile(filePath);
+        String data = readFile(filePath);
         // 获取该群的加入链接
         String groupQsig = getGroupQsig(group);
         if (StringUtils.isEmpty(groupQsig)) {
@@ -110,23 +111,23 @@ public class SendEmailService {
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
-        String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
+        String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "你真的舍得就这么走了吗", emailContent);
         sendTextMail(qq + "@qq.com", "促销期间，更多福利都在群中：", "进群和家人们团聚：" + group);
     }
-    
-    private void process(String qq, List<String> curQQGroups, String filePath) throws IOException {
+
+    private void process(String qq, List<String> curQQGroups, String filePath) {
         Email email = emailDAL.getEmail(qq);
         if (email == null) {
             email = new Email();
         }
         Set<String> targetQQJoinedGroups = StringUtils
-            .isEmpty(email.getJoinedGroups()) ? new HashSet<>() : new HashSet<>(Arrays
-            .asList(email.getJoinedGroups().split(",")));
+                .isEmpty(email.getJoinedGroups()) ? new HashSet<>() : new HashSet<>(Arrays
+                .asList(email.getJoinedGroups().split(",")));
         curQQGroups.removeAll(targetQQJoinedGroups);
         // 解析设置的h5文件
-        File file = ResourceUtils.getFile(filePath);
+        String data = readFile(filePath);
         // 获取该群的加入链接
         String groupQsig = getGroupQsig(curQQGroups.get(0));
         log.info("[腾讯加群解析测试日志] 二级解析 ret:{}", groupQsig);
@@ -137,7 +138,7 @@ public class SendEmailService {
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
-        String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
+        String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "隐藏福利开启", emailContent);
         sendTextMail(qq + "@qq.com", "羊毛群，冲冲冲" + qq, "淘宝，京东，拼多多内部运营人员返利招新群，欢迎加入 QQ群:" + curQQGroups.get(0));
@@ -146,26 +147,39 @@ public class SendEmailService {
         targetQQJoinedGroups.add(curQQGroups.get(0));
         emailDAL.addEmail(email, targetQQJoinedGroups);
     }
-    
+
+    @NotNull
+    private String readFile(String filePath) {
+        String data = Strings.EMPTY;
+        ClassPathResource classPathResource = new ClassPathResource(filePath);
+        try {
+            byte[] bdata = FileCopyUtils.copyToByteArray(classPathResource.getInputStream());
+            data = new String(bdata, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("IOException", e);
+        }
+        return data;
+    }
+
     private String getGroupQsig(String group) {
-        if (Strings.isBlank(group)){
+        if (Strings.isBlank(group)) {
             return Strings.EMPTY;
         }
 
         QunConfig qunConfig = QUN_CONFIG_CACHE.getIfPresent(group);
-        if (Objects.nonNull(qunConfig)){
+        if (Objects.nonNull(qunConfig)) {
             return GROUP_URL_TEMPLATE.replace("${groupKey}", qunConfig.getGroupKey());
         }
 
         qunConfig = qunConfigDAL.selectByGroupCode(group);
-        if (Objects.isNull(qunConfig)){
+        if (Objects.isNull(qunConfig)) {
             return Strings.EMPTY;
         }
 
         QUN_CONFIG_CACHE.put(group, qunConfig);
         return GROUP_URL_TEMPLATE.replace("${groupKey}", qunConfig.getGroupKey());
     }
-    
+
     /**
      * 发送纯文本邮件
      *
@@ -186,7 +200,7 @@ public class SendEmailService {
             logger.error("邮件发送失败。", e);
         }
     }
-    
+
     /**
      * 发送html形式邮件
      *

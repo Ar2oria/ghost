@@ -97,5 +97,5 @@ public interface AccountManager {
      * @param flag
      * @return
      */
-    Set<String> getGroupNumbersOfAllConsumers(String flag);
+    Set<String> getAllAvailableGroupNumbers(String flag);
 }

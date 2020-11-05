@@ -263,7 +263,7 @@ public class AccountManagerImpl implements AccountManager {
     }
 
     @Override
-    public Set<String> getGroupNumbersOfAllConsumers(String flag) {
+    public Set<String> getAllAvailableGroupNumbers(String flag) {
         Set<String> allGroups = new HashSet<>();
         Set<Consumer> msgGroupConsumerMember = getMsgGroupConsumerMember(flag);
         msgGroupConsumerMember.forEach(consumer -> {

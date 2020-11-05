@@ -7,17 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
 @Slf4j
 public class EmailDALImpl {
-    
+
     @Resource
     private EmailMapper emailMapper;
-    
+
     public Email getEmail(String qq) {
         if (!StringUtils.isNumber(qq)) {
             return null;
@@ -29,11 +28,15 @@ public class EmailDALImpl {
         }
         return null;
     }
-    
+
     public void addEmail(Email email, Set<String> joinedGroups) {
         email.setJoinedGroups(String.join(",", joinedGroups));
         try {
-            emailMapper.insertOrUpdate(email);
+            if (Objects.isNull(email.getId())) {
+                emailMapper.insertSelective(email);
+            } else {
+                emailMapper.updateByPrimaryKeySelective(email);
+            }
         } catch (Exception e) {
             log.error("email信息添加失败 查询qq信息:{}", email.toString(), e);
         }
