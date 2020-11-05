@@ -68,9 +68,6 @@ public class SendEmailService {
     @Value("${spring.mail.username}")
     private String from;
     
-    @Value("${spring.mail.test}")
-    private String testEmailTo;
-    
     public void increase(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
             String qq = groupMemberIncrease.getBeOperatedQQ();
