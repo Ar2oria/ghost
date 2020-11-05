@@ -5,7 +5,6 @@ import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.entity.GroupRule;
 import cc.w0rm.ghost.entity.platform.GetAble;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
-import com.forte.qqrobot.beans.messages.msgget.MsgGet;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,9 @@ import java.util.Set;
  * @date : 2020/10/13 2:08 上午
  */
 public interface AccountManager {
+
+    List<String> listAllGroups();
+
     /**
      * 通过消息组标识获取组
      * @param flag

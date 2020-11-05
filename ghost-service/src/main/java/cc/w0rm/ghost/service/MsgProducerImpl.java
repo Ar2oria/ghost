@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -62,7 +63,7 @@ public class MsgProducerImpl implements MsgProducer {
 
     @Override
     public void make(MsgSender msgSender, GroupMsg groupMsg) {
-        Set<String> msgGroupFlag = accountManager.getMsgGroupFlag(groupMsg);
+        List<String> msgGroupFlag = accountManager.listAllGroups();
         try {
             Map<String, MsgInfoDTO> msgInfoMap = msgGroupFlag.stream()
                     .collect(Collectors.toMap(Function.identity(),
