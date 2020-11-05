@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public interface AccountManager {
 
-    List<String> listAllGroups();
+    List<String> getAllGroups();
 
     /**
      * 通过消息组标识获取组
@@ -29,14 +29,21 @@ public interface AccountManager {
      * @param codesAble
      * @return
      */
-    List<MsgGroup> listMsgGroup(ThisCodeAble codesAble);
+    List<MsgGroup> getMsgGroup(ThisCodeAble codesAble);
 
     /**
      * 获取自己是producer的消费组
      * @param codeAble
      * @return
      */
-    List<MsgGroup> listLeadGroup(ThisCodeAble codeAble);
+    List<MsgGroup> getLeadGroup(ThisCodeAble codeAble);
+
+    /**
+     * 获取自己是producer的消费组
+     * @param code
+     * @return
+     */
+    List<MsgGroup> getLeadGroup(String code);
 
     /**
      * 通过消息组标识获取组成员
@@ -90,5 +97,5 @@ public interface AccountManager {
      * @param flag
      * @return
      */
-    Set<String> getMsgGroupConsumerMemberGroups(String flag);
+    Set<String> getGroupNumbersOfAllConsumers(String flag);
 }
