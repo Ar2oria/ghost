@@ -140,8 +140,9 @@ public class SendEmailService {
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
-        sendHtmlMail(qq + "@qq.com", "隐藏福利开启", emailContent);
-        sendTextMail(qq + "@qq.com", "羊毛群，冲冲冲" + qq, "淘宝，京东，拼多多内部运营人员返利招新群，欢迎加入 QQ群:" + curQQGroups.get(0));
+        sendHtmlMail(qq + "@qq.com", "欢迎加入，您的审核已经通过", emailContent);
+        sendTextMail(qq + "@qq.com", "这是系统的自动邮件，如果您已经收到类似的邮件请忽略" + qq, "这是系统的自动邮件，如果您已经收到类似的邮件请忽略，" +
+                "双十一期间，淘宝，京东限时优惠，十亿补贴等你来拿！快点一起加入吧，q群:" + curQQGroups.get(0));
         // 添加数据库
         email.setQqAccount(Long.parseLong(qq));
         targetQQJoinedGroups.add(curQQGroups.get(0));
