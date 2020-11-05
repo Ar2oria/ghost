@@ -34,6 +34,11 @@ public class AccountManagerImpl implements AccountManager {
     @Autowired
     private Map<String, Parser> parserMap;
 
+    @Override
+    public List<String> listAllGroups() {
+        return accountManagerConfig.listMsgGroupNames();
+    }
+
     /**
      * 通过消息组标识获取组
      *
