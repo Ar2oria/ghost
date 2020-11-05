@@ -91,7 +91,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             }
             msgGroups = Lists.newArrayList(msgGroup);
         } else {
-            msgGroups = accountManager.listLeadGroup(msgGet);
+            msgGroups = accountManager.getLeadGroup(msgGet);
         }
 
         CompletableFuture<?>[] taskArray = getFutureTaskArray(msgGet, msgGroups);

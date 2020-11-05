@@ -63,7 +63,7 @@ public class MsgProducerImpl implements MsgProducer {
 
     @Override
     public void make(MsgSender msgSender, GroupMsg groupMsg) {
-        List<String> msgGroupFlag = accountManager.listAllGroups();
+        List<String> msgGroupFlag = accountManager.getAllGroups();
         try {
             Map<String, MsgInfoDTO> msgInfoMap = msgGroupFlag.stream()
                     .collect(Collectors.toMap(Function.identity(),

@@ -1,14 +1,19 @@
 package cc.w0rm.ghost.service;
 
+import cc.w0rm.ghost.common.util.Strings;
 import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
+import cc.w0rm.ghost.mysql.dao.QunConfigDAL;
 import cc.w0rm.ghost.mysql.po.Email;
-import cc.w0rm.ghost.util.HttpUtils;
+import cc.w0rm.ghost.mysql.po.QunConfig;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce;
 import com.forte.qqrobot.sender.MsgSender;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -27,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -36,7 +42,15 @@ import java.util.*;
 @Service
 @Slf4j
 public class SendEmailService {
-    
+
+    private static final Cache<String, QunConfig> QUN_CONFIG_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(Integer.MAX_VALUE)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .softValues()
+            .build();
+
+    private static final String GROUP_URL_TEMPLATE = "https://qm.qq.com/cgi-bin/qm/qr?k=${groupKey}&jump_from=webapi";
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     @Resource
@@ -47,6 +61,9 @@ public class SendEmailService {
     
     @Resource
     private EmailDALImpl emailDAL;
+
+    @Autowired
+    private QunConfigDAL qunConfigDAL;
     
     @Value("${spring.mail.username}")
     private String from;
@@ -61,7 +78,7 @@ public class SendEmailService {
                 .getMsgGroupFlag(msgSender.GETTER.getLoginQQInfo().getQQCode());
             Set<String> whiteGroup = new HashSet<>();
             for (String msgGroup : msgGroupByCode) {
-                whiteGroup.addAll(accountManagerImpl.getMsgGroupConsumerMemberGroups(msgGroup));
+                whiteGroup.addAll(accountManagerImpl.getGroupNumbersOfAllConsumers(msgGroup));
             }
             if (CollectionUtils.isEmpty(whiteGroup)) {
                 return;
@@ -93,13 +110,11 @@ public class SendEmailService {
         if (StringUtils.isEmpty(groupQsig)) {
             return;
         }
-        groupQsig = groupQsig.replace("\\u0026", "&");
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(new String(Files.readAllBytes(file.toPath())), context);
         // 发送h5邮件
-        sendHtmlMail(testEmailTo, "你真的舍得就这么走了吗", emailContent);
         sendHtmlMail(qq + "@qq.com", "你真的舍得就这么走了吗", emailContent);
         sendTextMail(qq + "@qq.com", "促销期间，更多福利都在群中：", "进群和家人们团聚：" + group);
     }
@@ -121,7 +136,7 @@ public class SendEmailService {
         if (StringUtils.isEmpty(groupQsig)) {
             return;
         }
-        groupQsig = groupQsig.replace("\\u0026", "&");
+
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
@@ -136,51 +151,23 @@ public class SendEmailService {
     }
     
     private String getGroupQsig(String group) {
-        String groupKey = getGroupKey(group);
-        log.info("[腾讯加群解析测试日志] 一级解析 key:{}", groupKey);
-        if (StringUtils.isEmpty(groupKey)) {
-            return null;
+        if (Strings.isBlank(group)){
+            return Strings.EMPTY;
         }
-        Map<String, String> header = new HashMap<>();
-        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
-        header.put("Content-Type", "utf-8");
-        header
-            .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
-                "Gecko) Chrome/86.0.4240.111 Safari/537.36");
-        header.put("Accept", "*/*");
-        String data = HttpUtils.get("http://shang.qq.com/wpa/qunwpa?idkey=" + groupKey, new HashMap<>(), header);
-        if (StringUtils.isEmpty(data) || !data.contains("tencent")) {
-            return null;
+
+        QunConfig qunConfig = QUN_CONFIG_CACHE.getIfPresent(group);
+        if (Objects.nonNull(qunConfig)){
+            return GROUP_URL_TEMPLATE.replace("${groupKey}", qunConfig.getGroupKey());
         }
-        String[] firstSplit = data.split("tencent");
-        if (firstSplit.length < 2) {
-            return null;
+
+        qunConfig = qunConfigDAL.selectByGroupCode(group);
+        if (Objects.isNull(qunConfig)){
+            return Strings.EMPTY;
         }
-        String[] secondSplit = firstSplit[1].split("\";");
-        return "tencent" + secondSplit[0];
+
+        QUN_CONFIG_CACHE.put(group, qunConfig);
+        return GROUP_URL_TEMPLATE.replace("${groupKey}", qunConfig.getGroupKey());
     }
-    
-    
-    private String getGroupKey(String group) {
-        Map<String, String> header = new HashMap<>();
-        header.put("Referer", "https://shang.qq.com/wpa/g_wpa_get?guin=123");
-        header.put("Content-Type", "utf-8");
-        header
-            .put("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like " +
-                "Gecko) Chrome/86.0.4240.111 Safari/537.36");
-        header.put("Accept", "*/*");
-        String data = HttpUtils.get("https://shang.qq.com/wpa/g_wpa_get?guin=" + group, new HashMap<>(), header);
-        if (StringUtils.isEmpty(data) || !data.contains("key")) {
-            return null;
-        }
-        String[] afterSplit = data.split("key\":\"");
-        if (afterSplit.length < 2) {
-            return null;
-        }
-        String groupKey = afterSplit[1];
-        return groupKey.split("\"}")[0];
-    }
-    
     
     /**
      * 发送纯文本邮件
@@ -199,7 +186,7 @@ public class SendEmailService {
             javaMailSender.send(simpleMailMessage);
             logger.info("邮件已发送。");
         } catch (Exception e) {
-            logger.error("邮件发送失败。" + e.getMessage());
+            logger.error("邮件发送失败。", e);
         }
     }
     

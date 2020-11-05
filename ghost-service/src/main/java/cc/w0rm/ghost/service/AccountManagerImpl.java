@@ -38,7 +38,7 @@ public class AccountManagerImpl implements AccountManager {
     private Map<String, Parser> parserMap;
 
     @Override
-    public List<String> listAllGroups() {
+    public List<String> getAllGroups() {
         return accountManagerConfig.listMsgGroupNames();
     }
 
@@ -64,7 +64,7 @@ public class AccountManagerImpl implements AccountManager {
      * @return
      */
     @Override
-    public List<MsgGroup> listMsgGroup(ThisCodeAble codesAble) {
+    public List<MsgGroup> getMsgGroup(ThisCodeAble codesAble) {
         if (codesAble == null) {
             return null;
         }
@@ -76,13 +76,18 @@ public class AccountManagerImpl implements AccountManager {
     }
 
     @Override
-    public List<MsgGroup> listLeadGroup(ThisCodeAble codesAble) {
-        if (codesAble == null) {
-            return null;
+    public List<MsgGroup> getLeadGroup(ThisCodeAble codesAble) {
+       return getLeadGroup(codesAble.getThisCode());
+    }
+
+    @Override
+    public List<MsgGroup> getLeadGroup(String code) {
+        if (Strings.isBlank(code)) {
+            return Collections.emptyList();
         }
-        Set<String> msgGroupFlag = getMsgGroupFlag(codesAble);
+        Set<String> msgGroupFlag = getMsgGroupFlag(code);
         return msgGroupFlag.stream()
-                .filter(flag -> isProducer(codesAble.getThisCode(), flag))
+                .filter(flag -> isProducer(code, flag))
                 .map(this::getMsgGroup)
                 .collect(Collectors.toList());
     }
@@ -116,7 +121,7 @@ public class AccountManagerImpl implements AccountManager {
             return Collections.emptySet();
         }
 
-        List<MsgGroup> msgGroups = listMsgGroup(codesAble);
+        List<MsgGroup> msgGroups = getMsgGroup(codesAble);
         if (CollUtil.isEmpty(msgGroups)){
             return Collections.emptySet();
         }
@@ -258,15 +263,19 @@ public class AccountManagerImpl implements AccountManager {
     }
 
     @Override
-    public Set<String> getMsgGroupConsumerMemberGroups(String flag) {
+    public Set<String> getGroupNumbersOfAllConsumers(String flag) {
         Set<String> allGroups = new HashSet<>();
         Set<Consumer> msgGroupConsumerMember = getMsgGroupConsumerMember(flag);
         msgGroupConsumerMember.forEach(consumer -> {
             if (!CollectionUtils.isEmpty(consumer.getWhiteSet())) {
                 allGroups.addAll(consumer.getWhiteSet());
             } else {
+                Set<String> blackSet = consumer.getBlackSet();
                 GroupList groupList = consumer.getSender().GETTER.getGroupList();
-                allGroups.addAll(groupList.stream().map(Group::getCode).collect(Collectors.toSet()));
+                allGroups.addAll(groupList.stream()
+                        .map(Group::getCode)
+                        .filter(code->!blackSet.contains(code))
+                        .collect(Collectors.toSet()));
             }
         });
         return allGroups;
