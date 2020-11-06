@@ -114,7 +114,7 @@ public class SendEmailService {
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "你真的舍得就这么走了吗", emailContent);
-        sendTextMail(qq + "@qq.com", "促销期间，更多福利都在群中：", "进群和家人们团聚：" + group);
+        sendTextMail(qq + "@qq.com", "促销期间，更多福利都在裙中|Apple|My Office Account", "进裙和家人们团聚：" + group);
     }
 
     private void process(String qq, List<String> curQQGroups, String filePath) {
@@ -145,9 +145,9 @@ public class SendEmailService {
         context.setVariable("qqGroupUrl", groupQsig);
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
-        sendHtmlMail(qq + "@qq.com", "欢迎加入，您的审核已经通过", emailContent);
-        sendTextMail(qq + "@qq.com", "这是系统的自动邮件，如果您已经收到类似的邮件请忽略" + qq, "这是系统的自动邮件，如果您已经收到类似的邮件请忽略，" +
-                "双十一期间，淘宝，京东限时优惠，十亿补贴等你来拿！快点一起加入吧，q群:" + curQQGroups.get(0));
+        sendHtmlMail(qq + "@qq.com", "欢迎，您的审核已经通过|Apple|My Office Account", emailContent);
+        sendTextMail(qq + "@qq.com", "【系统自动邮件】恭喜，您已经通过系统审核|Apple|My Office Account", "这是系统的自动邮件，如果您已经收到类似的邮件请忽略，" +
+                "双十一期间，淘宝，京东限时优惠，十亿补贴等你来拿！快点一起加入吧，您的专属裙:" + curQQGroups.get(0));
         // 添加数据库
         email.setQqAccount(Long.parseLong(qq));
         targetQQJoinedGroups.add(curQQGroups.get(0));
