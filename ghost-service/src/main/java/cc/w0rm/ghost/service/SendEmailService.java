@@ -82,7 +82,7 @@ public class SendEmailService {
                 return;
             }
             List<String> whiteGroupsList = new ArrayList<>(whiteGroup);
-            process(qq, whiteGroupsList, "templates/emailTemplate.html");
+            process(qq, whiteGroupsList, "templates/welcome.html");
             // 发送测试邮件
         } catch (Exception e) {
             log.error("新成员加入邮件发送失败 成员qq:{}", groupMemberIncrease.getBeOperatedQQ(), e);
@@ -94,7 +94,7 @@ public class SendEmailService {
             String qq = groupMemberReduce.getBeOperatedQQ();
             String group = groupMemberReduce.getGroupCode();
             // 发送测试邮件
-            simpleProcess(qq, group, "templates/emailReduceTemplate.html");
+            simpleProcess(qq, group, "templates/keep.html");
         } catch (Exception e) {
             log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
         }
