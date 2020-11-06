@@ -91,6 +91,7 @@ public class Room implements IndexAble<Long> {
 
         public synchronized boolean put(MsgGet msgGet) {
             msgCount++;
+            time = Math.min(time, msgGet.getTime());
             return msgWraps.add(new MsgGetWrap(msgGet));
         }
 
