@@ -126,6 +126,11 @@ public class SendEmailService {
                 .isEmpty(email.getJoinedGroups()) ? new HashSet<>() : new HashSet<>(Arrays
                 .asList(email.getJoinedGroups().split(",")));
         curQQGroups.removeAll(targetQQJoinedGroups);
+
+        if (CollectionUtils.isEmpty(curQQGroups)){
+            return;
+        }
+
         // 解析设置的h5文件
         String data = readFile(filePath);
         // 获取该群的加入链接
