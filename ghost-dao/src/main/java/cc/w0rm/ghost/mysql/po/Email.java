@@ -1,20 +1,21 @@
 package cc.w0rm.ghost.mysql.po;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import java.util.Date;
 
-@Data
-@ToString
-@AllArgsConstructor
-@NoArgsConstructor
 public class Email {
     private Integer id;
 
-    private Long qqAccount;
+    private String qqCode;
 
-    private String joinedGroups;
+    private String groupCode;
+
+    private Integer mailType;
+
+    private Byte deleted;
+
+    private Date createdAt;
+
+    private Date updatedAt;
 
     public Integer getId() {
         return id;
@@ -24,19 +25,51 @@ public class Email {
         this.id = id;
     }
 
-    public Long getQqAccount() {
-        return qqAccount;
+    public String getQqCode() {
+        return qqCode;
     }
 
-    public void setQqAccount(Long qqAccount) {
-        this.qqAccount = qqAccount;
+    public void setQqCode(String qqCode) {
+        this.qqCode = qqCode == null ? null : qqCode.trim();
     }
 
-    public String getJoinedGroups() {
-        return joinedGroups;
+    public String getGroupCode() {
+        return groupCode;
     }
 
-    public void setJoinedGroups(String joinedGroups) {
-        this.joinedGroups = joinedGroups == null ? null : joinedGroups.trim();
+    public void setGroupCode(String groupCode) {
+        this.groupCode = groupCode == null ? null : groupCode.trim();
+    }
+
+    public Integer getMailType() {
+        return mailType;
+    }
+
+    public void setMailType(Integer mailType) {
+        this.mailType = mailType;
+    }
+
+    public Byte getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Byte deleted) {
+        this.deleted = deleted;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

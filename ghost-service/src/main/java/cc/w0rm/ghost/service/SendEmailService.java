@@ -1,7 +1,8 @@
 package cc.w0rm.ghost.service;
 
 import cc.w0rm.ghost.common.util.Strings;
-import cc.w0rm.ghost.mysql.dao.EmailDALImpl;
+import cc.w0rm.ghost.enums.EmailType;
+import cc.w0rm.ghost.mysql.dao.EmailDAL;
 import cc.w0rm.ghost.mysql.dao.QunConfigDAL;
 import cc.w0rm.ghost.mysql.po.Email;
 import cc.w0rm.ghost.mysql.po.QunConfig;
@@ -17,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -28,12 +28,13 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.annotation.Resource;
-import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.*;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 /**
@@ -60,8 +61,8 @@ public class SendEmailService {
     @Resource
     private AccountManagerImpl accountManagerImpl;
 
-    @Resource
-    private EmailDALImpl emailDAL;
+    @Autowired
+    private EmailDAL emailDAL;
 
     @Autowired
     private QunConfigDAL qunConfigDAL;
@@ -82,7 +83,7 @@ public class SendEmailService {
                 return;
             }
             List<String> whiteGroupsList = new ArrayList<>(whiteGroup);
-            process(qq, whiteGroupsList, "templates/welcome.html");
+            welcomeCustomer(qq, whiteGroupsList);
             // 发送测试邮件
         } catch (Exception e) {
             log.error("新成员加入邮件发送失败 成员qq:{}", groupMemberIncrease.getBeOperatedQQ(), e);
@@ -94,15 +95,15 @@ public class SendEmailService {
             String qq = groupMemberReduce.getBeOperatedQQ();
             String group = groupMemberReduce.getGroupCode();
             // 发送测试邮件
-            simpleProcess(qq, group, "templates/keep.html");
+            begCustomers(qq, group);
         } catch (Exception e) {
             log.error("成员退出邮件发送失败 成员qq:{}", groupMemberReduce.getBeOperatedQQ(), e);
         }
     }
 
-    private void simpleProcess(String qq, String group, String filePath) {
+    private void begCustomers(String qq, String group) {
         // 解析设置的h5文件
-        String data = readFile(filePath);
+        String data = readFile("templates/keep.html");
         // 获取该群的加入链接
         String groupQsig = getGroupQsig(group);
         if (StringUtils.isEmpty(groupQsig)) {
@@ -114,27 +115,40 @@ public class SendEmailService {
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "你真的舍得就这么走了吗", emailContent);
-        sendTextMail(qq + "@qq.com", "促销期间，更多福利都在裙中|Apple|My Office Account", "进裙和家人们团聚：" + group);
     }
 
-    private void process(String qq, List<String> curQQGroups, String filePath) {
-        Email email = emailDAL.getEmail(qq);
-        if (email == null) {
-            email = new Email();
-        }
-        Set<String> targetQQJoinedGroups = StringUtils
-                .isEmpty(email.getJoinedGroups()) ? new HashSet<>() : new HashSet<>(Arrays
-                .asList(email.getJoinedGroups().split(",")));
-        curQQGroups.removeAll(targetQQJoinedGroups);
-
+    private void welcomeCustomer(String qq, List<String> curQQGroups) {
         if (CollectionUtils.isEmpty(curQQGroups)){
             return;
         }
 
+        List<Email> emails = emailDAL.selectInGroups(qq, curQQGroups, EmailType.INCREASE.getCode());
+        Set<String> groupCodes = emails.stream()
+                .map(Email::getGroupCode)
+                .collect(Collectors.toSet());
+
+        String targetCode = null;
+        for (String curCode: curQQGroups){
+            if (!groupCodes.contains(curCode)){
+                targetCode = curCode;
+                break;
+            }
+        }
+
+        if (Strings.isBlank(targetCode)){
+            return;
+        }
+
+        Email entity = new Email();
+        entity.setQqCode(qq);
+        entity.setGroupCode(targetCode);
+        entity.setMailType(EmailType.INCREASE.getCode());
+        emailDAL.insertSelective(entity);
+
         // 解析设置的h5文件
-        String data = readFile(filePath);
+        String data = readFile("templates/welcome.html");
         // 获取该群的加入链接
-        String groupQsig = getGroupQsig(curQQGroups.get(0));
+        String groupQsig = getGroupQsig(targetCode);
         log.info("[腾讯加群解析测试日志] 二级解析 ret:{}", groupQsig);
         if (StringUtils.isEmpty(groupQsig)) {
             return;
@@ -146,12 +160,6 @@ public class SendEmailService {
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "欢迎，您的审核已经通过|Apple|My Office Account", emailContent);
-        sendTextMail(qq + "@qq.com", "【系统自动邮件】恭喜，您已经通过系统审核|Apple|My Office Account", "这是系统的自动邮件，如果您已经收到类似的邮件请忽略，" +
-                "🐑毛党的温暖小屋    ≯    内部裙:" + curQQGroups.get(0));
-        // 添加数据库
-        email.setQqAccount(Long.parseLong(qq));
-        targetQQJoinedGroups.add(curQQGroups.get(0));
-        emailDAL.addEmail(email, targetQQJoinedGroups);
     }
 
     @NotNull
@@ -187,27 +195,6 @@ public class SendEmailService {
     }
 
     /**
-     * 发送纯文本邮件
-     *
-     * @param to      邮件接收方
-     * @param subject 邮件主题
-     * @param text    邮件内容
-     */
-    private void sendTextMail(String to, String subject, String text) {
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        simpleMailMessage.setFrom(from);
-        simpleMailMessage.setTo(to);
-        simpleMailMessage.setSubject(subject);
-        simpleMailMessage.setText(text);
-        try {
-            javaMailSender.send(simpleMailMessage);
-            logger.info("邮件已发送。");
-        } catch (Exception e) {
-            logger.error("邮件发送失败。", e);
-        }
-    }
-
-    /**
      * 发送html形式邮件
      *
      * @param to
@@ -218,13 +205,13 @@ public class SendEmailService {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom(from);
+            helper.setFrom(new InternetAddress(from, "系统管理员", "UTF-8"));
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);
             javaMailSender.send(message);
             logger.info("html邮件发送成功");
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             logger.error("发送html邮件时发生异常！", e);
         }
     }

@@ -29,15 +29,31 @@ public class EmailSqlProvider {
         sql.INSERT_INTO("email");
         
         if (record.getId() != null) {
-            sql.VALUES("_id", "#{id,jdbcType=INTEGER}");
+            sql.VALUES("id", "#{id,jdbcType=INTEGER}");
         }
         
-        if (record.getQqAccount() != null) {
-            sql.VALUES("qq_account", "#{qqAccount,jdbcType=BIGINT}");
+        if (record.getQqCode() != null) {
+            sql.VALUES("qq_code", "#{qqCode,jdbcType=VARCHAR}");
         }
         
-        if (record.getJoinedGroups() != null) {
-            sql.VALUES("joined_groups", "#{joinedGroups,jdbcType=VARCHAR}");
+        if (record.getGroupCode() != null) {
+            sql.VALUES("group_code", "#{groupCode,jdbcType=VARCHAR}");
+        }
+        
+        if (record.getMailType() != null) {
+            sql.VALUES("mail_type", "#{mailType,jdbcType=INTEGER}");
+        }
+        
+        if (record.getDeleted() != null) {
+            sql.VALUES("deleted", "#{deleted,jdbcType=TINYINT}");
+        }
+        
+        if (record.getCreatedAt() != null) {
+            sql.VALUES("created_at", "#{createdAt,jdbcType=TIMESTAMP}");
+        }
+        
+        if (record.getUpdatedAt() != null) {
+            sql.VALUES("updated_at", "#{updatedAt,jdbcType=TIMESTAMP}");
         }
         
         return sql.toString();
@@ -46,12 +62,16 @@ public class EmailSqlProvider {
     public String selectByExample(EmailExample example) {
         SQL sql = new SQL();
         if (example != null && example.isDistinct()) {
-            sql.SELECT_DISTINCT("_id");
+            sql.SELECT_DISTINCT("id");
         } else {
-            sql.SELECT("_id");
+            sql.SELECT("id");
         }
-        sql.SELECT("qq_account");
-        sql.SELECT("joined_groups");
+        sql.SELECT("qq_code");
+        sql.SELECT("group_code");
+        sql.SELECT("mail_type");
+        sql.SELECT("deleted");
+        sql.SELECT("created_at");
+        sql.SELECT("updated_at");
         sql.FROM("email");
         applyWhere(sql, example, false);
         
@@ -70,15 +90,31 @@ public class EmailSqlProvider {
         sql.UPDATE("email");
         
         if (record.getId() != null) {
-            sql.SET("_id = #{record.id,jdbcType=INTEGER}");
+            sql.SET("id = #{record.id,jdbcType=INTEGER}");
         }
         
-        if (record.getQqAccount() != null) {
-            sql.SET("qq_account = #{record.qqAccount,jdbcType=BIGINT}");
+        if (record.getQqCode() != null) {
+            sql.SET("qq_code = #{record.qqCode,jdbcType=VARCHAR}");
         }
         
-        if (record.getJoinedGroups() != null) {
-            sql.SET("joined_groups = #{record.joinedGroups,jdbcType=VARCHAR}");
+        if (record.getGroupCode() != null) {
+            sql.SET("group_code = #{record.groupCode,jdbcType=VARCHAR}");
+        }
+        
+        if (record.getMailType() != null) {
+            sql.SET("mail_type = #{record.mailType,jdbcType=INTEGER}");
+        }
+        
+        if (record.getDeleted() != null) {
+            sql.SET("deleted = #{record.deleted,jdbcType=TINYINT}");
+        }
+        
+        if (record.getCreatedAt() != null) {
+            sql.SET("created_at = #{record.createdAt,jdbcType=TIMESTAMP}");
+        }
+        
+        if (record.getUpdatedAt() != null) {
+            sql.SET("updated_at = #{record.updatedAt,jdbcType=TIMESTAMP}");
         }
         
         applyWhere(sql, example, true);
@@ -89,9 +125,13 @@ public class EmailSqlProvider {
         SQL sql = new SQL();
         sql.UPDATE("email");
         
-        sql.SET("_id = #{record.id,jdbcType=INTEGER}");
-        sql.SET("qq_account = #{record.qqAccount,jdbcType=BIGINT}");
-        sql.SET("joined_groups = #{record.joinedGroups,jdbcType=VARCHAR}");
+        sql.SET("id = #{record.id,jdbcType=INTEGER}");
+        sql.SET("qq_code = #{record.qqCode,jdbcType=VARCHAR}");
+        sql.SET("group_code = #{record.groupCode,jdbcType=VARCHAR}");
+        sql.SET("mail_type = #{record.mailType,jdbcType=INTEGER}");
+        sql.SET("deleted = #{record.deleted,jdbcType=TINYINT}");
+        sql.SET("created_at = #{record.createdAt,jdbcType=TIMESTAMP}");
+        sql.SET("updated_at = #{record.updatedAt,jdbcType=TIMESTAMP}");
         
         EmailExample example = (EmailExample) parameter.get("example");
         applyWhere(sql, example, true);
@@ -102,15 +142,31 @@ public class EmailSqlProvider {
         SQL sql = new SQL();
         sql.UPDATE("email");
         
-        if (record.getQqAccount() != null) {
-            sql.SET("qq_account = #{qqAccount,jdbcType=BIGINT}");
+        if (record.getQqCode() != null) {
+            sql.SET("qq_code = #{qqCode,jdbcType=VARCHAR}");
         }
         
-        if (record.getJoinedGroups() != null) {
-            sql.SET("joined_groups = #{joinedGroups,jdbcType=VARCHAR}");
+        if (record.getGroupCode() != null) {
+            sql.SET("group_code = #{groupCode,jdbcType=VARCHAR}");
         }
         
-        sql.WHERE("_id = #{id,jdbcType=INTEGER}");
+        if (record.getMailType() != null) {
+            sql.SET("mail_type = #{mailType,jdbcType=INTEGER}");
+        }
+        
+        if (record.getDeleted() != null) {
+            sql.SET("deleted = #{deleted,jdbcType=TINYINT}");
+        }
+        
+        if (record.getCreatedAt() != null) {
+            sql.SET("created_at = #{createdAt,jdbcType=TIMESTAMP}");
+        }
+        
+        if (record.getUpdatedAt() != null) {
+            sql.SET("updated_at = #{updatedAt,jdbcType=TIMESTAMP}");
+        }
+        
+        sql.WHERE("id = #{id,jdbcType=INTEGER}");
         
         return sql.toString();
     }
