@@ -79,7 +79,7 @@ public class SendEmailService {
             for (String msgGroup : msgGroupByCode) {
                 whiteGroup.addAll(accountManagerImpl.getAllAvailableGroupNumbers(msgGroup));
             }
-            if (CollectionUtils.isEmpty(whiteGroup)) {
+            if (CollectionUtils.isEmpty(whiteGroup) || whiteGroup.contains(groupMemberIncrease.getGroup())) {
                 return;
             }
             List<String> whiteGroupsList = new ArrayList<>(whiteGroup);
