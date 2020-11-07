@@ -83,7 +83,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             }
         }
 
-        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleAtFixedRate(new RunnableWithMDC(() -> {
+        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleWithFixedDelay(new RunnableWithMDC(() -> {
             try {
                 long curIdx = curIdx();
                 long lastIdx = roomList.lastIdx();
@@ -130,7 +130,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             msgExpireStrategy.accept(msgGet);
         } else if (!room.tryPut(msgGet)) {
             while (room.getFlag() != 1) {
-                Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
+                Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
             }
             trueForward(msgGet, interval);
         }
@@ -145,7 +145,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
             for (MsgGet msgGet : queue) {
-                trueForward(msgGet, waitTime / room.getMsgCount());
+                trueForward(msgGet, waitTime / room.getMsgCount() * 2);
             }
         }
         room.setFlag(1);
