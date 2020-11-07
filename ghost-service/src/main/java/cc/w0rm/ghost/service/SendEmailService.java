@@ -1,28 +1,27 @@
 package cc.w0rm.ghost.service;
 
+import cc.w0rm.ghost.common.util.DateTimeUtil;
 import cc.w0rm.ghost.common.util.Strings;
 import cc.w0rm.ghost.enums.EmailType;
 import cc.w0rm.ghost.mysql.dao.EmailDAL;
 import cc.w0rm.ghost.mysql.dao.QunConfigDAL;
 import cc.w0rm.ghost.mysql.po.Email;
 import cc.w0rm.ghost.mysql.po.QunConfig;
+import cc.w0rm.ghost.util.FileUtil;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease;
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce;
 import com.forte.qqrobot.sender.MsgSender;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -30,8 +29,6 @@ import org.thymeleaf.context.Context;
 import javax.annotation.Resource;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -103,7 +100,7 @@ public class SendEmailService {
 
     private void begCustomers(String qq, String group) {
         // 解析设置的h5文件
-        String data = readFile("templates/keep.html");
+        String data = FileUtil.readFile("templates/keep.html");
         // 获取该群的加入链接
         String groupQsig = getGroupQsig(group);
         if (StringUtils.isEmpty(groupQsig)) {
@@ -146,7 +143,7 @@ public class SendEmailService {
         emailDAL.insertSelective(entity);
 
         // 解析设置的h5文件
-        String data = readFile("templates/welcome.html");
+        String data = FileUtil.readFile("templates/welcome.html");
         // 获取该群的加入链接
         String groupQsig = getGroupQsig(targetCode);
         log.info("[腾讯加群解析测试日志] 二级解析 ret:{}", groupQsig);
@@ -157,23 +154,14 @@ public class SendEmailService {
         // 设置上下文 和h5文件交互
         Context context = new Context();
         context.setVariable("qqGroupUrl", groupQsig);
+        context.setVariable("code", UUID.randomUUID().toString().replace("-","").substring(0,4));
+        context.setVariable("datetime", DateTimeUtil.now());
+        context.setVariable("shakespeare", FileUtil.getShakespeare());
         String emailContent = new TemplateEngine().process(data, context);
         // 发送h5邮件
         sendHtmlMail(qq + "@qq.com", "欢迎，您的审核已经通过|Apple|My Office Account", emailContent);
     }
 
-    @NotNull
-    private String readFile(String filePath) {
-        String data = Strings.EMPTY;
-        ClassPathResource classPathResource = new ClassPathResource(filePath);
-        try {
-            byte[] bdata = FileCopyUtils.copyToByteArray(classPathResource.getInputStream());
-            data = new String(bdata, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            log.error("IOException", e);
-        }
-        return data;
-    }
 
     private String getGroupQsig(String group) {
         if (Strings.isBlank(group)) {
