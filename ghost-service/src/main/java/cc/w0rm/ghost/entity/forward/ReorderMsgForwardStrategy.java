@@ -36,6 +36,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
     private long interval;
     private int waitCount;
     private int roomSize;
+    private long expireWaitTime;
     private ExpireStrategy msgExpireStrategy;
 
     private static final ScheduledExecutorService SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(4,
@@ -52,6 +53,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         interval = 5000L;
         waitCount = 2;
         roomSize = 5;
+        expireWaitTime = 5000L;
         msgExpireStrategy = new MsgExpireStrategy();
         roomList = new CircleIndexArray<>(roomSize);
     }
@@ -64,6 +66,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.interval = coordinatorConfig.getIntervalTime();
                 this.waitCount = coordinatorConfig.getWaitCount();
                 this.roomSize = coordinatorConfig.getRoomSize();
+                this.expireWaitTime = coordinatorConfig.getExpireWaitTime();
                 String expireStrategy = coordinatorConfig.getExpireStrategy();
                 if (Strings.isNotBlank(expireStrategy)) {
                     this.msgExpireStrategy = expireStrategyMap.get(expireStrategy);
@@ -135,7 +138,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             while (room.getFlag() != 1) {
                 Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
             }
-            trueForward(msgGet, interval);
+            trueForward(msgGet, expireWaitTime);
         }
     }
 
@@ -144,7 +147,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         if (room == null || room.isCleaned()) {
             return;
         }
-        waitTime = Math.max(waitTime, this.interval);
+        waitTime = Math.max(waitTime, expireWaitTime);
 
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {

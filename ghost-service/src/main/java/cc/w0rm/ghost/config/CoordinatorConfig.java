@@ -15,15 +15,17 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "coordinator")
 public class CoordinatorConfig {
     @Getter
-    private Long intervalTime = 5000L;
+    private Long intervalTime = 30000L;
     @Getter
-    private Integer waitCount = 2;
+    private Integer waitCount = 1;
     @Getter
     private String forwardStrategy = "reorderMsgForwardStrategy";
     @Getter
     private String expireStrategy = "msgExpireStrategy";
     @Getter
-    private Integer roomSize = 5;
+    private Integer roomSize = 6;
+    @Getter
+    private Long expireWaitTime = 5000L;
 
     public CoordinatorConfig() {
     }
@@ -69,4 +71,11 @@ public class CoordinatorConfig {
         this.roomSize = roomSize;
     }
 
+    public void setExpireWaitTime(Long expireWaitTime){
+        if (expireWaitTime == null){
+            return;
+        }
+
+        this.expireWaitTime = expireWaitTime;
+    }
 }
