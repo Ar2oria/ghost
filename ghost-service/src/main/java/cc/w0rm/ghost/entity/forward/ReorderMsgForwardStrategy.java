@@ -99,7 +99,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                     expireRooms.forEach(room -> {
                         if (!room.isCleaned()) {
                             log.debug("ReorderMsgForwardStrategy: find expire rooms[{}]", room);
-                            forward(room, (roomSize - (curIdx - room.getId()) - 1) * interval);
+                            forward(room, (roomSize - (curIdx - room.getId())) * interval);
                         }
                     });
                 }
