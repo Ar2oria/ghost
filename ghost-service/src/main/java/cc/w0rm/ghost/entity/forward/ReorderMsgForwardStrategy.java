@@ -152,7 +152,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
             for (MsgGet msgGet : queue) {
-                trueForward(msgGet, waitTime / room.getMsgCount() * 2);
+                trueForward(msgGet, waitTime / room.getMsgCount());
             }
         }
         room.setFlag(1);
