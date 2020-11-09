@@ -82,17 +82,20 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 this.roomList = new CircleIndexArray<>(roomSize);
             }
         }
+        SCHEDULED_THREAD_POOL_EXECUTOR.scheduleAtFixedRate(new RunnableWithMDC(()->{
+            long curIdx = curIdx();
+            long lastIdx = roomList.lastIdx();
+            if (lastIdx < curIdx) {
+                Room room = new Room(curIdx);
+                if(roomList.add(room)) {
+                    log.debug("ReorderMsgForwardStrategy: scheduled add room[{}]", room);
+                }
+            }
+        }),0L, this.interval / 2, TimeUnit.MILLISECONDS);
 
         SCHEDULED_THREAD_POOL_EXECUTOR.scheduleWithFixedDelay(new RunnableWithMDC(() -> {
             try {
                 long curIdx = curIdx();
-                long lastIdx = roomList.lastIdx();
-                if (lastIdx < curIdx) {
-                    Room room = new Room(curIdx);
-                    roomList.add(room);
-                    log.debug("ReorderMsgForwardStrategy: scheduled add room[{}]", room);
-                }
-
                 long expireIdx = curIdx - waitCount;
                 List<Room> expireRooms = roomList.range(expireIdx);
                 if (CollUtil.isNotEmpty(expireRooms)) {
@@ -141,6 +144,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         if (room == null || room.isCleaned()) {
             return;
         }
+        waitTime = Math.max(waitTime, this.interval);
 
         List<MsgGet> queue = room.clean();
         if (!CollUtil.isEmpty(queue)) {
@@ -173,16 +177,13 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
         long now = Instant.now().toEpochMilli();
         long nowIdx = getTimeIdx(now);
         long lastIdx = roomList.lastIdx();
-
-        Room lastRoom;
+        Room lastRoom = roomList.last();
         if (nowIdx > lastIdx) {
             lastRoom = new Room(nowIdx);
             boolean add = roomList.add(lastRoom);
             if (!add) {
                 lastRoom = roomList.last();
             }
-        } else {
-            lastRoom = roomList.last();
         }
 
         Room returnRoom;
