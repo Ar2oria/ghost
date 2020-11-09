@@ -38,12 +38,18 @@ public class MsgUtil {
     public static final String JD_COUPON_URL_REGEX = "https://coupon[.]m[.]jd[.]com/[-\\[\\]\\d\\w:/.?=&%;,()]+";
     public static final Pattern JD_COUPON_URL_PATTERN = Pattern.compile(JD_COUPON_URL_REGEX);
 
-    public static final String SPECIFIC_SYMBOL_REGEX = "[劵券亓元]*";
+    public static final String SPECIFIC_SYMBOL_REGEX = "[劵券卷quan亓元]*";
     public static final Pattern SPECIFIC_SYMBOL_PATTERN = Pattern.compile(SPECIFIC_SYMBOL_REGEX);
 
     public static final String AT_ALL_REGEX = "com[.]simplerobot[.]modules[.]utils[.]AtAll@[\\d\\w]+";
     public static final String AT_ALL_MSG = KQCodeUtils.INSTANCE.toCq("at", "qq=all");
     public static final Pattern AT_ALL_PATTERN = Pattern.compile(AT_ALL_REGEX);
+
+    public static final String ELEME_REGEX ="饿了[么嘛吗嚒妈马]";
+    public static final Pattern ELEME_PATTERN = Pattern.compile(ELEME_REGEX);
+
+    public static final String MEITUAN_REGEX = "美团";
+    public static final Pattern MEITUAN_PATTERN = Pattern.compile(MEITUAN_REGEX);
 
     public static Map<String, String> getFile(String msg) {
         if (Strings.isBlank(msg)) {

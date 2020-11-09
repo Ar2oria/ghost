@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 
 /**
  * @author : xuyang
@@ -65,6 +66,27 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
             return true;
         } else {
             msgHash.add(hash);
+
+            Matcher elem = MsgUtil.ELEME_PATTERN.matcher(msgGet.getMsg());
+            if (elem.find()) {
+                hash = MsgUtil.ELEME_REGEX.hashCode();
+                if (msgHash.contains(hash)){
+                    return true;
+                }else {
+                    msgHash.add(hash);
+                }
+            }
+
+            Matcher meituan = MsgUtil.MEITUAN_PATTERN.matcher(msgGet.getMsg());
+            if (meituan.find()) {
+                hash = MsgUtil.MEITUAN_REGEX.hashCode();
+                if (msgHash.contains(hash)){
+                    return true;
+                }else {
+                    msgHash.add(hash);
+                }
+            }
+
             return false;
         }
     }
