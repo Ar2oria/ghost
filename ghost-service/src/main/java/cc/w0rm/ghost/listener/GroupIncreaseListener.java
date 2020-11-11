@@ -25,7 +25,7 @@ public class GroupIncreaseListener {
     
     public void listen(MsgSender msgSender, GroupMemberIncrease groupMemberIncrease) {
         try {
-//            sendEmailService.increase(msgSender, groupMemberIncrease);
+            sendEmailService.increase(msgSender, groupMemberIncrease);
         } catch (Exception e) {
             log.info("email邮件发送失败", e);
         }

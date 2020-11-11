@@ -24,7 +24,7 @@ public class GroupReduceListener {
     
     public void listen(GroupMemberReduce groupMemberReduce) {
         try {
-//            sendEmailService.reduce(groupMemberReduce);
+            sendEmailService.reduce(groupMemberReduce);
         } catch (Exception e) {
             log.info("email邮件发送失败", e);
         }
