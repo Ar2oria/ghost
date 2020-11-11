@@ -38,7 +38,7 @@ public class BaozouFeignInterceptor implements RequestInterceptor {
 
     private static final Cache<String, BaozouSession> SESSION_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(2, TimeUnit.HOURS)
+            .expireAfterAccess(30, TimeUnit.MINUTES)
             .softValues()
             .build();
 

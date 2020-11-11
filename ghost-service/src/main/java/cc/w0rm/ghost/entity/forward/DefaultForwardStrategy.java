@@ -11,8 +11,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import com.forte.qqrobot.beans.messages.msgget.GroupMsg;
 import com.forte.qqrobot.beans.messages.msgget.MsgGet;
-import com.forte.qqrobot.beans.messages.result.GroupList;
-import com.forte.qqrobot.beans.messages.result.inner.Group;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -28,7 +26,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -54,7 +51,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     private static final Cache<String, Set<String>> GROUP_CODE_CACHE = CacheBuilder.newBuilder()
             .softValues()
             .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(1, TimeUnit.HOURS)
+            .expireAfterAccess(24, TimeUnit.HOURS)
             .build();
 
     private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
@@ -202,9 +199,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     private Set<String> getGroupCodeFromCache(Consumer consumer) {
         Set<String> groupCodes = GROUP_CODE_CACHE.getIfPresent(consumer.getBotCode());
         if (CollectionUtils.isEmpty(groupCodes)) {
-            GroupList groupList = consumer.getSender().GETTER.getGroupList();
-            groupCodes = groupList.stream()
-                    .map(Group::getCode).collect(Collectors.toSet());
+            groupCodes = accountManager.getAvailableGroupCodesOfAccount(consumer.getBotCode());
             GROUP_CODE_CACHE.put(consumer.getBotCode(), groupCodes);
         }
         return groupCodes;

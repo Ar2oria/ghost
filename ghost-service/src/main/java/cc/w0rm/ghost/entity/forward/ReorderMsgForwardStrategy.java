@@ -155,6 +155,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
                 trueForward(msgGet, waitTime / room.getMsgCount());
             }
         }
+
         room.setFlag(1);
         log.debug("room[{}] all msg is forward", room.getId());
     }
@@ -172,7 +173,7 @@ public class ReorderMsgForwardStrategy extends DefaultForwardStrategy implements
             future.get(waitTime, TimeUnit.MILLISECONDS);
             log.debug("ReorderMsgForwardStrategy: forward msg[{}] success", msgGet.getId());
         } catch (Exception exp) {
-            log.error("转发消息[{}]，等待超时，请查看网络是否出现异常或代码中出现死循环", msgGet.getId(), exp);
+            log.error("转发消息[{}]，等待[{}]毫秒超时，请查看网络是否出现异常或代码中出现死循环", msgGet.getId(), waitTime, exp);
         }
     }
 

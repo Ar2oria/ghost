@@ -5,6 +5,7 @@ import cc.w0rm.ghost.config.role.MsgGroup;
 import cc.w0rm.ghost.entity.GroupRule;
 import cc.w0rm.ghost.entity.platform.GetAble;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
+import com.forte.qqrobot.bot.BotInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -79,10 +80,33 @@ public interface AccountManager {
      */
     GroupRule getGroupRuler(ThisCodeAble codesAble);
 
+    /**
+     * 通过qq信息获取群管理/转发规则
+     * @param code
+     * @return
+     */
+    GroupRule getGroupRuler(String code);
+
+    /**
+     * 判断一个账号是否是生产者
+     * @param code
+     * @return
+     */
     boolean isProducer(String code);
 
+    /**
+     * 判断一个账号是否在一个消息组是生产者
+     * @param code
+     * @param group
+     * @return
+     */
     boolean isProducer(String code, String group);
 
+    /**
+     * 判断一个消息是否属于生产者
+     * @param codeAble
+     * @return
+     */
     boolean isProducer(ThisCodeAble codeAble);
 
     /**
@@ -97,5 +121,20 @@ public interface AccountManager {
      * @param flag
      * @return
      */
-    Set<String> getAllAvailableGroupNumbers(String flag);
+    Set<String> getAllAvailableGroupCodes(String flag);
+
+    /**
+     * 获取一个账号下的所有可分发群号
+     * @param code
+     * @return
+     */
+    Set<String> getAvailableGroupCodesOfAccount(String code);
+
+
+    /**
+     * 获得一个账号的信息
+     * @param code
+     * @return
+     */
+    BotInfo getBotInfo(String code);
 }

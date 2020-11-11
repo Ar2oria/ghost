@@ -74,7 +74,7 @@ public class SendEmailService {
                     .getMsgGroupFlag(msgSender.GETTER.getLoginQQInfo().getQQCode());
             Set<String> whiteGroup = new HashSet<>();
             for (String msgGroup : msgGroupByCode) {
-                whiteGroup.addAll(accountManagerImpl.getAllAvailableGroupNumbers(msgGroup));
+                whiteGroup.addAll(accountManagerImpl.getAllAvailableGroupCodes(msgGroup));
             }
             if (CollectionUtils.isEmpty(whiteGroup) || whiteGroup.contains(groupMemberIncrease.getGroup())) {
                 return;

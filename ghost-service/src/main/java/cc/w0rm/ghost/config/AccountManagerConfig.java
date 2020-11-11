@@ -453,6 +453,10 @@ public class AccountManagerConfig extends LinkedHashMap<String, Object> {
         return onlineMsgGroup.get(name);
     }
 
+    public BotInfo getBotInfo(String code){
+        return botManager.getBot(code);
+    }
+
     /**
      * 获取一个账号所属的所有消息组
      * @param code

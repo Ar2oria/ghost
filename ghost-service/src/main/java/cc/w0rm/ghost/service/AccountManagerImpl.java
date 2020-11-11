@@ -15,6 +15,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.forte.qqrobot.beans.messages.ThisCodeAble;
 import com.forte.qqrobot.beans.messages.result.GroupList;
 import com.forte.qqrobot.beans.messages.result.inner.Group;
+import com.forte.qqrobot.bot.BotInfo;
 import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,17 +174,26 @@ public class AccountManagerImpl implements AccountManager {
             return null;
         }
 
-        Set<String> producerBlack = accountManagerConfig.getBlackSet(codesAble.getThisCode(), RoleEnum.PRODUCER);
-        Set<String> producerWhite = accountManagerConfig.getWhiteSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
+        return getGroupRuler(codesAble.getThisCode());
+    }
 
-        Set<String> consumerBlack = accountManagerConfig.getBlackSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
-        Set<String> consumerWhite = accountManagerConfig.getWhiteSet(codesAble.getThisCode(), RoleEnum.CONSUMER);
+    @Override
+    public GroupRule getGroupRuler(String code) {
+        if (Strings.isBlank(code)){
+            return null;
+        }
+
+        Set<String> producerBlack = accountManagerConfig.getBlackSet(code, RoleEnum.PRODUCER);
+        Set<String> producerWhite = accountManagerConfig.getWhiteSet(code, RoleEnum.CONSUMER);
+
+        Set<String> consumerBlack = accountManagerConfig.getBlackSet(code, RoleEnum.CONSUMER);
+        Set<String> consumerWhite = accountManagerConfig.getWhiteSet(code, RoleEnum.CONSUMER);
 
         Rule producerRule = new Rule(producerBlack, producerWhite);
         Rule consumerRule = new Rule(consumerBlack, consumerWhite);
 
         GroupRule groupRule = new GroupRule();
-        groupRule.setCode(codesAble.getThisCode());
+        groupRule.setCode(code);
         groupRule.setProducer(producerRule);
         groupRule.setConsumer(consumerRule);
 
@@ -263,7 +273,11 @@ public class AccountManagerImpl implements AccountManager {
     }
 
     @Override
-    public Set<String> getAllAvailableGroupNumbers(String flag) {
+    public Set<String> getAllAvailableGroupCodes(String flag) {
+        if (Strings.isBlank(flag)){
+            return Collections.emptySet();
+        }
+
         Set<String> allGroups = new HashSet<>();
         Set<Consumer> msgGroupConsumerMember = getMsgGroupConsumerMember(flag);
         msgGroupConsumerMember.forEach(consumer -> {
@@ -279,5 +293,36 @@ public class AccountManagerImpl implements AccountManager {
             }
         });
         return allGroups;
+    }
+
+    @Override
+    public Set<String> getAvailableGroupCodesOfAccount(String code) {
+        if (Strings.isBlank(code)){
+            return Collections.emptySet();
+        }
+        BotInfo botInfo = getBotInfo(code);
+        if (Objects.isNull(botInfo)){
+            return Collections.emptySet();
+        }
+
+        Set<String> whiteSet = accountManagerConfig.getWhiteSet(code, RoleEnum.CONSUMER);
+        if (!CollectionUtils.isEmpty(whiteSet)){
+            return whiteSet;
+        }
+
+        Set<String> blackSet = accountManagerConfig.getBlackSet(code, RoleEnum.CONSUMER);
+        return botInfo.getSender().GETTER.getGroupList().stream()
+                .map(Group::getCode)
+                .filter(gcode -> !blackSet.contains(gcode))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public BotInfo getBotInfo(String code) {
+        if (Strings.isBlank(code)){
+            return null;
+        }
+
+        return accountManagerConfig.getBotInfo(code);
     }
 }

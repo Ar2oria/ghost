@@ -27,7 +27,7 @@ public class DefaultMsgConsumerImpl implements MsgConsumer {
      */
     @Override
     public void consume(BotInfo botInfo, String group, MsgGet msgGet) {
-        log.debug("[default] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
+        log.info("[default] 消费者：[{}] , 接收到消息：[{}] ==> 群qq：[{}]",
                 botInfo.getBotCode(),
                 msgGet.getId(),
                 group);
