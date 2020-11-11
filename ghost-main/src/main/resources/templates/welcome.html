@@ -47,18 +47,18 @@
                             <tr>
                                 <td align="left" style="-webkit-font-smoothing: subpixel-antialiased;">
                                     <div style="padding-left:30px;">
-                                    <p style="margin: 0px; padding: 0px; line-height: 1.5;"><span
-                                            style="font-size: 16px;">但这是临时的，将在5分钟后失效</span><span
-                                            style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 16px;">尊敬的用户，</span>
-                                    </p>
-                                    <p style="margin: 0px; padding: 0px; line-height: 1.5;">&nbsp;</p>
-                                    <p style="margin: 0px; padding: 0px; line-height: 1.5;"><span
-                                            style="font-size: 16px;">请在点击以下按钮，进入到正式群组，谢谢！</span><span
-                                            style="border-bottom-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: dashed;"
-                                            t="5"
-                                            times=" <br/><br/>时间：2020-11-05 10:39:21<br/><br/>提交了绑定邮箱请求</span></p></div></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td style="
-                                            webkit-font-smoothing:="webkit-font-smoothing:"
-                                            subpixel-antialiased="subpixel-antialiased"></span></p>
+                                        <p style="margin: 0px; padding: 0px; line-height: 1.5;"><span
+                                                style="font-size: 16px;">但这是临时的，将在5分钟后失效</span><span
+                                                style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 16px;">尊敬的用户，</span>
+                                        </p>
+                                        <p style="margin: 0px; padding: 0px; line-height: 1.5;">&nbsp;</p>
+                                        <p style="margin: 0px; padding: 0px; line-height: 1.5;"><span
+                                                style="font-size: 16px;">请在点击以下按钮，进入到正式群组，谢谢！</span><span
+                                                style="border-bottom-color: rgb(204, 204, 204); border-bottom-width: 1px; border-bottom-style: dashed;"
+                                                t="5"
+                                                times=" <br/><br/>时间：2020-11-05 10:39:21<br/><br/>提交了绑定邮箱请求</span></p></div></td></tr></tbody></table></td></tr></tbody></table></td></tr><tr><td style="
+                                                webkit-font-smoothing:="webkit-font-smoothing:"
+                                                subpixel-antialiased="subpixel-antialiased"></span></p>
                                     </div>
                                     <table class="font_warp" style="width: 100%; padding-top: 0px; padding-bottom: 0px;"
                                            border="0" cellspacing="0" cellpadding="0">
@@ -90,15 +90,13 @@
                                                                 <a style="padding: 10px 30px; border: 1px solid red; border-image: none; color: #ff0000; font-size: 20px; text-decoration: none; display: inline-block;"
                                                                    href="" th:href="${qqGroupUrl}"
                                                                    target="_blank" rel="noopener">立即进入</a>
-                                                                <h2 style="margin: 0px; padding: 0px; font-weight: bold;">
-                                                                    <span style="color: rgb(255, 255, 255); line-height: 13.44px; font-size: 14px;"><br>时间：<span
-                                                                            th:text="${datetime}"><br></span>
-                                                                </h2><br>
+                                                                <br>
                                                                 <p style="margin: 0px; padding: 0px; line-height: 1.5;">
-                                                                    <span style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">如有问题，感谢您的理解与配合（公共假期除外）联系</span><span
-                                                                        style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">或发送邮件至</span><span
-                                                                        style="color: rgb(51, 145, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">&nbsp;</span><span
-                                                                        style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">联系我们。</span>
+                                                                    <span style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;"><br>时间：<span th:text="${datetime}"></span><br></span>
+                                                                    <span style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">如有问题，感谢您的理解与配合（公共假期除外）联系</span>
+                                                                    <span style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">或发送邮件至</span>
+                                                                    <span style="color: rgb(51, 145, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">&nbsp;</span>
+                                                                    <span style="color: rgb(255, 255, 255); font-family: geneva, verdana, arial, helvetica, sans-serif; font-size: 14px;">联系我们。</span>
                                                                 </p></div>
                                                         </td>
                                                     </tr>
@@ -154,7 +152,9 @@
                                                                 &nbsp;</h1>
                                                             <div>
                                                                 <h2 style="margin: 0px; padding: 0px; font-weight: bold;">
-                                                                    <div style="color: rgb(255, 255, 255); line-height: 13.44px; font-size: 14px;">您的验证码：<span th:text="${code}"></span><br/><span th:text="${shakespeare}"></span>
+                                                                    <div style="color: rgb(255, 255, 255); line-height: 13.44px; font-size: 14px;">
+                                                                        您的验证码：<span th:text="${code}"></span><br/><span
+                                                                            th:text="${shakespeare}"></span>
                                                                     </div>
                                                                 </h2>
                                                             </div>
