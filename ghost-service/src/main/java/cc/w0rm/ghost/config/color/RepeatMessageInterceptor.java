@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 @Component
 public class RepeatMessageInterceptor implements ProducerInterceptor {
 
-    private static final Cache<String, Set<Integer>> ACCOUNT_MSG_FILTER = CacheBuilder.newBuilder()
+    private static final Cache<String, Set<Integer>> GLOBAL_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
             .expireAfterAccess(10, TimeUnit.MINUTES)
             .softValues()
@@ -37,6 +37,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
     private static final List<Pattern> PATTERN_LIST = Lists.newArrayList(MsgUtil.ELEME_PATTERN, MsgUtil.MEITUAN_PATTERN,
             MsgUtil.C88_10_PATTERN);
 
+    private static final int REPEAT_COUNT = 3;
 
     @Override
     public boolean intercept(Context context, ConfigRole configRole) {
@@ -56,16 +57,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
             return false;
         }
 
-        Set<Integer> msgHash = ACCOUNT_MSG_FILTER.getIfPresent(GLOBAL_CODE);
-        if (msgHash == null) {
-            synchronized (this) {
-                msgHash = ACCOUNT_MSG_FILTER.getIfPresent(GLOBAL_CODE);
-                if (msgHash == null) {
-                    msgHash = new ConcurrentHashSet<>();
-                    ACCOUNT_MSG_FILTER.put(GLOBAL_CODE, msgHash);
-                }
-            }
-        }
+        Set<Integer> msgHash = newConcurrentHashSet(GLOBAL_CODE);
         int hash = MsgUtil.hashCode(msgGet.getMsg(), MsgHashMode.STRICT);
         if (msgHash.contains(hash)) {
             return true;
@@ -73,7 +65,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         msgHash.add(hash);
 
         for (Pattern p : PATTERN_LIST) {
-            boolean match = match(msgGet.getMsg(), p, msgHash);
+            boolean match = match(msgGet.getMsg(), p);
             if (match) {
                 return true;
             }
@@ -82,18 +74,32 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         return false;
     }
 
-
-    private boolean match(String msg, Pattern pattern, Set<Integer> hashSet) {
+    private boolean match(String msg, Pattern pattern) {
         Matcher matcher = pattern.matcher(msg);
         if (matcher.find()) {
-            int hash = pattern.pattern().hashCode();
-            if (hashSet.contains(hash)) {
+            String key = pattern.pattern();
+            Set<Integer> countSet = newConcurrentHashSet(key);
+            if (countSet.size() >= REPEAT_COUNT) {
                 return true;
             } else {
-                hashSet.add(hash);
+                countSet.add(msg.hashCode());
             }
         }
 
         return false;
+    }
+
+    private Set<Integer> newConcurrentHashSet(String key) {
+        Set<Integer> set = GLOBAL_MSG_FILTER.getIfPresent(key);
+        if (set == null) {
+            synchronized (this) {
+                set = GLOBAL_MSG_FILTER.getIfPresent(key);
+                if (set == null) {
+                    set = new ConcurrentHashSet<>();
+                    GLOBAL_MSG_FILTER.put(key, set);
+                }
+            }
+        }
+        return set;
     }
 }
