@@ -87,6 +87,16 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
                 }
             }
 
+            Matcher c8810 = MsgUtil.C88_10_PATTERN.matcher(msgGet.getMsg());
+            if (c8810.find()) {
+                hash = MsgUtil.C88_10_REGEX.hashCode();
+                if (msgHash.contains(hash)){
+                    return true;
+                }else {
+                    msgHash.add(hash);
+                }
+            }
+
             return false;
         }
     }

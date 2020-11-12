@@ -1,6 +1,7 @@
 package cc.w0rm.ghost.entity.resolver;
 
 import cc.w0rm.ghost.api.AccountManager;
+import cc.w0rm.ghost.common.util.CompletableFutureWithMDC;
 import cc.w0rm.ghost.common.util.Strings;
 import cc.w0rm.ghost.dto.*;
 import cc.w0rm.ghost.entity.platform.GetAble;
@@ -11,13 +12,14 @@ import cc.w0rm.ghost.rpc.baozou.BaozouService;
 import cc.w0rm.ghost.rpc.taokouling.TaokoulingService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author : xuyang
@@ -27,6 +29,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class TbTklResolver implements Resolver {
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(4,
+            Integer.MAX_VALUE,
+            60,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("TbTklResolver-ThreadPool")
+                    .build());
     private static final Cache<Integer, CommodityDetailDTO> TKL_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
             .expireAfterAccess(10, TimeUnit.MINUTES)
@@ -58,12 +69,18 @@ public class TbTklResolver implements Resolver {
         }
 
         String tkl = preTestText.getFind();
-        BaozouResponseDTO<TklInfoDTO> responseDTO = baoZouService.tklDecrypt(tkl);
-        if (Objects.isNull(responseDTO) || Objects.isNull(responseDTO.getData())) {
-            return tryResolveFromItemInfo(preTestText, account);
+        CompletableFuture<BaozouResponseDTO<TklInfoDTO>> future = CompletableFutureWithMDC.supplyAsyncWithMdc(()
+                -> baoZouService.tklDecrypt(tkl), EXECUTOR_SERVICE);
+        try {
+            BaozouResponseDTO<TklInfoDTO> responseDTO = future.get(5, TimeUnit.SECONDS);
+            if (Objects.nonNull(responseDTO) && Objects.nonNull(responseDTO.getData())) {
+                return getCommodityDetail(responseDTO.getData(), preTestText.getSource(), account);
+            }
+        }catch (Exception exp){
+            log.error("暴走工具箱解析异常", exp);
         }
 
-        return getCommodityDetail(responseDTO.getData(), preTestText.getSource(), account);
+        return tryResolveFromItemInfo(preTestText, account);
     }
 
     @NotNull
