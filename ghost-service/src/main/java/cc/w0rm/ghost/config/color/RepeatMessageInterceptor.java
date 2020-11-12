@@ -9,12 +9,15 @@ import com.forte.qqrobot.intercept.Context;
 import com.forte.qqrobot.listener.MsgGetContext;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author : xuyang
@@ -31,6 +34,8 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
             .build();
 
     private static final String GLOBAL_CODE = "#";
+    private static final List<Pattern> PATTERN_LIST = Lists.newArrayList(MsgUtil.ELEME_PATTERN, MsgUtil.MEITUAN_PATTERN,
+            MsgUtil.C88_10_PATTERN);
 
 
     @Override
@@ -64,40 +69,31 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         int hash = MsgUtil.hashCode(msgGet.getMsg(), MsgHashMode.STRICT);
         if (msgHash.contains(hash)) {
             return true;
-        } else {
-            msgHash.add(hash);
-
-            Matcher elem = MsgUtil.ELEME_PATTERN.matcher(msgGet.getMsg());
-            if (elem.find()) {
-                hash = MsgUtil.ELEME_REGEX.hashCode();
-                if (msgHash.contains(hash)){
-                    return true;
-                }else {
-                    msgHash.add(hash);
-                }
-            }
-
-            Matcher meituan = MsgUtil.MEITUAN_PATTERN.matcher(msgGet.getMsg());
-            if (meituan.find()) {
-                hash = MsgUtil.MEITUAN_REGEX.hashCode();
-                if (msgHash.contains(hash)){
-                    return true;
-                }else {
-                    msgHash.add(hash);
-                }
-            }
-
-            Matcher c8810 = MsgUtil.C88_10_PATTERN.matcher(msgGet.getMsg());
-            if (c8810.find()) {
-                hash = MsgUtil.C88_10_REGEX.hashCode();
-                if (msgHash.contains(hash)){
-                    return true;
-                }else {
-                    msgHash.add(hash);
-                }
-            }
-
-            return false;
         }
+        msgHash.add(hash);
+
+        for (Pattern p : PATTERN_LIST) {
+            boolean match = match(msgGet.getMsg(), p, msgHash);
+            if (match) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    private boolean match(String msg, Pattern pattern, Set<Integer> hashSet) {
+        Matcher matcher = pattern.matcher(msg);
+        if (matcher.find()) {
+            int hash = pattern.pattern().hashCode();
+            if (hashSet.contains(hash)) {
+                return true;
+            } else {
+                hashSet.add(hash);
+            }
+        }
+
+        return false;
     }
 }

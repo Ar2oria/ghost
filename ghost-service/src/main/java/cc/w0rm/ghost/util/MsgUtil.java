@@ -51,7 +51,7 @@ public class MsgUtil {
     public static final String MEITUAN_REGEX = "美团";
     public static final Pattern MEITUAN_PATTERN = Pattern.compile(MEITUAN_REGEX);
 
-    public static final String C88_10_REGEX = "88\\s?-\\s?10";
+    public static final String C88_10_REGEX = "[\\u4e00-\\u9fa5]88-10|88-10[\\u4e00-\\u9fa5]";
     public static final Pattern C88_10_PATTERN = Pattern.compile(C88_10_REGEX);
 
     public static Map<String, String> getFile(String msg) {
