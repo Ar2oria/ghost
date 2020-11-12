@@ -29,7 +29,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
 
     private static final Cache<String, Set<Integer>> GLOBAL_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
             .softValues()
             .build();
 
@@ -37,7 +37,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
     private static final List<Pattern> PATTERN_LIST = Lists.newArrayList(MsgUtil.ELEME_PATTERN, MsgUtil.MEITUAN_PATTERN,
             MsgUtil.C88_10_PATTERN);
 
-    private static final int REPEAT_COUNT = 3;
+    private static final int REPEAT_COUNT = 2;
 
     @Override
     public boolean intercept(Context context, ConfigRole configRole) {
