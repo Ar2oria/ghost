@@ -118,13 +118,13 @@ public class MsgResolverImpl implements MsgResolver {
         if (referenceId == 0) {
             String replace = MsgUtil.replace(msg);
             int len = replace.length() > MSG_LENGTH_THRESHOLD? MSG_LENGTH_THRESHOLD : replace.length();
-            referenceId = replace.substring(0, len).hashCode();
+            referenceId = replace.substring(replace.length() - len).hashCode();
         }
 
 
         ResolveType resolveType = ResolveType.SUCCESS;
         if (CollectionUtils.isEmpty(result)) {
-            resolveType = msg.length() > MSG_LENGTH_THRESHOLD ? ResolveType.UNSUPPORT_URL : ResolveType.NONE;
+            resolveType = ResolveType.NONE;
         }
 
         msgInfoDTO = new MsgInfoDTO();
