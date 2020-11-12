@@ -12,6 +12,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -91,10 +92,10 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
 
     private Set<Integer> newConcurrentHashSet(String key) {
         Set<Integer> set = GLOBAL_MSG_FILTER.getIfPresent(key);
-        if (set == null) {
+        if (CollectionUtils.isEmpty(set)) {
             synchronized (this) {
                 set = GLOBAL_MSG_FILTER.getIfPresent(key);
-                if (set == null) {
+                if (CollectionUtils.isEmpty(set)) {
                     set = new ConcurrentHashSet<>();
                     GLOBAL_MSG_FILTER.put(key, set);
                 }
