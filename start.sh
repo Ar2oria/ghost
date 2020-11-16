@@ -5,7 +5,7 @@ module_name="ghost-main.jar"
 echo "正在寻找旧进程..."
 process=`ps axu|grep ${module_name} |grep -v grep |awk '{print $2}'|wc -l`
 if [ $process -ge 1 ];then
-   ps axu | grep ${module_name} |grep -v grep |awk '{print $2}'| xargs kill
+   ps axu | grep ${module_name} |grep -v grep |awk '{print $2}'| xargs kill -9
    echo "进程查找成功，正在执行kill程序..."
 fi
 

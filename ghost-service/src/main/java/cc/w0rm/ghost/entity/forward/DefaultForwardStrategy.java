@@ -54,12 +54,6 @@ public class DefaultForwardStrategy implements ForwardStrategy {
             .expireAfterAccess(24, TimeUnit.HOURS)
             .build();
 
-    private static final Cache<String, Set<Integer>> GROUP_MSG_FILTER = CacheBuilder.newBuilder()
-            .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(5, TimeUnit.MINUTES)
-            .softValues()
-            .build();
-
     @Autowired
     private AccountManager accountManager;
 
@@ -112,7 +106,7 @@ public class DefaultForwardStrategy implements ForwardStrategy {
                     String msgGroupName = msgGroup.getName();
                     MsgConsumer msgConsumer = msgConsumerMap.get(msgGroupName);
                     if (msgConsumer == null) {
-                        log.warn("未找到对应消息组[{}]的消费者策略，请检查消费者配置！", msgGroupName);
+                        log.warn("未找到对应消息组[{}]的消费者策略，将使用默认消费策略", msgGroupName);
                         msgConsumer = msgConsumerMap.get(DEFAULT_MSG_CONSUMER);
                     }
 
@@ -148,11 +142,6 @@ public class DefaultForwardStrategy implements ForwardStrategy {
     }
 
     private boolean canForward(MsgGet msgGet, String groupCode) {
-        if (isForward(msgGet, groupCode)) {
-            log.debug("msg is already forward to group, skip.");
-            return false;
-        }
-
         if (msgGet instanceof GroupMsg) {
             if (isFromMyGroup((GroupMsg) msgGet, groupCode)) {
                 log.debug("msg forward to self, skip.");
@@ -170,27 +159,6 @@ public class DefaultForwardStrategy implements ForwardStrategy {
         if (sourceCode.equals(groupCode)) {
             return true;
         } else {
-            return false;
-        }
-    }
-
-    private boolean isForward(MsgGet msgGet, String groupCode) {
-        Set<Integer> msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
-        if (msgHash == null) {
-            synchronized (this){
-                msgHash = GROUP_MSG_FILTER.getIfPresent(groupCode);
-                if (msgHash == null){
-                    msgHash = new ConcurrentHashSet<>();
-                    GROUP_MSG_FILTER.put(groupCode, msgHash);
-                }
-            }
-        }
-
-        int hash = MsgUtil.hashCode(msgGet.getMsg());
-        if (msgHash.contains(hash)) {
-            return true;
-        } else {
-            msgHash.add(hash);
             return false;
         }
     }
