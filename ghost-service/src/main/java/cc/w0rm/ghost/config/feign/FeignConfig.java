@@ -101,10 +101,6 @@ public class FeignConfig {
                     .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
                     .andCommandPropertiesDefaults(setter)
                     .andThreadPoolPropertiesDefaults(threadSetter);
-
-
         };
-
-
     }
 }

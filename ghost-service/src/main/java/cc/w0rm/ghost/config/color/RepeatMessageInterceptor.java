@@ -30,15 +30,12 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
 
     private static final Cache<String, Set<Integer>> GLOBAL_MSG_FILTER = CacheBuilder.newBuilder()
             .concurrencyLevel(Integer.MAX_VALUE)
-            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .expireAfterAccess(10, TimeUnit.MINUTES)
             .softValues()
             .build();
 
     private static final String GLOBAL_CODE = "#";
-    private static final List<Pattern> PATTERN_LIST = Lists.newArrayList(MsgUtil.ELEME_PATTERN, MsgUtil.MEITUAN_PATTERN,
-            MsgUtil.C88_10_PATTERN);
-
-    private static final int REPEAT_COUNT = 2;
+    private static final List<Pattern> KEYWORD_FILTERING = Lists.newArrayList(MsgUtil.ELEME_PATTERN, MsgUtil.MEITUAN_PATTERN);
 
     @Override
     public boolean intercept(Context context, ConfigRole configRole) {
@@ -65,7 +62,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         }
         msgHash.add(hash);
 
-        for (Pattern p : PATTERN_LIST) {
+        for (Pattern p : KEYWORD_FILTERING) {
             boolean match = match(msgGet.getMsg(), p);
             if (match) {
                 return true;
@@ -80,10 +77,11 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         if (matcher.find()) {
             String key = pattern.pattern();
             Set<Integer> countSet = newConcurrentHashSet(key);
-            if (countSet.size() >= REPEAT_COUNT) {
+            int hash = msg.hashCode();
+            if (countSet.contains(hash)) {
                 return true;
             } else {
-                countSet.add(msg.hashCode());
+                countSet.add(hash);
             }
         }
 
