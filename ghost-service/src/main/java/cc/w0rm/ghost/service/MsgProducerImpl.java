@@ -65,7 +65,7 @@ public class MsgProducerImpl implements MsgProducer {
     public void make(MsgSender msgSender, GroupMsg groupMsg) {
         List<String> msgGroupFlag = accountManager.getAllGroups();
         try {
-            Map<String, MsgInfoDTO> msgInfoMap = msgGroupFlag.stream()
+            Map<String, MsgInfoDTO> msgInfoMap = msgGroupFlag.parallelStream()
                     .collect(Collectors.toMap(Function.identity(),
                             flag -> msgResolver.resolve(groupMsg.getMsg(), flag)));
 

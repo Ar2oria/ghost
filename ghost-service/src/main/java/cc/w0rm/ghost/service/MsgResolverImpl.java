@@ -72,7 +72,7 @@ public class MsgResolverImpl implements MsgResolver {
         }
 
         ArrayList<PreTestText> preTestTexts = Lists.newArrayList(new PreTestText(TextType.SOURCE_TEXT, msg, msg));
-        List<PreTestText> texts = detectorList.parallelStream()
+        List<PreTestText> texts = detectorList.stream()
                 .flatMap(detector -> {
                     try {
                         return detector.detect(msg).stream();
@@ -84,6 +84,7 @@ public class MsgResolverImpl implements MsgResolver {
 
         preTestTexts.addAll(texts);
 
+        // todo 这里的代码太垃圾了操的，迟早改一改
         LinkedBlockingQueue<CommodityDetailDTO> result = new LinkedBlockingQueue<>();
         CompletableFuture<?>[] completableFutures = resolverList.stream()
                 .flatMap(resolver -> preTestTexts.stream().map(preTestText ->
@@ -98,7 +99,7 @@ public class MsgResolverImpl implements MsgResolver {
                                 }))
                 ).toArray(CompletableFuture[]::new);
         try {
-            CompletableFuture.allOf(completableFutures).get(10, TimeUnit.SECONDS);
+            CompletableFuture.allOf(completableFutures).get(15, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error("消息解析超时", e);
         }

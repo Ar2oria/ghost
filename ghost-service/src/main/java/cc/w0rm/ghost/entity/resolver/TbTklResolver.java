@@ -69,18 +69,22 @@ public class TbTklResolver implements Resolver {
         }
 
         String tkl = preTestText.getFind();
-        CompletableFuture<BaozouResponseDTO<TklInfoDTO>> future = CompletableFutureWithMDC.supplyAsyncWithMdc(()
-                -> baoZouService.tklDecrypt(tkl), EXECUTOR_SERVICE);
-        try {
-            BaozouResponseDTO<TklInfoDTO> responseDTO = future.get(5, TimeUnit.SECONDS);
+        CompletableFuture<CommodityDetailDTO> future = CompletableFutureWithMDC.supplyAsyncWithMdc(() -> {
+            BaozouResponseDTO<TklInfoDTO> responseDTO = baoZouService.tklDecrypt(tkl);
             if (Objects.nonNull(responseDTO) && Objects.nonNull(responseDTO.getData())) {
                 return getCommodityDetail(responseDTO.getData(), preTestText.getSource(), account);
             }
-        }catch (Exception exp){
+            return tryResolveFromItemInfo(preTestText, account);
+        }, EXECUTOR_SERVICE);
+
+        CommodityDetailDTO resultVal = null;
+        try {
+            resultVal = future.get(10, TimeUnit.SECONDS);
+        } catch (Exception exp) {
             log.error("暴走工具箱解析异常", exp);
         }
 
-        return tryResolveFromItemInfo(preTestText, account);
+        return Objects.isNull(resultVal) ? buildUnresolvedDTO(preTestText) : resultVal;
     }
 
     @NotNull
@@ -90,7 +94,7 @@ public class TbTklResolver implements Resolver {
 
         TklJmDTO tklJmDTO = new TklJmDTO(apikey, tkl);
         TklResponseDTO tklResponseDTO = taokoulingService.tklJm(tklJmDTO);
-        if (tklResponseDTO == null || tklResponseDTO.getCode() != 1){
+        if (tklResponseDTO == null || tklResponseDTO.getCode() != 1) {
             return buildUnresolvedDTO(preTestText);
         }
 
