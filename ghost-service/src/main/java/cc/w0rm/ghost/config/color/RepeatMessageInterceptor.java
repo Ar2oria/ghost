@@ -77,7 +77,7 @@ public class RepeatMessageInterceptor implements ProducerInterceptor {
         if (matcher.find()) {
             String key = pattern.pattern();
             Set<Integer> countSet = newConcurrentHashSet(key);
-            int hash = msg.hashCode();
+            int hash = key.hashCode();
             if (countSet.contains(hash)) {
                 return true;
             } else {
