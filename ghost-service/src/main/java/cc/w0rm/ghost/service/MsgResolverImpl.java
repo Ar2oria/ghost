@@ -126,7 +126,7 @@ public class MsgResolverImpl implements MsgResolver {
         if (referenceId == 0) {
             String replace = MsgUtil.replace(msg);
             int len = replace.length() > MSG_LENGTH_THRESHOLD? MSG_LENGTH_THRESHOLD : replace.length();
-            referenceId = replace.substring(replace.length() - len).hashCode();
+            referenceId = replace.substring(0, len).hashCode();
         }
 
         msgInfoDTO = new MsgInfoDTO();
